@@ -65,7 +65,7 @@ var Crop = function (name) {
         {organId: 3, yieldPercentage: 0.9, yieldDryMatter: 0.86}
       ],
       organIdsForCutting: [],
-      pc_CropName: "winter wheat",
+      pc_CropName: 'winter wheat',
       pc_MaxAssimilationRate: 52,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 4,
@@ -111,7 +111,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Wheat",
+      name: 'winter wheat',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -170,7 +170,7 @@ var Crop = function (name) {
         {organId: 3, yieldPercentage: 0.9, yieldDryMatter: 0.86}
       ],
       organIdsForCutting: [],
-      pc_CropName: "winter barley",
+      pc_CropName: 'winter barley',
       pc_MaxAssimilationRate: 40,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 4,
@@ -216,7 +216,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Barley",
+      name: 'winter barley',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -275,7 +275,7 @@ var Crop = function (name) {
         {organId: 3, yieldPercentage: 0.9, yieldDryMatter: 0.86}
       ],
       organIdsForCutting: [],
-      pc_CropName: "winter rye",
+      pc_CropName: 'winter rye',
       pc_MaxAssimilationRate: 38,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 3,
@@ -321,7 +321,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Rye",
+      name: 'winter rye',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -380,7 +380,7 @@ var Crop = function (name) {
         {organId: 3, yieldPercentage: 0.85, yieldDryMatter: 0.86}
       ],
       organIdsForCutting: [],
-      pc_CropName: "spring barley",
+      pc_CropName: 'spring barley',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 4,
@@ -426,7 +426,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Barley",
+      name: 'spring barley',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -484,7 +484,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.78, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "grain maize",
+      pc_CropName: 'grain maize',
       pc_MaxAssimilationRate: 96,
       pc_CarboxylationPathway: 2,
       pc_MinimumTemperatureForAssimilation: 6,
@@ -530,7 +530,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Maize (grain)",
+      name: 'grain maize',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -592,7 +592,7 @@ var Crop = function (name) {
       ],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "silage maize",
+      pc_CropName: 'silage maize',
       pc_MaxAssimilationRate: 96,
       pc_CarboxylationPathway: 2,
       pc_MinimumTemperatureForAssimilation: 6,
@@ -638,7 +638,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Maize (silage)",
+      name: 'silage maize',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -697,7 +697,7 @@ var Crop = function (name) {
         {organId: 3, yieldPercentage: 0.85, yieldDryMatter: 0.35}
       ],
       organIdsForCutting: [],
-      pc_CropName: "winter rape",
+      pc_CropName: 'winter rape',
       pc_MaxAssimilationRate: 50,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 4,
@@ -743,7 +743,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Oil seed rape",
+      name: 'winter rape',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -799,7 +799,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 1, yieldDryMatter: 0.23}],
       organIdsForSecondaryYield: [{organId: 2, yieldPercentage: 0.95, yieldDryMatter: 0.16}],
       organIdsForCutting: [],
-      pc_CropName: "sugar beet",
+      pc_CropName: 'sugar beet',
       pc_MaxAssimilationRate: 100,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 7,
@@ -845,7 +845,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Sugar Beet",
+      name: 'sugar beet',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -905,7 +905,7 @@ var Crop = function (name) {
       ],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "mustard",
+      pc_CropName: 'mustard',
       pc_MaxAssimilationRate: 65,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 4,
@@ -951,7 +951,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Mustard cover",
+      name: 'mustard',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0,
@@ -1011,7 +1011,7 @@ var Crop = function (name) {
       ],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "oil raddich",
+      pc_CropName: 'oil raddich',
       pc_MaxAssimilationRate: 60.08,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 4,
@@ -1057,7 +1057,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Oil raddish",
+      name: 'oil raddich',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -1116,7 +1116,7 @@ var Crop = function (name) {
         {organId: 3, yieldPercentage: 0.85, yieldDryMatter: 0.86}
       ],
       organIdsForCutting: [],
-      pc_CropName: "winter triticale",
+      pc_CropName: 'winter triticale',
       pc_MaxAssimilationRate: 48,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 3,
@@ -1162,7 +1162,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "winter triticale",
+      name: 'winter triticale',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -1221,7 +1221,7 @@ var Crop = function (name) {
         {organId: 3, yieldPercentage: 0.9, yieldDryMatter: 0.86}
       ],
       organIdsForCutting: [],
-      pc_CropName: "spring rye",
+      pc_CropName: 'spring rye',
       pc_MaxAssimilationRate: 38,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 3,
@@ -1267,7 +1267,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Spring rye",
+      name: 'spring rye',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -1326,7 +1326,7 @@ var Crop = function (name) {
         {organId: 3, yieldPercentage: 0.9, yieldDryMatter: 0.86}
       ],
       organIdsForCutting: [],
-      pc_CropName: "oat compound",
+      pc_CropName: 'oat compound',
       pc_MaxAssimilationRate: 38.32,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 3,
@@ -1372,7 +1372,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Oat",
+      name: 'oat compound',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -1431,7 +1431,7 @@ var Crop = function (name) {
         {organId: 3, yieldPercentage: 0.85, yieldDryMatter: 0.86}
       ],
       organIdsForCutting: [],
-      pc_CropName: "spring triticale",
+      pc_CropName: 'spring triticale',
       pc_MaxAssimilationRate: 45,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 3,
@@ -1477,7 +1477,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "spring triticale",
+      name: 'spring triticale',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -1536,7 +1536,7 @@ var Crop = function (name) {
         {organId: 3, yieldPercentage: 0.9, yieldDryMatter: 0.86}
       ],
       organIdsForCutting: [],
-      pc_CropName: "field pea",
+      pc_CropName: 'field pea',
       pc_MaxAssimilationRate: 60,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 3,
@@ -1582,7 +1582,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Peas",
+      name: 'field pea',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -1641,7 +1641,7 @@ var Crop = function (name) {
         {organId: 3, yieldPercentage: 0.9, yieldDryMatter: 0.86}
       ],
       organIdsForCutting: [],
-      pc_CropName: "spring wheat",
+      pc_CropName: 'spring wheat',
       pc_MaxAssimilationRate: 52,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 4,
@@ -1687,7 +1687,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Spring wheat",
+      name: 'spring wheat',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -1745,7 +1745,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean 000",
+      pc_CropName: 'soy bean 000',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -1791,7 +1791,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean 000",
+      name: 'soy bean 000',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -1849,7 +1849,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean 00",
+      pc_CropName: 'soy bean 00',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -1895,7 +1895,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean 00",
+      name: 'soy bean 00',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -1953,7 +1953,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean 0",
+      pc_CropName: 'soy bean 0',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -1999,7 +1999,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean 0",
+      name: 'soy bean 0',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -2014,9 +2014,9 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     }
-  } else if (name ==='soy bean I') {
+  } else if (name ==='soy bean i') {
     _id = 31;
-    _name = 'soy bean I';
+    _name = 'soy bean i';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2057,7 +2057,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean I",
+      pc_CropName: 'soy bean i',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -2103,7 +2103,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean I",
+      name: 'soy bean i',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -2118,9 +2118,9 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     }
-  } else if (name ==='soy bean II') {
+  } else if (name ==='soy bean ii') {
     _id = 32;
-    _name = 'soy bean II';
+    _name = 'soy bean ii';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2161,7 +2161,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean II",
+      pc_CropName: 'soy bean ii',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -2207,7 +2207,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean II",
+      name: 'soy bean ii',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -2222,9 +2222,9 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     }
-  } else if (name ==='soy bean III') {
+  } else if (name ==='soy bean iii') {
     _id = 33;
-    _name = 'soy bean III';
+    _name = 'soy bean iii';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2265,7 +2265,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean III",
+      pc_CropName: 'soy bean iii',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -2311,7 +2311,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean III",
+      name: 'soy bean iii',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -2326,9 +2326,9 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     }
-  } else if (name ==='soy bean IV') {
+  } else if (name ==='soy bean iv') {
     _id = 34;
-    _name = 'soy bean IV';
+    _name = 'soy bean iv';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2369,7 +2369,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean IV",
+      pc_CropName: 'soy bean iv',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -2415,7 +2415,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean IV",
+      name: 'soy bean iv',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -2430,9 +2430,9 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     }
-  } else if (name ==='soy bean V') {
+  } else if (name ==='soy bean v') {
     _id = 35;
-    _name = 'soy bean V';
+    _name = 'soy bean v';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2473,7 +2473,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean V",
+      pc_CropName: 'soy bean v',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -2519,7 +2519,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean V",
+      name: 'soy bean v',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -2534,9 +2534,9 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     }
-  } else if (name ==='soy bean VI') {
+  } else if (name ==='soy bean vi') {
     _id = 36;
-    _name = 'soy bean VI';
+    _name = 'soy bean vi';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2577,7 +2577,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean VI",
+      pc_CropName: 'soy bean vi',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -2623,7 +2623,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean VI",
+      name: 'soy bean vi',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -2638,9 +2638,9 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     }
-  } else if (name ==='soy bean VII') {
+  } else if (name ==='soy bean vii') {
     _id = 37;
-    _name = 'soy bean VII';
+    _name = 'soy bean vii';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2681,7 +2681,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean VII",
+      pc_CropName: 'soy bean vii',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -2727,7 +2727,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean VII",
+      name: 'soy bean vii',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -2742,9 +2742,9 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     }
-  } else if (name ==='soy bean VIII') {
+  } else if (name ==='soy bean viii') {
     _id = 38;
-    _name = 'soy bean VIII';
+    _name = 'soy bean viii';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2785,7 +2785,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean VIII",
+      pc_CropName: 'soy bean viii',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -2831,7 +2831,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean VIII",
+      name: 'soy bean viii',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -2846,9 +2846,9 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     }
-  } else if (name ==='soy bean IX') {
+  } else if (name ==='soy bean ix') {
     _id = 39;
-    _name = 'soy bean IX';
+    _name = 'soy bean ix';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2889,7 +2889,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean IX",
+      pc_CropName: 'soy bean ix',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -2935,7 +2935,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean IX",
+      name: 'soy bean ix',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -2950,9 +2950,9 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     }
-  } else if (name ==='soy bean X') {
+  } else if (name ==='soy bean x') {
     _id = 40;
-    _name = 'soy bean X';
+    _name = 'soy bean x';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2993,7 +2993,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean X",
+      pc_CropName: 'soy bean x',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -3039,7 +3039,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean X",
+      name: 'soy bean x',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -3054,9 +3054,9 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     }
-  } else if (name ==='soy bean XI') {
+  } else if (name ==='soy bean xi') {
     _id = 41;
-    _name = 'soy bean XI';
+    _name = 'soy bean xi';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -3097,7 +3097,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean XI",
+      pc_CropName: 'soy bean xi',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -3143,7 +3143,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean XI",
+      name: 'soy bean xi',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -3158,9 +3158,9 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     }
-  } else if (name ==='soy bean XII') {
+  } else if (name ==='soy bean xii') {
     _id = 42;
-    _name = 'soy bean XII';
+    _name = 'soy bean xii';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -3201,7 +3201,7 @@ var Crop = function (name) {
       organIdsForPrimaryYield: [{organId: 4, yieldPercentage: 0.79, yieldDryMatter: 0.86}],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: "soy bean XII",
+      pc_CropName: 'soy bean xii',
       pc_MaxAssimilationRate: 30,
       pc_CarboxylationPathway: 1,
       pc_MinimumTemperatureForAssimilation: 5,
@@ -3247,7 +3247,7 @@ var Crop = function (name) {
       pc_FieldConditionModifier: 1
     }
     _residueParams = {
-      name: "Soybean XII",
+      name: 'soy bean xii',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -3263,6 +3263,7 @@ var Crop = function (name) {
       vo_NConcentration: 0
     }
   }
+
   return {
 
     id: function () { 
