@@ -1,3 +1,4 @@
+'use strict';
 var Crop = function (name) {
 
   var _id = -1
@@ -3311,8 +3312,8 @@ var Crop = function (name) {
       _primaryYieldTM += primaryYieldTM;
       _secondaryYieldTM += secondaryYieldTM;
     },
-    addCuttingYieldDM: function (yield) {
-      _cuttingYieldsDM.push(yield);
+    addCuttingYieldDM: function (cut) {
+      _cuttingYieldsDM.push(cut);
     },
     getCuttingYieldsDM: function () {
       return _cuttingYieldsDM;
