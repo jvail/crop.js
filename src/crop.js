@@ -109,7 +109,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'winter wheat',
       vo_AOM_DryMatterContent: 1,
@@ -125,7 +125,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'winter barley') {
     _id = 2;
     _name = 'winter barley';
@@ -214,7 +214,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'winter barley',
       vo_AOM_DryMatterContent: 1,
@@ -230,7 +230,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'winter rye') {
     _id = 3;
     _name = 'winter rye';
@@ -319,7 +319,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'winter rye',
       vo_AOM_DryMatterContent: 1,
@@ -335,7 +335,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'spring barley') {
     _id = 4;
     _name = 'spring barley';
@@ -424,7 +424,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'spring barley',
       vo_AOM_DryMatterContent: 1,
@@ -440,7 +440,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'grain maize') {
     _id = 5;
     _name = 'grain maize';
@@ -528,7 +528,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0.5,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'grain maize',
       vo_AOM_DryMatterContent: 1,
@@ -544,7 +544,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'silage maize') {
     _id = 7;
     _name = 'silage maize';
@@ -636,7 +636,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0.5,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'silage maize',
       vo_AOM_DryMatterContent: 1,
@@ -652,7 +652,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'winter rape') {
     _id = 9;
     _name = 'winter rape';
@@ -741,7 +741,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'winter rape',
       vo_AOM_DryMatterContent: 1,
@@ -757,7 +757,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'sugar beet') {
     _id = 10;
     _name = 'sugar beet';
@@ -843,7 +843,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'sugar beet',
       vo_AOM_DryMatterContent: 1,
@@ -859,7 +859,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'mustard') {
     _id = 11;
     _name = 'mustard';
@@ -949,7 +949,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'mustard',
       vo_AOM_DryMatterContent: 1,
@@ -965,7 +965,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'oil raddich') {
     _id = 17;
     _name = 'oil raddich';
@@ -1055,7 +1055,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'oil raddich',
       vo_AOM_DryMatterContent: 1,
@@ -1071,7 +1071,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'winter triticale') {
     _id = 19;
     _name = 'winter triticale';
@@ -1160,7 +1160,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'winter triticale',
       vo_AOM_DryMatterContent: 1,
@@ -1176,7 +1176,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'spring rye') {
     _id = 20;
     _name = 'spring rye';
@@ -1265,7 +1265,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'spring rye',
       vo_AOM_DryMatterContent: 1,
@@ -1281,7 +1281,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'oat compound') {
     _id = 22;
     _name = 'oat compound';
@@ -1370,7 +1370,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'oat compound',
       vo_AOM_DryMatterContent: 1,
@@ -1386,7 +1386,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'spring triticale') {
     _id = 23;
     _name = 'spring triticale';
@@ -1475,7 +1475,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'spring triticale',
       vo_AOM_DryMatterContent: 1,
@@ -1491,7 +1491,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'field pea') {
     _id = 24;
     _name = 'field pea';
@@ -1580,7 +1580,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'field pea',
       vo_AOM_DryMatterContent: 1,
@@ -1596,7 +1596,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'spring wheat') {
     _id = 25;
     _name = 'spring wheat';
@@ -1685,7 +1685,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: 0,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'spring wheat',
       vo_AOM_DryMatterContent: 1,
@@ -1701,7 +1701,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean 000') {
     _id = 28;
     _name = 'soy bean 000';
@@ -1789,7 +1789,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean 000',
       vo_AOM_DryMatterContent: 1,
@@ -1805,7 +1805,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean 00') {
     _id = 29;
     _name = 'soy bean 00';
@@ -1893,7 +1893,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean 00',
       vo_AOM_DryMatterContent: 1,
@@ -1909,7 +1909,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean 0') {
     _id = 30;
     _name = 'soy bean 0';
@@ -1997,7 +1997,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean 0',
       vo_AOM_DryMatterContent: 1,
@@ -2013,7 +2013,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean i') {
     _id = 31;
     _name = 'soy bean i';
@@ -2101,7 +2101,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean i',
       vo_AOM_DryMatterContent: 1,
@@ -2117,7 +2117,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean ii') {
     _id = 32;
     _name = 'soy bean ii';
@@ -2205,7 +2205,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean ii',
       vo_AOM_DryMatterContent: 1,
@@ -2221,7 +2221,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean iii') {
     _id = 33;
     _name = 'soy bean iii';
@@ -2309,7 +2309,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean iii',
       vo_AOM_DryMatterContent: 1,
@@ -2325,7 +2325,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean iv') {
     _id = 34;
     _name = 'soy bean iv';
@@ -2413,7 +2413,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean iv',
       vo_AOM_DryMatterContent: 1,
@@ -2429,7 +2429,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean v') {
     _id = 35;
     _name = 'soy bean v';
@@ -2517,7 +2517,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean v',
       vo_AOM_DryMatterContent: 1,
@@ -2533,7 +2533,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean vi') {
     _id = 36;
     _name = 'soy bean vi';
@@ -2621,7 +2621,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean vi',
       vo_AOM_DryMatterContent: 1,
@@ -2637,7 +2637,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean vii') {
     _id = 37;
     _name = 'soy bean vii';
@@ -2725,7 +2725,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean vii',
       vo_AOM_DryMatterContent: 1,
@@ -2741,7 +2741,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean viii') {
     _id = 38;
     _name = 'soy bean viii';
@@ -2829,7 +2829,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean viii',
       vo_AOM_DryMatterContent: 1,
@@ -2845,7 +2845,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean ix') {
     _id = 39;
     _name = 'soy bean ix';
@@ -2933,7 +2933,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean ix',
       vo_AOM_DryMatterContent: 1,
@@ -2949,7 +2949,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean x') {
     _id = 40;
     _name = 'soy bean x';
@@ -3037,7 +3037,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean x',
       vo_AOM_DryMatterContent: 1,
@@ -3053,7 +3053,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean xi') {
     _id = 41;
     _name = 'soy bean xi';
@@ -3141,7 +3141,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean xi',
       vo_AOM_DryMatterContent: 1,
@@ -3157,7 +3157,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   } else if (name === 'soy bean xii') {
     _id = 42;
     _name = 'soy bean xii';
@@ -3245,7 +3245,7 @@ var Crop = function (name) {
       pc_DroughtImpactOnFertilityFactor: 0,
       pc_CuttingDelayDays: null,
       pc_FieldConditionModifier: 1
-    }
+    };
     _residueParams = {
       name: 'soy bean xii',
       vo_AOM_DryMatterContent: 1,
@@ -3261,7 +3261,7 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
-    }
+    };
   }
 
   return {
