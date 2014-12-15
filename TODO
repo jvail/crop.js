@@ -1,1 +1,2 @@
 - check bool vs int in db parameters
+- check soil bulk density units (getter&setter)
