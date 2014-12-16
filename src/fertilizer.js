@@ -1,37 +1,72 @@
+'use strict';
 
 var MineralFertilizer = function (name, carbamid, no3, nh4) {
 
-  var name = name
-    , vo_Carbamid = carbamid // [kg kg-1]
-    , vo_NH4 = nh4           // [kg kg-1]
-    , vo_NO3 = no3           // [kg kg-1]
+  var _name = name.toLowerCase()
+    , _vo_Carbamid = carbamid || 0 // [kg (N) kg-1 (N)]
+    , _vo_NO3 = no3 || 0           // [kg (N) kg-1 (N)]
+    , _vo_NH4 = nh4 || 0           // [kg (N) kg-1 (N)]
     ;
+
+  if (_name === 'ammonium nitrate') {
+    _vo_NO3 = 0.5;
+    _vo_NH4 = 0.5;
+    _vo_Carbamid = 0;
+  } else if (_name === 'ammonium phosphate') {
+    _vo_NO3 = 0;
+    _vo_NH4 = 1;
+    _vo_Carbamid = 0;
+  } else if (_name === 'ammonium sulphate') {
+    _vo_NO3 = 0;
+    _vo_NH4 = 1;
+    _vo_Carbamid = 0;
+  } else if (_name === 'potassium nitrate') {
+    _vo_NO3 = 1;
+    _vo_NH4 = 0;
+    _vo_Carbamid = 0;
+  } else if (_name === 'compound fertiliser (0 no3, 100 nh4)') {
+    _vo_NO3 = 0;
+    _vo_NH4 = 1;
+    _vo_Carbamid = 0;
+  } else if (_name === 'compound fertiliser (35 no3, 65 nh4)') {
+    _vo_NO3 = 0.35;
+    _vo_NH4 = 0.65;
+    _vo_Carbamid = 0;
+  } else if (_name === 'compound fertiliser (43 no3, 57 nh4)') {
+    _vo_NO3 = 0.435;
+    _vo_NH4 = 0.565;
+    _vo_Carbamid = 0;
+  } else if (_name === 'compound fertiliser (50 no3, 50 nh4)') {
+    _vo_NO3 = 0.5;
+    _vo_NH4 = 0.5;
+    _vo_Carbamid = 0;
+  } else if (_name === 'urea') {
+    _vo_NO3 = 0;
+    _vo_NH4 = 0;
+    _vo_Carbamid = 1;
+  } else if (_name === 'urea ammonium nitrate') {
+    _vo_NO3 = 0.25;
+    _vo_NH4 = 0.25;
+    _vo_Carbamid = 0.5;
+  } else if (_name === 'urea ammonium sulphate') {
+    _vo_NO3 = 0;
+    _vo_NH4 = 0.18;
+    _vo_Carbamid = 0.82;
+  }
 
   return {
 
     getName: function () { 
-      return name; 
+      return _name; 
     },
     getCarbamid: function () { 
-      return vo_Carbamid; 
+      return _vo_Carbamid; 
     },
     getNH4: function () { 
-      return vo_NH4; 
+      return _vo_NH4; 
     },
     getNO3: function () { 
-      return vo_NO3; 
-    },
-    setName: function (_name) { 
-      name = name_; 
-    },
-    setCarbamid: function (_vo_Carbamid) {
-      vo_Carbamid = _vo_Carbamid;
-    },
-    setNH4: function (_vo_NH4) { 
-      vo_NH4 = _vo_NH4; 
-    },
-    setNO3: function (_vo_NO3) { 
-      vo_NO3 = _vo_NO3; 
+      return _vo_NO3; 
     }
     
   };
