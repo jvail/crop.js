@@ -1,8 +1,9 @@
 'use strict';
+
 var Crop = function (name) {
 
   var _id = -1
-    , _name = ''
+    , _name = name.toLowerCase()
     , _accumulatedETa = 0.0
     , _appliedAmountIrrigation = 0
     , _cropHeight = 0.0
@@ -22,9 +23,8 @@ var Crop = function (name) {
     , _cropParams = null
     ;
 
-  if (name === 'winter wheat') {
+  if (_name === 'winter wheat') {
     _id = 1;
-    _name = 'winter wheat';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -127,9 +127,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'winter barley') {
+  } else if (_name === 'winter barley') {
     _id = 2;
-    _name = 'winter barley';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -232,9 +231,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'winter rye') {
+  } else if (_name === 'winter rye') {
     _id = 3;
-    _name = 'winter rye';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -337,9 +335,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'spring barley') {
+  } else if (_name === 'spring barley') {
     _id = 4;
-    _name = 'spring barley';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -442,9 +439,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'grain maize') {
+  } else if (_name === 'grain maize') {
     _id = 5;
-    _name = 'grain maize';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -546,9 +542,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'silage maize') {
+  } else if (_name === 'silage maize') {
     _id = 7;
-    _name = 'silage maize';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -654,9 +649,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'winter rape') {
+  } else if (_name === 'winter rape') {
     _id = 9;
-    _name = 'winter rape';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -759,9 +753,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'sugar beet') {
+  } else if (_name === 'sugar beet') {
     _id = 10;
-    _name = 'sugar beet';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -861,9 +854,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'mustard') {
+  } else if (_name === 'mustard') {
     _id = 11;
-    _name = 'mustard';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -967,9 +959,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'oil raddich') {
+  } else if (_name === 'oil raddich') {
     _id = 17;
-    _name = 'oil raddich';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -1073,9 +1064,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'winter triticale') {
+  } else if (_name === 'winter triticale') {
     _id = 19;
-    _name = 'winter triticale';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -1178,9 +1168,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'spring rye') {
+  } else if (_name === 'spring rye') {
     _id = 20;
-    _name = 'spring rye';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -1283,9 +1272,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'oat compound') {
+  } else if (_name === 'oat compound') {
     _id = 22;
-    _name = 'oat compound';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -1388,9 +1376,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'spring triticale') {
+  } else if (_name === 'spring triticale') {
     _id = 23;
-    _name = 'spring triticale';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -1493,9 +1480,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'field pea') {
+  } else if (_name === 'field pea') {
     _id = 24;
-    _name = 'field pea';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -1598,9 +1584,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'spring wheat') {
+  } else if (_name === 'spring wheat') {
     _id = 25;
-    _name = 'spring wheat';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
@@ -1703,9 +1688,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean 000') {
+  } else if (_name === 'soy bean 000') {
     _id = 28;
-    _name = 'soy bean 000';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -1807,9 +1791,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean 00') {
+  } else if (_name === 'soy bean 00') {
     _id = 29;
-    _name = 'soy bean 00';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -1911,9 +1894,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean 0') {
+  } else if (_name === 'soy bean 0') {
     _id = 30;
-    _name = 'soy bean 0';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2015,9 +1997,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean i') {
+  } else if (_name === 'soy bean i') {
     _id = 31;
-    _name = 'soy bean i';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2119,9 +2100,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean ii') {
+  } else if (_name === 'soy bean ii') {
     _id = 32;
-    _name = 'soy bean ii';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2223,9 +2203,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean iii') {
+  } else if (_name === 'soy bean iii') {
     _id = 33;
-    _name = 'soy bean iii';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2327,9 +2306,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean iv') {
+  } else if (_name === 'soy bean iv') {
     _id = 34;
-    _name = 'soy bean iv';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2431,9 +2409,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean v') {
+  } else if (_name === 'soy bean v') {
     _id = 35;
-    _name = 'soy bean v';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2535,9 +2512,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean vi') {
+  } else if (_name === 'soy bean vi') {
     _id = 36;
-    _name = 'soy bean vi';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2639,9 +2615,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean vii') {
+  } else if (_name === 'soy bean vii') {
     _id = 37;
-    _name = 'soy bean vii';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2743,9 +2718,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean viii') {
+  } else if (_name === 'soy bean viii') {
     _id = 38;
-    _name = 'soy bean viii';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2847,9 +2821,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean ix') {
+  } else if (_name === 'soy bean ix') {
     _id = 39;
-    _name = 'soy bean ix';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -2951,9 +2924,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean x') {
+  } else if (_name === 'soy bean x') {
     _id = 40;
-    _name = 'soy bean x';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -3055,9 +3027,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean xi') {
+  } else if (_name === 'soy bean xi') {
     _id = 41;
-    _name = 'soy bean xi';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -3159,9 +3130,8 @@ var Crop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (name === 'soy bean xii') {
+  } else if (_name === 'soy bean xii') {
     _id = 42;
-    _name = 'soy bean xii';
     _cropParams = {
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
@@ -3271,7 +3241,7 @@ var Crop = function (name) {
       return _id; 
     },
     name: function () { 
-      return _name; 
+      return _name;
     },
     isValid: function () { 
       return _id > -1; 
