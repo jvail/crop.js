@@ -74,21 +74,23 @@ var MineralFertilizer = function (name, carbamid, no3, nh4) {
 };
 
 
-var OrganicFertilizer = function (omp) {
+var OrganicFertilizer = function (name) {
 
-  this.name = "";
-  this.vo_AOM_DryMatterContent = omp.vo_AOM_DryMatterContent | 0.0;
-  this.vo_AOM_NH4Content = omp.vo_AOM_NH4Content | 0.0;
-  this.vo_AOM_NO3Content = omp.vo_AOM_NO3Content | 0.0;
-  this.vo_AOM_CarbamidContent = omp.vo_AOM_CarbamidContent | 0.0;
-  this.vo_AOM_SlowDecCoeffStandard = omp.vo_AOM_SlowDecCoeffStandard | 0.0;
-  this.vo_AOM_FastDecCoeffStandard = omp.vo_AOM_FastDecCoeffStandard | 0.0;
-  this.vo_PartAOM_to_AOM_Slow = omp.vo_PartAOM_to_AOM_Slow | 0.0;
-  this.vo_PartAOM_to_AOM_Fast = omp.vo_PartAOM_to_AOM_Fast | 0.0;
-  this.vo_CN_Ratio_AOM_Slow = omp.vo_CN_Ratio_AOM_Slow | 0.0;
-  this.vo_CN_Ratio_AOM_Fast = omp.vo_CN_Ratio_AOM_Fast | 0.0;
-  this.vo_PartAOM_Slow_to_SMB_Slow = omp.vo_PartAOM_Slow_to_SMB_Slow | 0.0;
-  this.vo_PartAOM_Slow_to_SMB_Fast = omp.vo_PartAOM_Slow_to_SMB_Fast | 0.0;
+  this.name = name.toLowerCase();
+  this.vo_AOM_DryMatterContent = 0.0;
+  this.vo_AOM_NH4Content = 0.0;
+  this.vo_AOM_NO3Content = 0.0;
+  this.vo_AOM_CarbamidContent = 0.0;
+  this.vo_AOM_SlowDecCoeffStandard = 0.0;
+  this.vo_AOM_FastDecCoeffStandard = 0.0;
+  this.vo_PartAOM_to_AOM_Slow = 0.0;
+  this.vo_PartAOM_to_AOM_Fast = 0.0;
+  this.vo_CN_Ratio_AOM_Slow = 0.0;
+  this.vo_CN_Ratio_AOM_Fast = 0.0;
+  this.vo_PartAOM_Slow_to_SMB_Slow = 0.0;
+  this.vo_PartAOM_Slow_to_SMB_Fast = 0.0;
   this.vo_NConcentration = 0.0;
+
+  
 
 };
