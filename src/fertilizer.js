@@ -78,10 +78,10 @@ var OrganicFertilizer = function (name) {
 
   this.name = name.toLowerCase();
 
-  this.vo_AOM_DryMatterContent = 0.0;
-  this.vo_AOM_NH4Content = 0.0;
-  this.vo_AOM_NO3Content = 0.0;
-  this.vo_AOM_CarbamidContent = 0.0;
+  this.vo_AOM_DryMatterContent = 0.0;     // [kg (DM) kg-1 (FM)]
+  this.vo_AOM_NH4Content = 0.0;           // [kg (N)  kg-1 (FM)]
+  this.vo_AOM_NO3Content = 0.0;           // [kg (N)  kg-1 (FM)]
+  this.vo_AOM_CarbamidContent = 0.0;      // [kg (N)  kg-1 (FM)]
   this.vo_AOM_SlowDecCoeffStandard = 0.0;
   this.vo_AOM_FastDecCoeffStandard = 0.0;
   this.vo_PartAOM_to_AOM_Slow = 0.0;
