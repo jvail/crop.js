@@ -92,21 +92,7 @@ var OrganicFertilizer = function (name) {
   this.vo_PartAOM_Slow_to_SMB_Fast = 0.0;
   this.vo_NConcentration = 0.0;
 
-  if (this.name === 'wood ashes') {
-    this.vo_AOM_DryMatterContent = 1;
-    this.vo_AOM_NH4Content = 0;
-    this.vo_AOM_NO3Content = 0;
-    this.vo_AOM_CarbamidContent = 0;
-    this.vo_AOM_SlowDecCoeffStandard = 0.0002;
-    this.vo_AOM_FastDecCoeffStandard = 0.002;
-    this.vo_PartAOM_to_AOM_Slow = 0.9;
-    this.vo_PartAOM_to_AOM_Fast = 0.1;
-    this.vo_CN_Ratio_AOM_Slow = 100;
-    this.vo_CN_Ratio_AOM_Fast = 10;
-    this.vo_PartAOM_Slow_to_SMB_Slow = 0;
-    this.vo_PartAOM_Slow_to_SMB_Fast = 1;
-    this.vo_NConcentration = 0.00;
-  } else if (this.name === 'cattle deep-litter manure') {
+  if (this.name === 'cattle deep-litter manure') {
     this.vo_AOM_DryMatterContent = 0.289;
     this.vo_AOM_NH4Content = 0.007;
     this.vo_AOM_NO3Content = 0;
@@ -425,6 +411,20 @@ var OrganicFertilizer = function (name) {
     this.vo_PartAOM_to_AOM_Fast = 0.18;
     this.vo_CN_Ratio_AOM_Slow = 100;
     this.vo_CN_Ratio_AOM_Fast = 8;
+    this.vo_PartAOM_Slow_to_SMB_Slow = 0;
+    this.vo_PartAOM_Slow_to_SMB_Fast = 1;
+    this.vo_NConcentration = 0.00;
+  } else if (this.name === 'wood ashes') {
+    this.vo_AOM_DryMatterContent = 1;
+    this.vo_AOM_NH4Content = 0;
+    this.vo_AOM_NO3Content = 0;
+    this.vo_AOM_CarbamidContent = 0;
+    this.vo_AOM_SlowDecCoeffStandard = 0.0002;
+    this.vo_AOM_FastDecCoeffStandard = 0.002;
+    this.vo_PartAOM_to_AOM_Slow = 0.9;
+    this.vo_PartAOM_to_AOM_Fast = 0.1;
+    this.vo_CN_Ratio_AOM_Slow = 100;
+    this.vo_CN_Ratio_AOM_Fast = 10;
     this.vo_PartAOM_Slow_to_SMB_Slow = 0;
     this.vo_PartAOM_Slow_to_SMB_Fast = 1;
     this.vo_NConcentration = 0.00;
