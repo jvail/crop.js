@@ -254,7 +254,7 @@ var OrganicMatterParameters = {
 };
 
 
-var CentralParameterProvider = {
+var ParameterProvider = {
   userCropParameters: {
     pc_Tortuosity: 0.002,
     pc_CanopyReflectionCoefficient: 0.08,

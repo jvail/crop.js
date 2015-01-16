@@ -52,6 +52,8 @@ var MineralFertilizer = function (name, carbamid, no3, nh4) {
     _vo_NO3 = 0;
     _vo_NH4 = 0.18;
     _vo_Carbamid = 0.82;
+  } else {
+    logger(MSG.WARN, 'Mineral fertilzer ' + _name + ' unknown.');
   }
 
   return {
@@ -428,6 +430,8 @@ var OrganicFertilizer = function (name) {
     this.vo_PartAOM_Slow_to_SMB_Slow = 0;
     this.vo_PartAOM_Slow_to_SMB_Fast = 1;
     this.vo_NConcentration = 0.00;
-  }  
+  } else {
+    logger(MSG.WARN, 'Organic fertilzer ' + this.name + ' unknown.');
+  }
 
 };
