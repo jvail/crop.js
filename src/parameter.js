@@ -28,111 +28,103 @@ var AutomaticIrrigationParameters = function (a, t, n, s) {
 };
 
 
-var AOM_Properties = function () {
+var AOM_Properties = {
 
   /* C content in slowly decomposing added organic matter pool [kgC m-3] */
-  this.vo_AOM_Slow = 0.0;  
+  vo_AOM_Slow: 0.0,  
   /* C content in rapidly decomposing added organic matter pool [kgC m-3] */
-  this.vo_AOM_Fast = 0.0; 
+  vo_AOM_Fast: 0.0, 
   /* Rate for slow AOM transformation that will be calculated. */
-  this.vo_AOM_SlowDecRate = 0.0; 
+  vo_AOM_SlowDecRate: 0.0, 
   /* Rate for fast AOM transformation that will be calculated. */
-  this.vo_AOM_FastDecRate = 0.0; 
+  vo_AOM_FastDecRate: 0.0, 
   /* Is dependent on environment */
-  this.vo_AOM_SlowDecCoeff = 0.0; 
+  vo_AOM_SlowDecCoeff: 0.0, 
   /* Is dependent on environment */
-  this.vo_AOM_FastDecCoeff = 0.0; 
+  vo_AOM_FastDecCoeff: 0.0, 
   /* Decomposition rate coefficient for slow AOM pool at standard conditions */
-  this.vo_AOM_SlowDecCoeffStandard = 1.0; 
+  vo_AOM_SlowDecCoeffStandard: 1.0, 
   /* Decomposition rate coefficient for fast AOM pool at standard conditions */
-  this.vo_AOM_FastDecCoeffStandard = 1.0; 
+  vo_AOM_FastDecCoeffStandard: 1.0, 
   /* Partial transformation from AOM to SMB (soil microbiological biomass) for slow AOMs. */
-  this.vo_PartAOM_Slow_to_SMB_Slow = 0.0; 
+  vo_PartAOM_Slow_to_SMB_Slow: 0.0, 
   /* Partial transformation from AOM to SMB (soil microbiological biomass) for fast AOMs. */
-  this.vo_PartAOM_Slow_to_SMB_Fast = 0.0; 
+  vo_PartAOM_Slow_to_SMB_Fast: 0.0, 
   /* Used for calculation N-value if only C-value is known. Usually a constant value. */
-  this.vo_CN_Ratio_AOM_Slow = 1.0; 
+  vo_CN_Ratio_AOM_Slow: 1.0, 
   /* C-N-Ratio is dependent on the nutritional condition of the plant. */
-  this.vo_CN_Ratio_AOM_Fast = 1.0; 
+  vo_CN_Ratio_AOM_Fast: 1.0, 
   /* Fertilization parameter */  
-  this.vo_DaysAfterApplication = 0; 
+  vo_DaysAfterApplication: 0,  /* Fertilization parameter */
+  vo_AOM_DryMatterContent: 0.0, 
   /* Fertilization parameter */
-  this.vo_AOM_DryMatterContent = 0.0; 
-  /* Fertilization parameter */
-  this.vo_AOM_NH4Content = 0.0; 
+  vo_AOM_NH4Content: 0.0, 
   /* Difference of AOM slow between to timesteps */
-  this.vo_AOM_SlowDelta = 0.0; 
+  vo_AOM_SlowDelta: 0.0, 
   /* Difference of AOM slow between to timesteps */
-  this.vo_AOM_FastDelta = 0.0; 
+  vo_AOM_FastDelta: 0.0, 
   /* True if organic fertilizer is added with a subsequent incorporation. */
-  this.incorporation = false;  
+  incorporation: false // TODO: rename -> doIncorporate
 
 };
 
 
-var GeneralParameters = function (
-  _ps_LayerThickness,
-  ps_ProfileDepth, 
-  ps_MaximumMineralisationDepth,
-  pc_NitrogenResponseOn,
-  pc_WaterDeficitResponseOn,
-  pc_EmergenceFloodingControlOn,
-  pc_EmergenceMoistureControlOn
-) {
+var GeneralParameters = function () {
 
-  this._ps_LayerThickness = _ps_LayerThickness || 0.1;
-  this.ps_ProfileDepth = ps_ProfileDepth || 2.0;
-  this.ps_LayerThickness  = new Float64Array(int(this.ps_ProfileDepth / this._ps_LayerThickness));
-  this.ps_MaxMineralisationDepth = ps_MaximumMineralisationDepth || 0.4;
-  this.pc_NitrogenResponseOn = pc_NitrogenResponseOn || false;
-  this.pc_WaterDeficitResponseOn = pc_WaterDeficitResponseOn || false;
-  this.pc_EmergenceFloodingControlOn = pc_EmergenceFloodingControlOn || false;
-  this.pc_EmergenceMoistureControlOn = pc_EmergenceMoistureControlOn || false;
+  // TODO: seems ps_LayerThickness is needless -> make GeneralParameters an object literal
+
+  // layer thickness, profil depth and number of layers are constants
+  this._ps_LayerThickness = 0.1;
+  this.ps_ProfileDepth = 2.0;
+  this.ps_LayerThickness = new Float64Array(20);
+  this.ps_MaxMineralisationDepth = 0.4;
+  this.pc_NitrogenResponseOn = true;
+  this.pc_WaterDeficitResponseOn = true;
+  this.pc_EmergenceFloodingControlOn = false;
+  this.pc_EmergenceMoistureControlOn = false;
 
   for (var i = 0; i < this.ps_LayerThickness.length; i++)
     this.ps_LayerThickness[i] = this._ps_LayerThickness;
 
   this.ps_NumberOfLayers = function () { 
-    return this.ps_LayerThickness.length;
+    return 20 /*this.ps_LayerThickness.length*/;
   };
 
 };
 
 
-var SiteParameters = function () {
+var SiteParameters = {
     
-  this.vs_Latitude = 60.0;
-  this.vs_Slope = 0.01;
-  this.vs_HeightNN = 50.0;
-  this.vs_GroundwaterDepth = 70.0;
-  this.vs_Soil_CN_Ratio = 10.0;
-  this.vs_DrainageCoeff = 1.0;
-  this.vq_NDeposition = 30.0;
-  this.vs_MaxEffectiveRootingDepth = 2.0;
+  vs_Latitude: 60.0, 
+  vs_Slope: 0.01, 
+  vs_HeightNN: 50.0, 
+  vs_GroundwaterDepth: 70.0, 
+  vs_Soil_CN_Ratio: 10.0, 
+  vs_DrainageCoeff: 1.0, 
+  vq_NDeposition: 30.0, 
+  vs_MaxEffectiveRootingDepth: 2.0
 
 };
 
 
-var SoilParameters = function () {
+var SoilParameters = {
 
-  this.vs_SoilSandContent = 0.4;
-  this.vs_SoilClayContent = 0.05;
-  this.vs_SoilpH = 6.9;
-  this.vs_SoilStoneContent = -1; // JS! add initialization
-  this.vs_Lambda = -1; // JS! add initialization
-  this.vs_FieldCapacity = -1; // JS! add initialization
-  this.vs_Saturation = -1; // JS! add initialization
-  this.vs_PermanentWiltingPoint = -1; // JS! add initialization
-  this.vs_SoilTexture = ''; // JS! add initialization
-  this.vs_SoilAmmonium = -1;
-  this.vs_SoilNitrate = -1;
-
-  this._vs_SoilRawDensity = -1;
-  this._vs_SoilBulkDensity = -1;
-  this._vs_SoilOrganicCarbon = -1;
-  this._vs_SoilOrganicMatter = -1;
-
-  this.isValid = function () {
+  vs_SoilSandContent: 0.4,
+  vs_SoilClayContent: 0.05,
+  vs_SoilpH: 6.9,
+  vs_SoilStoneContent: -1,
+  vs_Lambda: -1,
+  vs_FieldCapacity: -1,
+  vs_Saturation: -1,
+  vs_PermanentWiltingPoint: -1,
+  vs_SoilTexture: '',
+  vs_SoilAmmonium: -1,
+  vs_SoilNitrate: -1,
+  _vs_SoilRawDensity: -1,
+  _vs_SoilBulkDensity: -1,
+  _vs_SoilOrganicCarbon: -1,
+  _vs_SoilOrganicMatter: -1,
+  isValid = function () {
 
     var is_valid = true;
 
@@ -140,139 +132,129 @@ var SoilParameters = function () {
         logger(MSG.WARN, "SoilParameters::Error: No field capacity defined in database for " + this.vs_SoilTexture + " , RawDensity: "+ this._vs_SoilRawDensity);
         is_valid = false;
     }
+
     if (this.vs_Saturation <= 0) {
         logger(MSG.WARN, "SoilParameters::Error: No saturation defined in database for " + this.vs_SoilTexture + " , RawDensity: " + this._vs_SoilRawDensity);
         is_valid = false;
     }
+    
     if (this.vs_PermanentWiltingPoint <= 0) {
         logger(MSG.WARN, "SoilParameters::Error: No saturation defined in database for " + this.vs_SoilTexture + " , RawDensity: " + this._vs_SoilRawDensity);
         is_valid = false;
     }
 
-    if (this.vs_SoilSandContent<0) {
+    if (this.vs_SoilSandContent < 0) {
         logger(MSG.WARN, "SoilParameters::Error: Invalid soil sand content: "+ this.vs_SoilSandContent);
         is_valid = false;
     }
 
-    if (this.vs_SoilClayContent<0) {
+    if (this.vs_SoilClayContent < 0) {
         logger(MSG.WARN, "SoilParameters::Error: Invalid soil clay content: "+ this.vs_SoilClayContent);
         is_valid = false;
     }
 
-    if (this.vs_SoilpH<0) {
+    if (this.vs_SoilpH < 0) {
         logger(MSG.WARN, "SoilParameters::Error: Invalid soil ph value: "+ this.vs_SoilpH);
         is_valid = false;
     }
 
-    if (this.vs_SoilStoneContent<0) {
+    if (this.vs_SoilStoneContent < 0) {
         logger(MSG.WARN, "SoilParameters::Error: Invalid soil stone content: "+ this.vs_SoilStoneContent);
         is_valid = false;
     }
 
-    if (this.vs_Saturation<0) {
+    if (this.vs_Saturation < 0) {
         logger(MSG.WARN, "SoilParameters::Error: Invalid value for saturation: "+ this.vs_Saturation);
         is_valid = false;
     }
 
-    if (this.vs_PermanentWiltingPoint<0) {
+    if (this.vs_PermanentWiltingPoint < 0) {
         logger(MSG.WARN, "SoilParameters::Error: Invalid value for permanent wilting point: "+ this.vs_PermanentWiltingPoint);
         is_valid = false;
     }
-/*
-    if (this._vs_SoilRawDensity<0) {
-        logger(MSG.WARN, "SoilParameters::Error: Invalid soil raw density: "+ this._vs_SoilRawDensity);
-        is_valid = false;
-    }
-*/
-    return is_valid;
-  };
 
-  this.vs_SoilRawDensity = function () {
+    // if (this._vs_SoilRawDensity<0) {
+    //     logger(MSG.WARN, "SoilParameters::Error: Invalid soil raw density: "+ this._vs_SoilRawDensity);
+    //     is_valid = false;
+    // }
+
+    return is_valid;
+  },
+  vs_SoilRawDensity = function () {
     // conversion from g cm-3 in kg m-3
     return this._vs_SoilRawDensity * 1000;
-  };
-
-  this.set_vs_SoilRawDensity = function (srd) {
+  },
+  set_vs_SoilRawDensity = function (srd) {
     this._vs_SoilRawDensity = srd;
-  };
-
-  this.vs_SoilOrganicCarbon = function () {
+  },
+  vs_SoilOrganicCarbon = function () {
     if (this._vs_SoilOrganicMatter < 0)
       return this._vs_SoilOrganicCarbon;
 
     return this._vs_SoilOrganicMatter * organicConstants.po_SOM_to_C;
-  };
-
-  this.set_vs_SoilOrganicCarbon = function (soc) {
+  },
+  set_vs_SoilOrganicCarbon = function (soc) {
     this._vs_SoilOrganicCarbon = soc;
-  };
-
-  this.vs_SoilOrganicMatter = function () {
+  },
+  vs_SoilOrganicMatter = function () {
     if (this._vs_SoilOrganicCarbon < 0)
       return this._vs_SoilOrganicMatter;
     return this._vs_SoilOrganicCarbon / organicConstants.po_SOM_to_C;
-  };
-
-  this.set_vs_SoilOrganicMatter = function (som) {
+  },
+  set_vs_SoilOrganicMatter = function (som) {
     this._vs_SoilOrganicMatter = som;
-  };
-
-  this.vs_SoilSiltContent = function () {
+  },
+  vs_SoilSiltContent = function () {
     if ((this.vs_SoilSandContent - 0.001) < 0 && (this.vs_SoilClayContent - 0.001) < 0)
       return 0;
 
     return 1 - this.vs_SoilSandContent - this.s_SoilClayContent;
-  };
-
+  },
   /*
     bulk density [kg m-3]
-
-    TODO: unit?
+    TODO: check unit
   */
-  this.vs_SoilBulkDensity = function () {
+  vs_SoilBulkDensity = function () {
     if (this._vs_SoilRawDensity < 0)
       return this._vs_SoilBulkDensity;
 
     return (this._vs_SoilRawDensity + (0.009 * 100 * this.vs_SoilClayContent)) * 1000;
-  };
-
+  }
   /*
     soilBulkDensity [g cm-3]
-
-    TODO: unit?
+    TODO: check unit
   */
-  this.set_vs_SoilBulkDensity = function (sbd) {
+  set_vs_SoilBulkDensity = function (sbd) {
     this._vs_SoilBulkDensity = sbd;
-  };
-
-  this.texture2lambda = function (sand, clay) {
+  },
+  texture2lambda = function (sand, clay) {
     return Tools.texture2lambda(sand, clay);
-  };
+  }
 
 };
 
 
-var OrganicMatterParameters = function (omp) {
+var OrganicMatterParameters = {
 
-  this.name = "";
-  this.vo_AOM_DryMatterContent = omp.vo_AOM_DryMatterContent | 0.0;
-  this.vo_AOM_NH4Content = omp.vo_AOM_NH4Content | 0.0;
-  this.vo_AOM_NO3Content = omp.vo_AOM_NO3Content | 0.0;
-  this.vo_AOM_CarbamidContent = omp.vo_AOM_CarbamidContent | 0.0;
-  this.vo_AOM_SlowDecCoeffStandard = omp.vo_AOM_SlowDecCoeffStandard | 0.0;
-  this.vo_AOM_FastDecCoeffStandard = omp.vo_AOM_FastDecCoeffStandard | 0.0;
-  this.vo_PartAOM_to_AOM_Slow = omp.vo_PartAOM_to_AOM_Slow | 0.0;
-  this.vo_PartAOM_to_AOM_Fast = omp.vo_PartAOM_to_AOM_Fast | 0.0;
-  this.vo_CN_Ratio_AOM_Slow = omp.vo_CN_Ratio_AOM_Slow | 0.0;
-  this.vo_CN_Ratio_AOM_Fast = omp.vo_CN_Ratio_AOM_Fast | 0.0;
-  this.vo_PartAOM_Slow_to_SMB_Slow = omp.vo_PartAOM_Slow_to_SMB_Slow | 0.0;
-  this.vo_PartAOM_Slow_to_SMB_Fast = omp.vo_PartAOM_Slow_to_SMB_Fast | 0.0;
-  this.vo_NConcentration = 0.0;
+  name: 'unnamed',
+  vo_AOM_DryMatterContent: 0.0,
+  vo_AOM_NH4Content: 0.0,
+  vo_AOM_NO3Content: 0.0,
+  vo_AOM_CarbamidContent: 0.0,
+  vo_AOM_SlowDecCoeffStandard: 0.0,
+  vo_AOM_FastDecCoeffStandard: 0.0,
+  vo_PartAOM_to_AOM_Slow: 0.0,
+  vo_PartAOM_to_AOM_Fast: 0.0,
+  vo_CN_Ratio_AOM_Slow: 0.0,
+  vo_CN_Ratio_AOM_Fast: 0.0,
+  vo_PartAOM_Slow_to_SMB_Slow: 0.0,
+  vo_PartAOM_Slow_to_SMB_Fast: 0.0,
+  vo_NConcentration: 0.0
 
 };
 
 
-var centralParameterProvider = {
+var CentralParameterProvider = {
   userCropParameters: {
     pc_Tortuosity: 0.002,
     pc_CanopyReflectionCoefficient: 0.08,
