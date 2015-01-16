@@ -390,7 +390,7 @@ var centralParameterProvider = {
     po_Inhibitor_NH3: 1
   },
   capillaryRiseRates: {
-    cap_rates_map: {
+    map: {
       Su3: {
         1: 0.0055,
         2: 0.0055,
@@ -1436,13 +1436,13 @@ var centralParameterProvider = {
         27: 0
       }
     },
-    addRate: function (bodart, distance, value) {
-      if (this.cap_rates_map[bodart] === undefined)
-        this.cap_rates_map[bodart] = {};
-      this.cap_rates_map[bodart][distance] = value;
+    addRate: function (textureClass, distance, value) {
+      if (this.map[textureClass] === undefined)
+        this.map[textureClass] = {};
+      this.map[textureClass][distance] = value;
     },
-    getRate: function (bodart, distance) {
-      var map = getMap(bodart);
+    getRate: function (textureClass, distance) {
+      var map = getMap(textureClass);
       var size = 0;
       for (var prop in map) {
         if (map.hasOwnProperty(prop))
@@ -1450,15 +1450,15 @@ var centralParameterProvider = {
       }    
       if (size <= 0 )
         logger(MSG.WARN, "No capillary rise rates in data structure available.");
-      return (this.cap_rates_map[bodart][distance] === undefined) ? 0.0 : this.cap_rates_map[bodart][distance];
+      return (this.map[textureClass][distance] === undefined) ? 0.0 : this.map[textureClass][distance];
     },
-    getMap: function (bodart) {
-      return this.cap_rates_map[bodart];
+    getMap: function (textureClass) {
+      return this.map[textureClass];
     },
     size: function () { 
       var size = 0;
-      for (var prop in this.cap_rates_map) {
-        if (this.cap_rates_map.hasOwnProperty(prop))
+      for (var prop in this.map) {
+        if (this.map.hasOwnProperty(prop))
           size++;
       } 
       return size;
