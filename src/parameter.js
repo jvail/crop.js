@@ -1442,17 +1442,15 @@ var centralParameterProvider = {
       this.map[textureClass][distance] = value;
     },
     getRate: function (textureClass, distance) {
+      distance = int(distance);
       var map = getMap(textureClass);
-      var size = 0;
-      for (var prop in map) {
-        if (map.hasOwnProperty(prop))
-          size++;
-      }    
-      if (size <= 0 )
-        logger(MSG.WARN, "No capillary rise rates in data structure available.");
-      return (this.map[textureClass][distance] === undefined) ? 0.0 : this.map[textureClass][distance];
+      return (map[distance] === undefined) ? 0.0 : map[distance]);
     },
     getMap: function (textureClass) {
+      if (this.map[textureClass] === undefined) {
+        logger(MSG.WARN, "No capillary rise rates for texture '"+texture+"' available: using default (Sl4)");
+        textureClass = 'Sl4';
+      }      
       return this.map[textureClass];
     },
     size: function () { 
