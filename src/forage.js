@@ -279,10 +279,11 @@ forage.harvest = (function () {
 
     loss_m  [kg kg-1] shatter losses caused by mowing and conditioning 
     s       [#]       crop stage factor
+    co      [bool]    w (true) or w/o conditioning 
     F_l     [kg kg-1] fraction of forage dry matter that is legume leaf
   */
 
-  var loss_m = function (s, F_l) {
+  var loss_m = function (s, co, F_l) {
 
     /* mower factor */
     var f_m = co ? 1 : 0.5;
