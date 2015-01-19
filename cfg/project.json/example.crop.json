@@ -1,0 +1,134 @@
+{
+  "site": {
+    "latitude": 52.2,
+    "slope": 0,
+    "heightNN": 38,
+    "atmosphericCO2": 380,
+    "windSpeedHeight": 2.5,
+    "leachingDepth": 1.5,
+    "NDeposition": 20,
+    "groundwaterDepthMin": 5,
+    "groundwaterDepthMax": 5,
+    "groundwaterDepthMinMonth": "April",
+    "horizons": [
+      {
+        "thickness": 0.2,
+        "Corg": 0.05,
+        "textureClass": "Ls2",
+        "sand": 0.15,
+        "clay": 0.24,
+        "sceleton": 0.02,
+        "poreVolume": 0.45,
+        "fieldCapacity": 0.33,
+        "permanentWiltingPoint": 0.2,
+        "pH": 6.9,
+        "CN": 10,
+        "bulkDensity": 1400
+      },
+      {
+        "thickness": 0.5,
+        "Corg": 0.05,
+        "textureClass": "Ls2",
+        "sand": 0.15,
+        "clay": 0.24,
+        "sceleton": 0.02,
+        "poreVolume": 0.45,
+        "fieldCapacity": 0.33,
+        "permanentWiltingPoint": 0.2,
+        "pH": 6.9,
+        "CN": 10,
+        "bulkDensity": 1400
+      },
+      {
+        "thickness": 2,
+        "Corg": 0.05,
+        "textureClass": "Ls2",
+        "sand": 0.15,
+        "clay": 0.24,
+        "sceleton": 0.02,
+        "poreVolume": 0.45,
+        "fieldCapacity": 0.33,
+        "permanentWiltingPoint": 0.2,
+        "pH": 6.9,
+        "CN": 10,
+        "bulkDensity": 1400
+      }
+    ]
+  },
+  "production": {
+    "crops": [
+      {
+        "name": {
+          "id": 3,
+          "name": "winter rye",
+          "gen_type": ""
+        },
+        "sowingDate": "1991-10-01",
+        "rowWidth": 5,
+        "plantSpace": 5,
+        "plantDryWeight": 225,
+        "percNTRansplant": 0.07,
+        "finalHarvestDate": "1992-08-01",
+        "residuesRemoval": 0.85,
+        "tillageOperations": [
+          {
+            "date": "1991-09-01",
+            "method": "Plough",
+            "depth": 30
+          }
+        ],
+        "irrigations": [
+          {
+            "date": "1992-06-01",
+            "method": "Sprinkler",
+            "eventType": "Fixed",
+            "threshold": 0.2,
+            "area": 1,
+            "amount": 5,
+            "NConc": 0
+          }
+        ],
+        "organicFertilisers": [
+          {
+            "date": "1992-05-01",
+            "method": "Fixed",
+            "type": {
+              "id": 3,
+              "om_type": "cattle slurry"
+            },
+            "amount": 30
+          }
+        ],
+        "mineralFertilisers": [
+          {
+            "date": "1992-04-01",
+            "method": "Fixed",
+            "type": {
+              "id": 1,
+              "name": "Ammonium Nitrate"
+            },
+            "amount": 40
+          }
+        ]
+      }
+    ]
+  },
+  "sim": {
+    "time": {
+      "startDate": "1991-01-01",
+      "endDate": "1992-12-31"
+    },
+    "switch": {
+      "useSecondaryYieldOn": false,
+      "nitrogenResponseOn": true,
+      "waterDeficitResponseOn": true,
+      "emergenceMoistureControlOn": false,
+      "emergenceFloodingControlOn": false
+    },
+    "init": {
+      "percentageFC": 1,
+      "soilNitrate": 0.001,
+      "soilAmmonium": 0.0001
+    }
+  }
+}
