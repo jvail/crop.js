@@ -113,12 +113,12 @@
       }
     ]
   },
-  "sim": {
+  "simulation": {
     "time": {
       "startDate": "1991-01-01",
       "endDate": "1992-12-31"
     },
-    "switch": {
+    "switches": {
       "useSecondaryYieldOn": false,
       "nitrogenResponseOn": true,
       "waterDeficitResponseOn": true,
