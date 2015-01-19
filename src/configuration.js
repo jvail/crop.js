@@ -99,12 +99,12 @@ var Configuration = function (climate, doDebug) {
     return runModel(env, setProgress);
   };
 
-  function getValue(obj, prop, default) {
+  function getValue(obj, prop, def) {
 
     if (obj.hasOwnProperty(prop) && obj[prop] != null)
       return obj[prop];
     else
-      return default;
+      return def;
 
   }
 
