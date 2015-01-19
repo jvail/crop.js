@@ -1,9 +1,17 @@
 var Tools = {
 
+    /*
+      sand [m3 m-3]
+      clay [m3 m-3]
+    */
+
     texture2KA5: function (sand, clay) {
 
+      sand = sand * 100;
+      clay = clay * 100;
+
       var textureClass = ''
-        , silt = 100 - (sand * 100 + clay * 100)
+        , silt = 100 - (sand + clay)
         ;
 
       if ((sand + clay + silt) != 100)
@@ -347,6 +355,8 @@ var Tools = {
       Bodenkundliche Kartieranleitung (2005) S.125 
 
       Estimate raw density ("Trockenrohdichte") from "effektive Lagerungsdichte"
+
+      TODO: ldEff unit?
     */
 
   , ld_eff2trd: function (ldEff, clay) {

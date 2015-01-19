@@ -90,8 +90,8 @@
         "max": 2.0,
         "default": 0.1
       },
-      "Corg": {
-        "desc": "Organic carbon concentration in the soild phase of the soil horizon",
+      "organicMatter": {
+        "desc": "Organic matter concentration in the soild phase of the soil horizon",
         "unit": "kg kg-1",
         "min": 0.0,
         "max": 0.5,

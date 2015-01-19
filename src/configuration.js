@@ -132,20 +132,19 @@ var Configuration = function (climate, doDebug) {
 
         depth += lThicknessCm;
 
-        // TODO: use soilCharacteristicsKA5()
         var soilParameters = Object.create(SoilParameters);
-        soilParameters.set_vs_SoilOrganicCarbon(horizon.Corg);
-        soilParameters.set_vs_SoilBulkDensity(horizon.bulkDensity);
+
+        soilParameters.set_vs_SoilOrganicMatter(horizon.organicMatter);
         soilParameters.vs_SoilSandContent = horizon.sand;
         soilParameters.vs_SoilClayContent = horizon.clay;
         soilParameters.vs_SoilStoneContent = horizon.sceleton;
-        soilParameters.vs_Lambda = Tools.texture2lambda(soilParameters.vs_SoilSandContent, soilParameters.vs_SoilClayContent);
-        soilParameters.vs_SoilTexture = horizon.textureClass;
         soilParameters.vs_SoilpH = horizon.pH;
-        soilParameters.vs_FieldCapacity = horizon.fieldCapacity;
-        soilParameters.vs_Saturation = horizon.poreVolume;
-        soilParameters.vs_PermanentWiltingPoint = horizon.permanentWiltingPoint;
-
+        soilParameters.vs_SoilTexture = Tools.texture2KA5(horizon.sand, horizon.clay);
+        soilParameters.set_vs_SoilRawDensity(Tools.ld_eff2trd(3 /*ldEff*/, horizon.clay));
+        soilParameters.vs_Lambda = Tools.texture2lambda(soilParameters.vs_SoilSandContent, soilParameters.vs_SoilClayContent);
+        /* set wilting point, saturation & field capacity */
+        soilCharacteristicsKA5(soilParameters);
+        
         /* TODO: hinter readJSON verschieben */ 
         if (!soilParameters.isValid()) {
           ok = false;

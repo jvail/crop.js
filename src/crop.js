@@ -1291,7 +1291,7 @@ var dumpMonicaParametersIntoFile = function (fileName, cpp) {
 
 var soilCharacteristicsKA5 = function (soilParameter) {
 
-  logger(MSG.INFO, "soilCharacteristicsKA5");
+  logger(MSG.INFO, 'Read soil characteristics from KA5');
 
   var texture = soilParameter.vs_SoilTexture;
   var stoneContent = soilParameter.vs_SoilStoneContent;
@@ -1514,11 +1514,12 @@ var readPrincipalSoilCharacteristicData = function (soilType, rawDensity) {
 
     var row = rows[r];
 
-    if (row[columns.indexOf('soil_type')] === soilType) {
 
-      var ac = row[columns.indexOf('air_capacity')];
-      var fc = row[columns.indexOf('field_capacity')];
-      var nfc = row[columns.indexOf('n_field_capacity')];
+    if (row['soil_type'] === soilType) {
+
+      var ac = row['air_capacity'];
+      var fc = row['field_capacity'];
+      var nfc = row['n_field_capacity'];
 
       var rp = new RPSCDRes(true);
       rp.sat = ac + fc;
@@ -1528,7 +1529,7 @@ var readPrincipalSoilCharacteristicData = function (soilType, rawDensity) {
       if (m[soilType] === undefined)
         m[soilType] = {};
 
-      m[soilType][int(row[columns.indexOf('soil_raw_density')])] = rp;
+      m[soilType][int(row['soil_raw_density*10'])] = rp;
 
     }
   }
@@ -1562,11 +1563,11 @@ var readSoilCharacteristicModifier = function (soilType, organicMatter) {
 
     var row = rows[r];
 
-    if (row[columns.indexOf('soil_type')] === soilType) {
+    if (row['soil_type'] === soilType) {
 
-      var ac = row[columns.indexOf('air_capacity')];
-      var fc = row[columns.indexOf('field_capacity')];
-      var nfc = row[columns.indexOf('n_field_capacity')];
+      var ac = row['air_capacity'];
+      var fc = row['field_capacity'];
+      var nfc = row['n_field_capacity'];
 
       var rp = new RPSCDRes(true);
       rp.sat = ac + fc;
@@ -1577,7 +1578,7 @@ var readSoilCharacteristicModifier = function (soilType, organicMatter) {
       if (m[soilType] === undefined)
         m[soilType] = {};
 
-      m[soilType][int(row[columns.indexOf('organic_matter')])] = rp;
+      m[soilType][int(row['organic_matter'])] = rp;
 
     }
   }
