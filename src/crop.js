@@ -1288,3 +1288,302 @@ var dumpMonicaParametersIntoFile = function (fileName, cpp) {
   fs.writeFileSync(fileName, parameter_output, { encoding: 'utf8' });
 
 };
+
+var soilCharacteristicsKA5 = function (soilParameter) {
+
+  logger(MSG.INFO, "soilCharacteristicsKA5");
+
+  var texture = soilParameter.vs_SoilTexture;
+  var stoneContent = soilParameter.vs_SoilStoneContent;
+
+  var fc = 0.0;
+  var sat = 0.0;
+  var pwp = 0.0;
+
+  if (texture != "") {
+    var srd = soilParameter.vs_SoilRawDensity() / 1000.0; // [kg m-3] -> [g cm-3]
+    var som = soilParameter.vs_SoilOrganicMatter() * 100.0; // [kg kg-1] -> [%]
+
+    // ***************************************************************************
+    // *** The following boundaries are extracted from:                        ***
+    // *** Wessolek, G., M. Kaupenjohann, M. Renger (2009) Bodenphysikalische  ***
+    // *** Kennwerte und Berechnungsverfahren für die Praxis. Bodenökologie    ***
+    // *** und Bodengenese 40, Selbstverlag Technische Universität Berlin      ***
+    // *** (Tab. 4).                                                           ***
+    // ***************************************************************************
+
+    var srd_lowerBound = 0.0;
+    var srd_upperBound = 0.0;
+    if (srd < 1.1) {
+      srd_lowerBound = 1.1;
+      srd_upperBound = 1.1;
+    }
+    else if ((srd >= 1.1) && (srd < 1.3)) {
+      srd_lowerBound = 1.1;
+      srd_upperBound = 1.3;
+    }
+    else if ((srd >= 1.3) && (srd < 1.5)) {
+      srd_lowerBound = 1.3;
+      srd_upperBound = 1.5;
+    }
+    else if ((srd >= 1.5) && (srd < 1.7)) {
+      srd_lowerBound = 1.5;
+      srd_upperBound = 1.7;
+    }
+    else if ((srd >= 1.7) && (srd < 1.9)) {
+      srd_lowerBound = 1.7;
+      srd_upperBound = 1.9;
+    }
+    else if (srd >= 1.9) {
+      srd_lowerBound = 1.9;
+      srd_upperBound = 1.9;
+    }
+
+    // special treatment for "torf" soils
+    if (texture == "Hh" || texture == "Hn") {
+        srd_lowerBound = -1;
+        srd_upperBound = -1;
+    }
+
+    // Boundaries for linear interpolation
+    var lbRes = readPrincipalSoilCharacteristicData(texture, srd_lowerBound);
+    var sat_lowerBound = lbRes.sat;
+    var fc_lowerBound = lbRes.fc;
+    var pwp_lowerBound = lbRes.pwp;
+
+    var ubRes = readPrincipalSoilCharacteristicData(texture, srd_upperBound);
+    var sat_upperBound = ubRes.sat;
+    var fc_upperBound = ubRes.fc;
+    var pwp_upperBound = ubRes.pwp;
+
+    if(lbRes.initialized && ubRes.initialized) {
+      //    cout << "Soil Raw Density:\t" << vs_SoilRawDensity << endl;
+      //    cout << "Saturation:\t\t" << vs_SaturationLowerBoundary << "\t" << vs_SaturationUpperBoundary << endl;
+      //    cout << "Field Capacity:\t" << vs_FieldCapacityLowerBoundary << "\t" << vs_FieldCapacityUpperBoundary << endl;
+      //    cout << "PermanentWP:\t" << vs_PermanentWiltingPointLowerBoundary << "\t" << vs_PermanentWiltingPointUpperBoundary << endl;
+      //    cout << "Soil Organic Matter:\t" << vs_SoilOrganicMatter << endl;
+
+      // ***************************************************************************
+      // *** The following boundaries are extracted from:                        ***
+      // *** Wessolek, G., M. Kaupenjohann, M. Renger (2009) Bodenphysikalische  ***
+      // *** Kennwerte und Berechnungsverfahren für die Praxis. Bodenökologie    ***
+      // *** und Bodengenese 40, Selbstverlag Technische Universität Berlin      ***
+      // *** (Tab. 5).                                                           ***
+      // ***************************************************************************
+
+      var som_lowerBound = 0.0;
+      var som_upperBound = 0.0;
+
+      if(som >= 0.0 && som < 1.0) {
+        som_lowerBound = 0.0;
+        som_upperBound = 0.0;
+      }
+      else if(som >= 1.0 && som < 1.5) {
+        som_lowerBound = 0.0;
+        som_upperBound = 1.5;
+      }
+      else if(som >= 1.5 && som < 3.0) {
+        som_lowerBound = 1.5;
+        som_upperBound = 3.0;
+      }
+      else if(som >= 3.0 && som < 6.0) {
+        som_lowerBound = 3.0;
+        som_upperBound = 6.0;
+      }
+      else if(som >= 6.0 && som < 11.5) {
+        som_lowerBound = 6.0;
+        som_upperBound = 11.5;
+      }
+      else if(som >= 11.5) {
+        som_lowerBound = 11.5;
+        som_upperBound = 11.5;
+      }
+
+      // special treatment for "torf" soils
+      if (texture == "Hh" || texture == "Hn") {
+        som_lowerBound = 0.0;
+        som_upperBound = 0.0;
+      }
+
+      // Boundaries for linear interpolation
+      var fc_mod_lowerBound = 0.0;
+      var sat_mod_lowerBound = 0.0;
+      var pwp_mod_lowerBound = 0.0;
+      // modifier values are given only for organic matter > 1.0% (class h2)
+      if (som_lowerBound != 0.0) {
+        var lbRes = readSoilCharacteristicModifier(texture, som_lowerBound);
+        sat_mod_lowerBound = lbRes.sat;
+        fc_mod_lowerBound = lbRes.fc;
+        pwp_mod_lowerBound = lbRes.pwp;
+      }
+
+      var fc_mod_upperBound = 0.0;
+      var sat_mod_upperBound = 0.0;
+      var pwp_mod_upperBound = 0.0;
+      if (som_upperBound != 0.0) {
+        var ubRes = readSoilCharacteristicModifier(texture, som_upperBound);
+        sat_mod_upperBound = ubRes.sat;
+        fc_mod_upperBound = ubRes.fc;
+        pwp_mod_upperBound = ubRes.pwp;
+      }
+
+//      cout << "Saturation-Modifier:\t" << sat_mod_lowerBound << "\t" << sat_mod_upperBound << endl;
+//      cout << "Field capacity-Modifier:\t" << fc_mod_lowerBound << "\t" << fc_mod_upperBound << endl;
+//      cout << "PWP-Modifier:\t" << pwp_mod_lowerBound << "\t" << pwp_mod_upperBound << endl;
+
+      // Linear interpolation
+      var fc_unmod = fc_lowerBound;
+      if (fc_upperBound < 0.5 && fc_lowerBound >= 1.0)
+        fc_unmod = fc_lowerBound;
+      else if(fc_lowerBound < 0.5 && fc_upperBound >= 1.0)
+        fc_unmod = fc_upperBound;
+      else if(srd_upperBound != srd_lowerBound)
+        fc_unmod = (srd - srd_lowerBound)/
+                   (srd_upperBound - srd_lowerBound)*
+                   (fc_upperBound - fc_lowerBound) + fc_lowerBound;
+
+      var sat_unmod = sat_lowerBound;
+      if(sat_upperBound < 0.5 && sat_lowerBound >= 1.0)
+        sat_unmod = sat_lowerBound;
+      else if(sat_lowerBound < 0.5 && sat_upperBound >= 1.0)
+        sat_unmod = sat_upperBound;
+      else if(srd_upperBound != srd_lowerBound)
+        sat_unmod = (srd - srd_lowerBound)/
+                    (srd_upperBound - srd_lowerBound)*
+                    (sat_upperBound - sat_lowerBound) + sat_lowerBound;
+
+      var pwp_unmod = pwp_lowerBound;
+      if(pwp_upperBound < 0.5 && pwp_lowerBound >= 1.0)
+        pwp_unmod = pwp_lowerBound;
+      else if(pwp_lowerBound < 0.5 && pwp_upperBound >= 1.0)
+        pwp_unmod = pwp_upperBound;
+      else if(srd_upperBound != srd_lowerBound)
+        pwp_unmod = (srd - srd_lowerBound)/
+                    (srd_upperBound - srd_lowerBound)*
+                    (pwp_upperBound - pwp_lowerBound) + pwp_lowerBound;
+
+      //in this case upper and lower boundary are equal, so doesn't matter.
+      var fc_mod = fc_mod_lowerBound;
+      var sat_mod = sat_mod_lowerBound;
+      var pwp_mod = pwp_mod_lowerBound;
+      if(som_upperBound != som_lowerBound) {
+        fc_mod = (som - som_lowerBound)/
+                 (som_upperBound - som_lowerBound)*
+                 (fc_mod_upperBound - fc_mod_lowerBound) + fc_mod_lowerBound;
+
+        sat_mod = (som - som_lowerBound)/
+                  (som_upperBound - som_lowerBound)*
+                  (sat_mod_upperBound - sat_mod_lowerBound) + sat_mod_lowerBound;
+
+        pwp_mod = (som - som_lowerBound)/
+                  (som_upperBound - som_lowerBound)*
+                  (pwp_mod_upperBound - pwp_mod_lowerBound) + pwp_mod_lowerBound;
+      }
+
+      // Modifying the principal values by organic matter
+      fc = (fc_unmod + fc_mod)/100.0; // [m3 m-3]
+      sat = (sat_unmod + sat_mod)/100.0; // [m3 m-3]
+      pwp = (pwp_unmod + pwp_mod)/100.0; // [m3 m-3]
+
+      // Modifying the principal values by stone content
+      fc *= (1.0 - stoneContent);
+      sat *= (1.0 - stoneContent);
+      pwp *= (1.0 - stoneContent);
+    }
+  }
+
+  soilParameter.vs_FieldCapacity = fc;
+  soilParameter.vs_Saturation = sat;
+  soilParameter.vs_PermanentWiltingPoint = pwp;
+};
+
+// TODO: refactor soilType -> textureClass
+var readPrincipalSoilCharacteristicData = function (soilType, rawDensity) {
+
+  // C++
+  // typedef map<int, RPSCDRes> M1;
+  // typedef map<string, M1> M2;
+  // static M2 m;
+
+  var columns = soilCharacteristicData.columns;
+  var rows = soilCharacteristicData.rows;
+
+  var m = {};
+
+  for (var r = 0, rs = rows.length; r < rs; r++) {
+
+    var row = rows[r];
+
+    if (row[columns.indexOf('soil_type')] === soilType) {
+
+      var ac = row[columns.indexOf('air_capacity')];
+      var fc = row[columns.indexOf('field_capacity')];
+      var nfc = row[columns.indexOf('n_field_capacity')];
+
+      var rp = new RPSCDRes(true);
+      rp.sat = ac + fc;
+      rp.fc = fc;
+      rp.pwp = fc - nfc;
+
+      if (m[soilType] === undefined)
+        m[soilType] = {};
+
+      m[soilType][int(row[columns.indexOf('soil_raw_density')])] = rp;
+
+    }
+  }
+
+  var rd10 = int(rawDensity * 10);
+  if (m[soilType][rd10])
+    return m[soilType][rd10];
+
+  //if we didn't find values for a given raw density, e.g. 1.1 (= 11)
+  //we try to find the closest next one (up (1.1) or down (1.9))
+  while(!m[soilType][rd10] && (11 <= rd10 && rd10 <= 19))
+    rd10 += (rd10 < 15) ? 1 : -1;
+
+  return (m[soilType][rd10]) ? m[soilType][rd10] : new RPSCDRes();
+
+};
+
+var readSoilCharacteristicModifier = function (soilType, organicMatter) {
+
+  // C++
+  // typedef map<int, RPSCDRes> M1;
+  // typedef map<string, M1> M2;
+  // static M2 m;
+
+  var columns = soilAggregationValues.columns;
+  var rows = soilAggregationValues.rows;
+
+  var m = {};
+
+  for (var r = 0, rs = rows.length; r < rs; r++) {
+
+    var row = rows[r];
+
+    if (row[columns.indexOf('soil_type')] === soilType) {
+
+      var ac = row[columns.indexOf('air_capacity')];
+      var fc = row[columns.indexOf('field_capacity')];
+      var nfc = row[columns.indexOf('n_field_capacity')];
+
+      var rp = new RPSCDRes(true);
+      rp.sat = ac + fc;
+      rp.fc = fc;
+      rp.pwp = fc - nfc;
+
+
+      if (m[soilType] === undefined)
+        m[soilType] = {};
+
+      m[soilType][int(row[columns.indexOf('organic_matter')])] = rp;
+
+    }
+  }
+
+  var rd10 = int(organicMatter * 10);
+
+  return (m[soilType][rd10]) ? m[soilType][rd10] : new RPSCDRes();
+  
+};

@@ -132,6 +132,7 @@ var Configuration = function (climate, doDebug) {
 
         depth += lThicknessCm;
 
+        // TODO: use soilCharacteristicsKA5()
         var soilParameters = Object.create(SoilParameters);
         soilParameters.set_vs_SoilOrganicCarbon(horizon.Corg);
         soilParameters.set_vs_SoilBulkDensity(horizon.bulkDensity);

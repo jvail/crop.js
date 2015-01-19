@@ -1452,6 +1452,16 @@ var ParameterProvider = {
 };
 
 
+var RPSCDRes = function (initialized) {
+
+  this.sat = 0;
+  this.fc = 0;
+  this.pwp = 0;
+  this.initialized = (initialized === undefined) ? false : initialized;
+
+};
+
+// TODO: refactor soilType -> textureClass
 var soilCharacteristicData = {
   "columns":[
     "soil_type",
