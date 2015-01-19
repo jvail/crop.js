@@ -94,9 +94,9 @@ var Configuration = function (climate, doDebug) {
     //   env.nMinFertiliserPartition = getMineralFertiliserParametersFromMonicaDB(hermes_config->getMineralFertiliserID());
     // }
 
-    logger(MSG.INFO, 'Start monica model.');
+    logger(MSG.INFO, 'Start model run.');
 
-    return runMonica(env, setProgress);
+    return runModel(env, setProgress);
   };
 
 
