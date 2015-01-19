@@ -281,7 +281,7 @@ var ParameterProvider = {
     p_NumberOfLayers: 20,
     p_StartPVIndex: 0,
     p_Albedo: 0.23,
-    p_AthmosphericCO2: 0,
+    p_AthmosphericCO2: 380,
     p_WindSpeedHeight: 2,
     p_UseSecondaryYields: true,
     p_JulianDayAutomaticFertilising: 74,

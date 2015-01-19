@@ -1,11 +1,7 @@
 {
   "crops": [
     {
-      "name": {
-        "id": 3,
-        "name": "winter rye",
-        "gen_type": ""
-      },
+      "name": "winter rye",
       "sowingDate": "1991-10-01",
       "rowWidth": 5,
       "plantSpace": 5,

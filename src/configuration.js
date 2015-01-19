@@ -16,30 +16,30 @@ var Configuration = function (climate, doDebug) {
     var startYear = new Date(Date.parse(simInput.time.startDate)).getFullYear();
     var endYear = new Date(Date.parse(simInput.time.endDate)).getFullYear();
 
-    parameterProvider.userEnvironmentParameters.p_UseSecondaryYields = simInput.switches.useSecondaryYieldOn;
-    parameterProvider.userInitValues.p_initPercentageFC = simInput.init.percentageFC;
-    parameterProvider.userInitValues.p_initSoilNitrate = simInput.init.soilNitrate;
-    parameterProvider.userInitValues.p_initSoilAmmonium = simInput.init.soilAmmonium;
+    parameterProvider.userEnvironmentParameters.p_UseSecondaryYields = getValue(simInput.switches, 'useSecondaryYieldOn', parameterProvider.userEnvironmentParameters.p_UseSecondaryYields);
+    parameterProvider.userInitValues.p_initPercentageFC = getValue(simInput.init, 'percentageFC', parameterProvider.userInitValues.p_initPercentageFC);
+    parameterProvider.userInitValues.p_initSoilNitrate = getValue(simInput.init, 'soilNitrate', parameterProvider.userInitValues.p_initSoilNitrate);
+    parameterProvider.userInitValues.p_initSoilAmmonium = getValue(simInput.init, 'soilAmmonium', parameterProvider.userInitValues.p_initSoilAmmonium);
 
-    generalParameters.pc_NitrogenResponseOn = simInput.switches.nitrogenResponseOn;
-    generalParameters.pc_WaterDeficitResponseOn = simInput.switches.waterDeficitResponseOn;
-    generalParameters.pc_EmergenceMoistureControlOn = simInput.switches.emergenceMoistureControlOn;
-    generalParameters.pc_EmergenceFloodingControlOn = simInput.switches.emergenceFloodingControlOn;
+    generalParameters.pc_NitrogenResponseOn = getValue(simInput.switches, 'nitrogenResponseOn', generalParameters.pc_NitrogenResponseOn);
+    generalParameters.pc_WaterDeficitResponseOn = getValue(simInput.switches, 'waterDeficitResponseOn', generalParameters.pc_WaterDeficitResponseOn);
+    generalParameters.pc_EmergenceMoistureControlOn = getValue(simInput.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
+    generalParameters.pc_EmergenceFloodingControlOn = getValue(simInput.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
 
     logger(MSG.INFO, 'Fetched sim data.');
     
     /* site */
-    siteParameters.vq_NDeposition = siteInput.NDeposition;
     siteParameters.vs_Latitude = siteInput.latitude;
     siteParameters.vs_Slope = siteInput.slope;
     siteParameters.vs_HeightNN = siteInput.heightNN;
+    siteParameters.vq_NDeposition = getValue(siteInput, 'NDeposition', siteParameters.vq_NDeposition);
 
-    parameterProvider.userEnvironmentParameters.p_AthmosphericCO2 = siteInput.atmosphericCO2;
-    parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepth = siteInput.groundwaterDepthMin;
-    parameterProvider.userEnvironmentParameters.p_MaxGroundwaterDepth = siteInput.groundwaterDepthMax;
-    parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepthMonth = siteInput.groundwaterDepthMinMonth;
-    parameterProvider.userEnvironmentParameters.p_WindSpeedHeight = siteInput.windSpeedHeight;  
-    parameterProvider.userEnvironmentParameters.p_LeachingDepth = siteInput.leachingDepth;
+    parameterProvider.userEnvironmentParameters.p_AthmosphericCO2 = getValue(siteInput, 'atmosphericCO2', parameterProvider.userEnvironmentParameters.p_AthmosphericCO2);
+    parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepth = getValue(siteInput, 'groundwaterDepthMin', parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepth);
+    parameterProvider.userEnvironmentParameters.p_MaxGroundwaterDepth = getValue(siteInput, 'groundwaterDepthMax', parameterProvider.userEnvironmentParameters.p_MaxGroundwaterDepth);
+    parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepthMonth = getValue(siteInput, 'groundwaterDepthMinMonth', parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepthMonth);
+    parameterProvider.userEnvironmentParameters.p_WindSpeedHeight = getValue(siteInput, 'windSpeedHeight', parameterProvider.userEnvironmentParameters.p_WindSpeedHeight);  
+    parameterProvider.userEnvironmentParameters.p_LeachingDepth = getValue(siteInput, 'leachingDepth', parameterProvider.userEnvironmentParameters.p_LeachingDepth);
 
     logger(MSG.INFO, 'Fetched site data.');
 
@@ -99,8 +99,17 @@ var Configuration = function (climate, doDebug) {
     return runModel(env, setProgress);
   };
 
+  function getValue(obj, prop, default) {
 
-  var createLayers = function createLayers(layers, horizons, lThicknessCm, maxNoOfLayers) {
+    if (obj.hasOwnProperty(prop) && obj[prop] != null)
+      return obj[prop];
+    else
+      return default;
+
+  }
+
+
+  function createLayers(layers, horizons, lThicknessCm, maxNoOfLayers) {
 
     var ok = true;
     var hs = horizons.length;
@@ -142,6 +151,10 @@ var Configuration = function (climate, doDebug) {
         soilParameters.vs_SoilTexture = Tools.texture2KA5(horizon.sand, horizon.clay);
         soilParameters.set_vs_SoilRawDensity(Tools.ld_eff2trd(3 /*ldEff*/, horizon.clay));
         soilParameters.vs_Lambda = Tools.texture2lambda(soilParameters.vs_SoilSandContent, soilParameters.vs_SoilClayContent);
+
+        /* optional parameters */
+        soilParameters.vs_SoilpH = getValue(horizon, 'pH', 6.9);
+
         /* set wilting point, saturation & field capacity */
         soilCharacteristicsKA5(soilParameters);
         
@@ -160,7 +173,8 @@ var Configuration = function (climate, doDebug) {
     }  
 
     return ok;
-  };
+  }
+
 
   function createProcesses(cropRotation, crops) {
     
@@ -172,12 +186,6 @@ var Configuration = function (climate, doDebug) {
     for (var c = 0; c < cs; c++) {
 
       var crop = crops[c];
-      var cropId = crop.name.id;
-
-      if (!cropId || cropId < 0 || isNaN(cropId)) {
-        ok = false;
-        logger(MSG.ERROR, 'Invalid crop id: ' + cropId + '.');
-      }
 
       var sd = new Date(Date.parse(crop.sowingDate));
       var hd = new Date(Date.parse(crop.finalHarvestDate));
@@ -190,10 +198,10 @@ var Configuration = function (climate, doDebug) {
         logger(MSG.ERROR, 'Invalid sowing or harvest date.');
       }
 
-      var fieldcrop = new FieldCrop(crop.name.name);
+      var fieldcrop = new FieldCrop(crop.name);
       fieldcrop.setSeedAndHarvestDate(sd, hd);
 
-      cropRotation[c] = new ProductionProcess(crop.name.name + ', ' + crop.name.gen_type, fieldcrop);
+      cropRotation[c] = new ProductionProcess(crop.name, fieldcrop);
 
       /* tillage */
       var tillageOperations = crop.tillageOperations;
@@ -245,7 +253,8 @@ var Configuration = function (climate, doDebug) {
     }
 
     return ok;
-  };
+  }
+
 
   function addTillageOperations(productionProcess, tillageOperations) {
 
@@ -280,7 +289,8 @@ var Configuration = function (climate, doDebug) {
     }
 
     return ok;
-  };
+  }
+
 
   function addFertilizers(productionProcess, fertilizers, isOrganic) {
     // TODO: implement in JS
@@ -346,9 +356,8 @@ var Configuration = function (climate, doDebug) {
 
     }
      
-    return ok;
-    
-  };
+    return ok; 
+  }
 
 
   function addIrrigations(productionProcess, irrigations) {
