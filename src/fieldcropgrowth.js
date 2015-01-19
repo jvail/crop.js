@@ -5,7 +5,7 @@
     - get_FreshPrimaryCropYield(): bestimme yield auch nach cutting
 */
 
-var CropGrowth = function (sc, gps, cps, stps, cpp) {
+var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
 
   if (DEBUG) debug(arguments); // JS!
 

@@ -53,7 +53,7 @@ var Model = function (env, da) {
     _currentCrop = crop;
     if(_currentCrop.isValid()) {
       cps = _currentCrop.cropParameters();
-      that._currentCropGrowth = new CropGrowth(_soilColumn, _env.general, cps, _env.site, _env.centralParameterProvider/*, crop.getEva2TypeUsage()*/);
+      that._currentCropGrowth = new FieldCropGrowth(_soilColumn, _env.general, cps, _env.site, _env.centralParameterProvider/*, crop.getEva2TypeUsage()*/);
       _soilTransport.put_Crop(that._currentCropGrowth);
       _soilColumn.put_Crop(that._currentCropGrowth);
       _soilMoisture.put_Crop(that._currentCropGrowth);

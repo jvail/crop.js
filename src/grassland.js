@@ -923,7 +923,7 @@ grassland.Species = function (cfg) {
   this.F_C = function () {
 
     return (
-      that.C_live_shoot() + that.C_root()) / 
+      (that.C_live_shoot() + that.C_root()) / 
       (that.dwt_live_leaf() + that.dwt_live_stem() + that.dwt_root())
     );
 
@@ -1515,8 +1515,8 @@ grassland.Growth = (function () {
       /* allocate potential transpiration according to d.wt share of shoot */
       var pot_transpiration_p = dwt_live_shoot_sh * E_T_demand;
 
-      var N_up_p[p] = 0;
-      var N_fix_p[p] = 0;
+      N_up_p[p] = 0;
+      N_fix_p[p] = 0;
 
       for (var l = 0, ls = min(N_up.length, E_T.length); l < ls; l++) {
 

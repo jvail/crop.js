@@ -1,6 +1,6 @@
 'use strict';
 
-var Crop = function (name) {
+var FieldCrop = function (name) {
 
   var _id = -1
     , _name = name.toLowerCase()

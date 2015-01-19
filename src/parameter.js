@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 var YieldComponent = function (oid, yp, ydm) {
 
@@ -124,7 +124,7 @@ var SoilParameters = {
   _vs_SoilBulkDensity: -1,
   _vs_SoilOrganicCarbon: -1,
   _vs_SoilOrganicMatter: -1,
-  isValid = function () {
+  isValid: function () {
 
     var is_valid = true;
 
@@ -180,31 +180,31 @@ var SoilParameters = {
 
     return is_valid;
   },
-  vs_SoilRawDensity = function () {
+  vs_SoilRawDensity: function () {
     // conversion from g cm-3 in kg m-3
     return this._vs_SoilRawDensity * 1000;
   },
-  set_vs_SoilRawDensity = function (srd) {
+  set_vs_SoilRawDensity: function (srd) {
     this._vs_SoilRawDensity = srd;
   },
-  vs_SoilOrganicCarbon = function () {
+  vs_SoilOrganicCarbon: function () {
     if (this._vs_SoilOrganicMatter < 0)
       return this._vs_SoilOrganicCarbon;
 
     return this._vs_SoilOrganicMatter * organicConstants.po_SOM_to_C;
   },
-  set_vs_SoilOrganicCarbon = function (soc) {
+  set_vs_SoilOrganicCarbon: function (soc) {
     this._vs_SoilOrganicCarbon = soc;
   },
-  vs_SoilOrganicMatter = function () {
+  vs_SoilOrganicMatter: function () {
     if (this._vs_SoilOrganicCarbon < 0)
       return this._vs_SoilOrganicMatter;
     return this._vs_SoilOrganicCarbon / organicConstants.po_SOM_to_C;
   },
-  set_vs_SoilOrganicMatter = function (som) {
+  set_vs_SoilOrganicMatter: function (som) {
     this._vs_SoilOrganicMatter = som;
   },
-  vs_SoilSiltContent = function () {
+  vs_SoilSiltContent: function () {
     if ((this.vs_SoilSandContent - 0.001) < 0 && (this.vs_SoilClayContent - 0.001) < 0)
       return 0;
 
@@ -214,20 +214,20 @@ var SoilParameters = {
     bulk density [kg m-3]
     TODO: check unit
   */
-  vs_SoilBulkDensity = function () {
+  vs_SoilBulkDensity: function () {
     if (this._vs_SoilRawDensity < 0)
       return this._vs_SoilBulkDensity;
 
     return (this._vs_SoilRawDensity + (0.009 * 100 * this.vs_SoilClayContent)) * 1000;
-  }
+  },
   /*
     soilBulkDensity [g cm-3]
     TODO: check unit
   */
-  set_vs_SoilBulkDensity = function (sbd) {
+  set_vs_SoilBulkDensity: function (sbd) {
     this._vs_SoilBulkDensity = sbd;
   },
-  texture2lambda = function (sand, clay) {
+  texture2lambda: function (sand, clay) {
     return Tools.texture2lambda(sand, clay);
   }
 
@@ -1426,7 +1426,7 @@ var ParameterProvider = {
     getRate: function (textureClass, distance) {
       distance = int(distance);
       var map = getMap(textureClass);
-      return (map[distance] === undefined) ? 0.0 : map[distance]);
+      return (map[distance] === undefined) ? 0.0 : map[distance];
     },
     getMap: function (textureClass) {
       if (this.map[textureClass] === undefined) {

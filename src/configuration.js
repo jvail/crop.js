@@ -3,7 +3,7 @@ var Configuration = function (climate, doDebug) {
 
   DEBUG = (doDebug === true) ? true : false;
 
-  var run = function run(simInput, siteInput, cropInput) {
+  var run = function run(simInput, siteInput, prodInput) {
 
     logger(MSG.INFO, 'Fetching parameters.');
     
@@ -67,7 +67,7 @@ var Configuration = function (climate, doDebug) {
 
     /* crops */
     var cropRotation = [];
-    if (!createProcesses(cropRotation, cropInput.crops)) {
+    if (!createProcesses(cropRotation, prodInput.crops)) {
       logger(MSG.ERROR, 'Error fetching crop data.');
       return;
     }
@@ -190,10 +190,10 @@ var Configuration = function (climate, doDebug) {
         logger(MSG.ERROR, 'Invalid sowing or harvest date.');
       }
 
-      var crop = new Crop(crop.name.name);
-      crop.setSeedAndHarvestDate(sd, hd);
+      var fieldcrop = new FieldCrop(crop.name.name);
+      fieldcrop.setSeedAndHarvestDate(sd, hd);
 
-      cropRotation[c] = new ProductionProcess(crop.name.name + ', ' + crop.name.gen_type, crop);
+      cropRotation[c] = new ProductionProcess(crop.name.name + ', ' + crop.name.gen_type, fieldcrop);
 
       /* tillage */
       var tillageOperations = crop.tillageOperations;
