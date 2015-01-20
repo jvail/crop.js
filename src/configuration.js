@@ -1,7 +1,10 @@
 
-var Configuration = function (climate, doDebug) {
+var Configuration = function (climate, doDebug, isVerbose) {
 
   DEBUG = (doDebug === true) ? true : false;
+  VERBOSE = (isVerbose === true) ? true : false;
+
+  var pathToOutputDir = './'
 
   var run = function run(simInput, siteInput, prodInput) {
 
@@ -10,7 +13,7 @@ var Configuration = function (climate, doDebug) {
     /* init parameters */
     var parameterProvider = Object.create(ParameterProvider);
     var siteParameters = Object.create(SiteParameters);
-    var generalParameters = Object.create(GeneralParameters);
+    var generalParameters = new GeneralParameters();
 
     /* sim */
     var startYear = new Date(Date.parse(simInput.time.startDate)).getFullYear();
@@ -58,7 +61,7 @@ var Configuration = function (climate, doDebug) {
 
     /* weather */
     var da = new DataAccessor(new Date(startYear, 0, 1), new Date(endYear, 11, 31));
-    if (!createClimate(da, cpp, siteParameters.vs_Latitude)) {
+    if (!createClimate(da, parameterProvider, siteParameters.vs_Latitude)) {
       logger(MSG.ERROR, 'Error fetching climate data.');
       return;
     }
@@ -74,11 +77,11 @@ var Configuration = function (climate, doDebug) {
     
     logger(MSG.INFO, 'Fetched crop data.');
 
-    var env = new Environment(layers, cpp);
+    var env = new Environment(layers, parameterProvider);
     env.general = generalParameters;
-    env.pathToOutputDir = _outPath;
+    env.pathToOutputDir = pathToOutputDir;
     // env.setMode(1); // JS! not implemented
-    env.site = sp;
+    env.site = siteParameters;
     env.da = da;
     env.cropRotation = cropRotation;
    
@@ -273,7 +276,7 @@ var Configuration = function (climate, doDebug) {
         }
       }
 
-      logger(MSG.INFO, 'Fetched crop ' + c + ', name: ' + crop.name.name + ', id: ' + cropId + '.');
+      logger(MSG.INFO, 'Fetched crop ' + c + ': ' + crop.name);
 
     }
 
@@ -357,7 +360,7 @@ var Configuration = function (climate, doDebug) {
       var fertilizer = fertilizers[f];
 
       /* ignore if any value is null */
-      if (fertilizer.date === null || fertilizer.method === null || fertilizer.type === null || fertilizer.amount === null) {
+      if (fertilizer.date === null || fertilizer.method === null || fertilizer.amount === null) {
         logger(MSG.WARN, 'At least one fertiliser parameter null: ' + (isOrganic ? 'organic' : 'mineral') + ' fertiliser ' + f + 'ignored.');
         continue;
       }
@@ -706,7 +709,7 @@ var Configuration = function (climate, doDebug) {
     if (ENVIRONMENT_IS_WORKER)
       postMessage({ progress: progress });
     else
-      logger(MSG.INFO, (progress ? progress.date.value : 'done'));
+      if (progress === null) logger(MSG.INFO, 'done');
   
   };  
 

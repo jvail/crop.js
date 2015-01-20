@@ -29,23 +29,17 @@
       ],
       "organicFertilisers": [
         {
+          "name": "cattle slurry",
           "date": "1992-05-01",
           "method": "Fixed",
-          "type": {
-            "id": 3,
-            "om_type": "cattle slurry"
-          },
           "amount": 30
         }
       ],
       "mineralFertilisers": [
         {
+          "name": "Ammonium Nitrate",
           "date": "1992-04-01",
           "method": "Fixed",
-          "type": {
-            "id": 1,
-            "name": "Ammonium Nitrate"
-          },
           "amount": 40
         }
       ]

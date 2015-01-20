@@ -75,7 +75,7 @@ var Model = function (env, da) {
       }
 
       // if (that.writeOutputFiles()) {
-          _currentCrop.writeCropParameters(_env.pathToOutputDir);
+          // _currentCrop.writeCropParameters(_env.pathToOutputDir);
       // }
     }
   };
@@ -110,7 +110,7 @@ var Model = function (env, da) {
       logger(MSG.INFO, "primary yield biomass: " + that._currentCropGrowth.get_PrimaryCropYield()
           + " Primary yield N concentration: " + that._currentCropGrowth.get_PrimaryYieldNConcentration());
       logger(MSG.INFO, "secondary yield biomass: " + that._currentCropGrowth.get_SecondaryCropYield()
-          + " Secondary yield N concentration: " + that._currentCropGrowth.get_PrimaryYieldNConcentration());
+          + " Secondary yield N concentration: " + '??');
       logger(MSG.INFO, "Residues N content: " + that._currentCropGrowth.get_ResiduesNContent()
           + " Primary yield N content: " + that._currentCropGrowth.get_PrimaryYieldNContent()
           + " Secondary yield N content: " + that._currentCropGrowth.get_SecondaryYieldNContent());
@@ -163,13 +163,14 @@ var Model = function (env, da) {
    */
   var applyMineralFertiliser = function (partition, amount) {
     if(!_env.useNMinMineralFertilisingMethod) {
+      logger(MSG.INFO, 'apply mineral fertiliser: amount: ' + amount);
       _soilColumn.applyMineralFertiliser(partition, amount);
       addDailySumFertiliser(amount);
     }
   };
 
   var applyOrganicFertiliser = function (params, amount, incorporation) {
-    logger(MSG.INFO, "MONICA model: applyOrganicFertiliser:\t" + amount + "\t" + params.vo_NConcentration);
+    logger(MSG.INFO, 'apply organic fertiliser: amount: ' + amount + ', vo_NConcentration: ' + params.vo_NConcentration);
     _soilOrganic.setIncorporation(incorporation);
     _soilOrganic.addOrganicMatter(params, amount, params.vo_NConcentration);
     addDailySumFertiliser(amount * params.vo_NConcentration);

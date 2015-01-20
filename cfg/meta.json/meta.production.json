@@ -2,18 +2,8 @@
   "crops": [
     {
       "name": {
-        "desc": "Crop species identifier (name and genetic type)",
-        "db": {
-          "table": "crop",
-          "columns": [
-            "id",
-            "name",
-            "gen_type"
-          ],
-          "keys": [
-            "id"
-          ]
-        }
+        "desc": "Crop species name",
+        "enum": []
       },
       "sowingDate": {
         "desc": "Date at which the crop is sown or transplanted",
@@ -135,6 +125,10 @@
       ],
       "organicFertilisers": [
         {
+          "name": {
+            "desc": "Organic fertiliser name",
+            "enum": []
+          },
           "date": {
             "desc": "Fertilising date",
             "unit": "date"
@@ -146,19 +140,6 @@
               "Automated"
             ],
             "default": "Fixed"
-          },
-          "type": {
-            "desc": "Organic fertiliser type",
-            "db": {
-              "table": "organic_fertiliser",
-              "columns": [
-                "id",
-                "om_type"
-              ],
-              "keys": [
-                "id"
-              ]
-            }
           },
           "amount": {
             "desc": "Amount of N applied",
@@ -171,6 +152,10 @@
       ],
       "mineralFertilisers": [
         {
+          "name": {
+            "desc": "Mineral fertiliser name",
+            "enum": []
+          },
           "date": {
             "desc": "Fertilising date",
             "unit": "date"
@@ -182,19 +167,6 @@
               "Automated"
             ],
             "default": "Fixed"
-          },
-          "type": {
-            "desc": "Mineral fertiliser type",
-            "db": {
-              "table": "mineral_fertilisers",
-              "columns": [
-                "id",
-                "name"
-              ],
-              "keys": [
-                "id"
-              ]
-            }
           },
           "amount": {
             "desc": "Amount of N applied",

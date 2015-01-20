@@ -77,7 +77,7 @@ var runModel = function (env, progress_callback) {
 
   for (var d = 0; d < nods; ++d, currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1), ++dim) {
 
-    logger(MSG.INFO, "currentDate: " + currentDate.getDate() + "." + (currentDate.getMonth() + 1) + "." + currentDate.getFullYear());
+    logger(MSG.INFO, currentDate.getDate() + "." + (currentDate.getMonth() + 1) + "." + currentDate.getFullYear());
     model.resetDailyCounter();
 
     // test if model's crop has been dying in previous step
@@ -257,7 +257,7 @@ var runModel = function (env, progress_callback) {
       monthETa = 0.0;
 
       dim = 0;
-      logger(MSG.INFO, "stored monthly values for month: " + currentMonth);
+      logger(MSG.INFO, "stored monthly values for month: " + (currentMonth + 1));
     
     } else {
 
@@ -295,7 +295,7 @@ var runModel = function (env, progress_callback) {
       writeGeneralResults(foutFileName, goutFileName, env, model, d);
   }
 
-  logger(MSG.INFO, "returning from runMonica");
+  logger(MSG.INFO, "returning from runModel");
   
   /* if progress_callback is provided send null i.e. we are done*/
   if (progress_callback)
