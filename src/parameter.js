@@ -210,20 +210,14 @@ var SoilParameters = {
 
     return 1 - this.vs_SoilSandContent - this.s_SoilClayContent;
   },
-  /*
-    bulk density [kg m-3]
-    TODO: check unit
-  */
+  /* bulk density [kg m-3] */
   vs_SoilBulkDensity: function () {
     if (this._vs_SoilRawDensity < 0)
       return this._vs_SoilBulkDensity;
 
     return (this._vs_SoilRawDensity + (0.009 * 100 * this.vs_SoilClayContent)) * 1000;
   },
-  /*
-    soilBulkDensity [g cm-3]
-    TODO: check unit
-  */
+  /* bulk density [kg m-3] */
   set_vs_SoilBulkDensity: function (sbd) {
     this._vs_SoilBulkDensity = sbd;
   },

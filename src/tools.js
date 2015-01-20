@@ -386,6 +386,165 @@ var Tools = {
 
       return x - (0.9 * clay);
     }
+  ,
+    saxton: function (sand, clay, organicMatter, stone) {
+      
+      /*
+        Eq. 15 + 18 (Saxton 2006)
+        lambda            slope of logarithmic tension-moisture curve
+        Theta_33    [% v] 33 kPa moisture, normal density
+        Theta_1500  [% v] 1500 kPa moisture
+        B                 coefficient of moisture-tension
+      */
+
+      function lambda(Theta_33, Theta_1500) {
+        
+        var B = (log(1500) - log(33)) / (log(Theta_33) - log(Theta_1500));
+        return 1 / B;
+
+      }
+
+      /*
+        Eq. 16 (Saxton 2006)
+        K_S       [mm h-1]    saturated conductivity (matric soil)
+        Theta_S   [% v]       saturated moisture (0 kPa), normal density
+        Theta_33  [% v]       33 kPa moisture, normal density
+        lambda                Slope of logarithmic tension-moisture curve
+      */
+
+      function K_S(Theta_S, Theta_33, lambda) {
+
+        return 1930 * pow(Theta_S - Theta_33, 3 - lambda);
+        
+      }
+
+      /*
+        Eq. 17 (Saxton 2006)
+        K_Theta     [mm h-1]  unsaturated conductivity at moisture Theta
+        K_S         [mm h-1]  saturated conductivity (matric soil)
+        Theta       [% v]     moisture
+        Theta_S     [% v]     saturated moisture (0 kPa), normal density
+        Theta_1500  [% v]     1500 kPa moisture
+        Theta_33    [% v]     33 kPa moisture, normal density
+      */
+
+      function K_Theta(K_S, Theta, Theta_S, lambda, Theta_1500, Theta_33) {
+
+        return K_S * pow(Theta / Theta_S, 3 + (2 / lambda));
+        
+      }
+
+      /*
+        Eq. 5 (Saxton 2006)
+        Theta_S       [% v]   saturated moisture (0 kPa), normal density
+        Theta_33      [% v]   33 kPa moisture, normal density
+        Theta_S33     [% v]   SAT-33 kPa moisture, normal density
+        S             [% w]   sand
+      */
+
+      function Theta_S(Theta_33, Theta_S33, S) {
+        
+        return Theta_33 + Theta_S33 - 0.097 * S + 0.043;
+        
+      }
+
+      /*
+        Eq. 2 (Saxton 2006)
+        Theta_33      [% v]   33 kPa moisture, normal density
+        S             [% w]   sand
+        C             [% w]   clay
+        OM            [% w]   organic matter
+      */
+
+      function Theta_33(S, C, OM) {
+        
+        var Theta_33t = (
+          - 0.251 * S + 0.195 * C + 0.011 * OM
+          + 0.006 * (S * OM) - 0.027 * (C * OM)
+          + 0.452 * (S * C) + 0.299
+        );
+        
+        return Theta_33t + (1.283 * pow(Theta_33t, 2) - 0.374 * Theta_33t - 0.015);
+        
+      }
+
+      /*
+        Eq. 3 (Saxton 2006)
+        Theta_S33     [% v]   SAT-33 kPa moisture, normal density
+        S             [% w]   sand
+        C             [% w]   clay
+        OM            [% w]   organic matter
+      */
+
+      function Theta_S33(S, C, OM) {
+        
+        var Theta_S33t = (
+            0.278 * S + 0.034 * C + 0.022 * OM
+          - 0.018 * (S * OM) - 0.027 * (C * OM) -
+          - 0.584 * (S * C) + 0.078
+        );
+        
+        return Theta_S33t + (0.636 * Theta_S33t - 0.107);
+        
+      }
+
+      /*
+        Eq. 1 (Saxton 2006)
+        Theta_1500    [% v]   1500 kPa moisture
+        S             [% w]   sand
+        C             [% w]   clay
+        OM            [% w]   organic matter
+      */
+
+      function Theta_1500(S, C, OM) {
+        
+        var Theta_1500t = (
+          - 0.024 * S + 0.487 * C + 0.006 * OM
+          + 0.005 * (S * OM) - 0.013 * (C * OM)
+          + 0.068 * (S * C) + 0.031
+        );
+        
+        return Theta_1500t + (0.14 * Theta_1500t - 0.02);
+        
+      }
+
+      /* Saxton 2006 */
+      var theta_33 = Theta_33(sand, clay, 0);
+      var theta_S33 = Theta_S33(sand, clay, 0);
+      var theta_S = Theta_S(theta_33, theta_S33, sand);
+      var theta_1500 = Theta_1500(sand, clay, 0);
+      var bulkDensity = (1 - theta_S) * 2.65;
+
+      /* Saxton 1986 */
+      var percent_sand = sand * 100;
+      var percent_clay = clay * 100;
+      var sand_2 = pow(percent_sand, 2);
+      var clay_2 = pow(percent_clay, 2);
+      var a = exp(-4.396 - 0.0715 * percent_clay - 4.88e-4 * sand_2 - 4.285e-5 * sand_2 * percent_clay)
+      var b = - 3.140 - 0.00222 * clay_2 - 3.484e-5 * sand_2 * percent_clay;
+      var SAT = 0.332 - 7.251e-4 * percent_sand + 0.1276 * log10(percent_clay);
+      var FC = pow((0.3333 / a), (1.0 / b));
+      var PWP = pow((15.0  / a), (1.0 / b));
+      var BD = (1 - SAT) * 2.65;
+
+      return {
+        saxton_06: { /* experimental! */
+          FC: theta_33 * (1 - stone),
+          theta_S33: theta_S33,
+          PWP: theta_1500 * (1 - stone),
+          S: theta_S * (1 - stone),
+          BD: bulkDensity * 1000, // [kg m-3]
+          lambda: lambda(theta_33, theta_1500) 
+        },
+        saxton_86: {
+          FC: FC * (1 - stone),
+          SAT: SAT * (1 - stone),
+          PWP: PWP * (1 - stone),
+          BD: BD * 1000 // [kg m-3]
+        }
+      };
+
+    }
   ,  
     texture2lambda: function (sand, clay) {
       return (2.0 * (sand * sand * 0.575)) + (clay * 0.1) + ((1.0 - sand - clay) * 0.35);

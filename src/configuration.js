@@ -149,14 +149,21 @@ var Configuration = function (climate, doDebug) {
         soilParameters.vs_SoilStoneContent = horizon.sceleton;
         soilParameters.vs_SoilpH = horizon.pH;
         soilParameters.vs_SoilTexture = Tools.texture2KA5(horizon.sand, horizon.clay);
-        soilParameters.set_vs_SoilRawDensity(Tools.ld_eff2trd(3 /*ldEff*/, horizon.clay));
         soilParameters.vs_Lambda = Tools.texture2lambda(soilParameters.vs_SoilSandContent, soilParameters.vs_SoilClayContent);
 
         /* optional parameters */
         soilParameters.vs_SoilpH = getValue(horizon, 'pH', 6.9);
 
         /* set wilting point, saturation & field capacity */
-        soilCharacteristicsKA5(soilParameters);
+        /* if density class according to KA5 is available (trockenrohdichte-klassifikation) */
+        // soilParameters.set_vs_SoilRawDensity(Tools.ld_eff2trd(3 /*ldEff*/, horizon.clay));
+        //soilCharacteristicsKA5(soilParameters); 
+        var saxton = Tools.saxton(horizon.sand, horizon.clay, horizon.organicMatter, horizon.sceleton).saxton_86;
+        debug(saxton);
+        soilParameters.set_vs_SoilBulkDensity(saxton.BD);
+        soilParameters.vs_FieldCapacity = saxton.FC;
+        soilParameters.vs_Saturation = saxton.SAT;
+        soilParameters.vs_PermanentWiltingPoint = saxton.PWP;
         
         /* TODO: hinter readJSON verschieben */ 
         if (!soilParameters.isValid()) {
