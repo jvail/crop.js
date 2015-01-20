@@ -155,15 +155,33 @@ var Configuration = function (climate, doDebug) {
         soilParameters.vs_SoilpH = getValue(horizon, 'pH', 6.9);
 
         /* set wilting point, saturation & field capacity */
-        /* if density class according to KA5 is available (trockenrohdichte-klassifikation) */
-        // soilParameters.set_vs_SoilRawDensity(Tools.ld_eff2trd(3 /*ldEff*/, horizon.clay));
-        //soilCharacteristicsKA5(soilParameters); 
-        var saxton = Tools.saxton(horizon.sand, horizon.clay, horizon.organicMatter, horizon.sceleton).saxton_86;
-        debug(saxton);
-        soilParameters.set_vs_SoilBulkDensity(saxton.BD);
-        soilParameters.vs_FieldCapacity = saxton.FC;
-        soilParameters.vs_Saturation = saxton.SAT;
-        soilParameters.vs_PermanentWiltingPoint = saxton.PWP;
+        if ( horizon.hasOwnProperty('poreVolume') && horizon.poreVolume != null
+          && horizon.hasOwnProperty('fieldCapacity') && horizon.fieldCapacity != null
+          && horizon.hasOwnProperty('permanentWiltingPoint') && horizon.permanentWiltingPoint != null
+          && horizon.hasOwnProperty('bulkDensity') && horizon.bulkDensity != null) { /* if all soil properties are available */
+
+          soilParameters.set_vs_SoilBulkDensity(horizon.bulkDensity);
+          soilParameters.vs_FieldCapacity = horizon.fieldCapacity;
+          soilParameters.vs_Saturation = horizon.poreVolume - horizon.fieldCapacity;
+          soilParameters.vs_PermanentWiltingPoint = horizon.permanentWiltingPoint;
+
+        } else { /* if any is missing */
+
+          /* if density class according to KA5 is available (trockenrohdichte-klassifikation) TODO: add ld_class to JSON cfg */
+          // soilParameters.set_vs_SoilRawDensity(Tools.ld_eff2trd(3 /*ld_class*/, horizon.clay));
+          // Tools.soilCharacteristicsKA5(soilParameters);
+
+          /* else use Saxton */
+          var saxton = Tools.saxton(horizon.sand, horizon.clay, horizon.organicMatter, horizon.sceleton).saxton_86;
+          debug(saxton);
+          soilParameters.set_vs_SoilBulkDensity(roundN(2, saxton.BD));
+          soilParameters.vs_FieldCapacity = roundN(2, saxton.FC);
+          soilParameters.vs_Saturation = roundN(2, saxton.SAT);
+          soilParameters.vs_PermanentWiltingPoint = roundN(2, saxton.PWP);
+
+        }
+
+        debug('soilParameters', soilParameters);
         
         /* TODO: hinter readJSON verschieben */ 
         if (!soilParameters.isValid()) {
