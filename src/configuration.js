@@ -368,7 +368,7 @@ var Configuration = function (climate, doDebug, isVerbose) {
       var fDate = new Date(Date.parse(fertilizer.date));
       var method = fertilizer.method;
       var name = fertilizer.name; // changed from id to name
-      var amount = fertilizer.amount;
+      var amount = fertilizer.amount; // [kg (N) ha-1]
 
       if (!fDate.isValid()) {
         ok = false;
