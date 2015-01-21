@@ -434,4 +434,6 @@ var OrganicFertilizer = function (name) {
     logger(MSG.WARN, 'Organic fertilzer ' + this.name + ' unknown.');
   }
 
+  this.vo_NConcentration = this.vo_AOM_NO3Content + this.vo_AOM_NH4Content + this.vo_AOM_CarbamidContent;
+
 };
