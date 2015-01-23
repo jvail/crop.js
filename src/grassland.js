@@ -25,6 +25,13 @@
 
 */
 
+var Grass = function (seedDates, harvestDates) {
+  this.species = [];
+  this.DM = [];
+  this.seedDates = seedDates;
+  this.harvestDates = harvestDates;
+};
+
 var grassland = {};
 
 (function () { // prevent poluting global scope

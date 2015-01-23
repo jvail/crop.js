@@ -233,6 +233,9 @@ var Climate = {
   , precip: 5
   , sunhours: 6
   , relhumid: 7
+  , ppf: 8            /* [μmol m-2 d-1] photosynthetic photon flux. required by grassland model */
+  , daylength: 9      /* [seconds]      daylength. required by grassland model */
+  , f_directrad: 10   /* [h h-1]        fraction direct solar radiation. required by grassland model */
 };
 
 // TODO: do not change JS types. Instead create own type.

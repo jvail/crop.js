@@ -1,0 +1,18 @@
+{
+  "crops": [
+    {
+      "name": "grassland",
+      "species": [
+        {
+          "type": "pasture grass",
+          "dryMatter": 1,
+          "constants": {}
+        }
+      ],
+      "tillageOperations": [],
+      "irrigations": [],
+      "organicFertilisers": [],
+      "mineralFertilisers": []
+    }
+  ]
+}

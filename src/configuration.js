@@ -1,10 +1,27 @@
+/*
+  climate = {                     object
+      tmin        [°C]            array, daily minimum temperature
+    , tmax        [°C]            array, daily maximum temperature
+    , tavg        [°C]            array, daily average temperature
+    , globrad     [MJ m-2]        array, global radiation
+    , wind        [m s-1]         array, wind speed
+    , precip      [mm]            array, rainfall
+    , sunhours    [h]             array, sunshine hours, optional (use empty array if not available)
+    , relhumid    [%]             array, relative humidity, optional (use empty array if not available)
+    , ppf         [μmol m-2 d-1]  array, photosynthetic photon flux. required by grassland model
+    , daylength   [seconds]       array, daylength. required by grassland model
+    , f_directrad [h h-1]         array, fraction direct solar radiation. required by grassland model   
+  }
+  doDebug         [bool]          debug model and show MSG.DEBUG output
+  isVerbose       [bool]          show MSG.INFO output
+*/
 
 var Configuration = function (climate, doDebug, isVerbose) {
 
   DEBUG = (doDebug === true) ? true : false;
   VERBOSE = (isVerbose === true) ? true : false;
 
-  var pathToOutputDir = './'
+  var pathToOutputDir = './';
 
   var run = function run(simInput, siteInput, prodInput) {
 
@@ -19,17 +36,17 @@ var Configuration = function (climate, doDebug, isVerbose) {
     var startYear = new Date(Date.parse(simInput.time.startDate)).getFullYear();
     var endYear = new Date(Date.parse(simInput.time.endDate)).getFullYear();
 
-    parameterProvider.userEnvironmentParameters.p_UseSecondaryYields = getValue(simInput.switches, 'useSecondaryYieldOn', parameterProvider.userEnvironmentParameters.p_UseSecondaryYields);
     parameterProvider.userInitValues.p_initPercentageFC = getValue(simInput.init, 'percentageFC', parameterProvider.userInitValues.p_initPercentageFC);
     parameterProvider.userInitValues.p_initSoilNitrate = getValue(simInput.init, 'soilNitrate', parameterProvider.userInitValues.p_initSoilNitrate);
     parameterProvider.userInitValues.p_initSoilAmmonium = getValue(simInput.init, 'soilAmmonium', parameterProvider.userInitValues.p_initSoilAmmonium);
 
+    parameterProvider.userEnvironmentParameters.p_UseSecondaryYields = getValue(simInput.switches, 'useSecondaryYieldOn', parameterProvider.userEnvironmentParameters.p_UseSecondaryYields);
     generalParameters.pc_NitrogenResponseOn = getValue(simInput.switches, 'nitrogenResponseOn', generalParameters.pc_NitrogenResponseOn);
     generalParameters.pc_WaterDeficitResponseOn = getValue(simInput.switches, 'waterDeficitResponseOn', generalParameters.pc_WaterDeficitResponseOn);
     generalParameters.pc_EmergenceMoistureControlOn = getValue(simInput.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
     generalParameters.pc_EmergenceFloodingControlOn = getValue(simInput.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
 
-    logger(MSG.INFO, 'Fetched sim data.');
+    logger(MSG.INFO, 'Fetched simulation data.');
     
     /* site */
     siteParameters.vs_Latitude = siteInput.latitude;
@@ -102,6 +119,7 @@ var Configuration = function (climate, doDebug, isVerbose) {
     return runModel(env, setProgress);
   };
 
+  /* read value from JSON input and return default value if parameter is not available */
   function getValue(obj, prop, def) {
 
     if (obj.hasOwnProperty(prop) && obj[prop] != null)
@@ -110,7 +128,6 @@ var Configuration = function (climate, doDebug, isVerbose) {
       return def;
 
   }
-
 
   function createLayers(layers, horizons, lThicknessCm, maxNoOfLayers) {
 
@@ -214,6 +231,8 @@ var Configuration = function (climate, doDebug, isVerbose) {
     for (var c = 0; c < cs; c++) {
 
       var crop = crops[c];
+      var isGrassland = (crop.name === 'grassland');
+      var isPermanentGrassland = (isGrassland && cs === 1);
 
       var sd = new Date(Date.parse(crop.sowingDate));
       var hd = new Date(Date.parse(crop.finalHarvestDate));
@@ -221,15 +240,36 @@ var Configuration = function (climate, doDebug, isVerbose) {
       debug(sd, 'sd');
       debug(hd, 'hd');
 
-      if (!sd.isValid() || !hd.isValid()) {
+      if (!isPermanentGrassland && (!sd.isValid() || !hd.isValid())) {
         ok = false;
         logger(MSG.ERROR, 'Invalid sowing or harvest date.');
       }
 
-      var fieldcrop = new FieldCrop(crop.name);
-      fieldcrop.setSeedAndHarvestDate(sd, hd);
+      if (isGrassland) {
 
-      cropRotation[c] = new ProductionProcess(crop.name, fieldcrop);
+        var grass = new Grass(sd, hds);
+
+        for (var s = 0, ss = crop.species.length; s < ss; s++) {
+
+          grass.species.push(
+            new grassland.Species({
+              type: crop.species[s].type,
+              constants: crop.species[s].constants
+            })
+          );
+          grass.DM.push(crop.species[s].dryMatter); 
+        
+        }
+
+        cropRotation[c] = new ProductionProcess((isPermanentGrassland ? 'perm. grassland' : 'grassland'), grass);
+
+      } else {
+
+        var fieldcrop = new FieldCrop(crop.name);
+        fieldcrop.setSeedAndHarvestDate(sd, hd);
+        cropRotation[c] = new ProductionProcess(crop.name, fieldcrop);
+      
+      }
 
       /* tillage */
       var tillageOperations = crop.tillageOperations;
@@ -250,27 +290,27 @@ var Configuration = function (climate, doDebug, isVerbose) {
       }
 
       /* organic fertilizer */ 
-      var orgFertArr = crop.organicFertilisers;
-      if (orgFertArr) { /* in case no org fertilizer has been added */ 
-        if (!addFertilizers(cropRotation[c], orgFertArr, true)) {
+      var organicFertilisers = crop.organicFertilisers;
+      if (organicFertilisers) { /* in case no org fertilizer has been added */ 
+        if (!addFertilizers(cropRotation[c], organicFertilisers, true)) {
           ok = false;
           logger(MSG.ERROR, 'Error adding organic fertilisers.');
         }
       }
 
       /* irrigations */
-      var irriArr = crop.irrigations;
-      if (irriArr) {  /* in case no irrigation has been added */
-        if (!addIrrigations(cropRotation[c], irriArr)) {
+      var irrigations = crop.irrigations;
+      if (irrigations) {  /* in case no irrigation has been added */
+        if (!addIrrigations(cropRotation[c], irrigations)) {
           ok = false;
           logger(MSG.ERROR, 'Error adding irrigations.');
         }
       }
 
       /* cutting */
-      var cutArr = crop.cuttings;
-      if (cutArr) { /* in case no tillage has been added */
-        if (!addCuttings(cropRotation[c], cutArr)) {
+      var cuttings = crop.cuttings;
+      if (cuttings) { /* in case no tillage has been added */
+        if (!addCuttings(cropRotation[c], cuttings)) {
           ok = false;
           logger(MSG.ERROR, 'Error adding cuttings.');
         }
@@ -487,20 +527,29 @@ var Configuration = function (climate, doDebug, isVerbose) {
 
     var ok = false;
 
-    if (climate) {
+    if (climate /* constructor */) {
 
-      da.addClimateData(Climate.tmin, new Float64Array(climate.tmin));
-      da.addClimateData(Climate.tmax, new Float64Array(climate.tmax));
-      da.addClimateData(Climate.tavg, new Float64Array(climate.tavg));
-      da.addClimateData(Climate.globrad, new Float64Array(climate.globrad)); /* MJ m-2 */
-      da.addClimateData(Climate.wind, new Float64Array(climate.wind));
-      da.addClimateData(Climate.precip, new Float64Array(climate.precip));
+      da.addClimateData(Climate.tmin, new Float64Array(climate.tmin));                  /* [°C] */
+      da.addClimateData(Climate.tmax, new Float64Array(climate.tmax));                  /* [°C] */
+      da.addClimateData(Climate.tavg, new Float64Array(climate.tavg));                  /* [°C] */
+      da.addClimateData(Climate.globrad, new Float64Array(climate.globrad));            /* [MJ m-2] */
+      da.addClimateData(Climate.wind, new Float64Array(climate.wind));                  /* [m s-1] */
+      da.addClimateData(Climate.precip, new Float64Array(climate.precip));              /* [mm] */
 
-      if(climate.sunhours.length > 0)
-        da.addClimateData(Climate.sunhours, new Float64Array(climate.sunhours));
+      /* required for grassland model */
+      if (climate.ppf.length > 0)
+        da.addClimateData(Climate.ppf, new Float64Array(climate.ppf));                  /* [μmol m-2 d-1] photosynthetic photon flux */
+      if (climate.daylength.length > 0)  
+        da.addClimateData(Climate.daylength, new Float64Array(climate.daylength));      /* [seconds] */
+      if (climate.f_directrad.length > 0)
+        da.addClimateData(Climate.f_directrad, new Float64Array(climate.f_directrad));  /* [h h-1] fraction direct solar radiation */
+
+
+      if (climate.sunhours.length > 0)
+        da.addClimateData(Climate.sunhours, new Float64Array(climate.sunhours));        /* [h] */
 
       if (climate.relhumid.length > 0)
-        da.addClimateData(Climate.relhumid, new Float64Array(climate.relhumid));
+        da.addClimateData(Climate.relhumid, new Float64Array(climate.relhumid));        /* [%] */
 
       /* TODO: add additional checks */
       ok = true;
