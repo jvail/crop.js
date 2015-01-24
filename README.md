@@ -11,7 +11,8 @@ The (generic) crop and soil model is a JS port of [MONICA](http://monica.agrosys
 ## Aims
 - Replace MONICA's generic grass-legume model with a more sophisticated grassland model.
 - Provide additional nutritional parameters (e.g. digestibility) for forage crops (e.g. maize, whole-crop silage) that may be used by animal (ruminants) models.
-- Simplify MONICA's configuration and API.
+- Add simple rountines for automatic seed, harvest, fertilization, irrigation and tillage date predictions.
+- Simplify MONICA's input parameters, configuration and API.
 
 ## Acknowledgements
 
