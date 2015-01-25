@@ -15,7 +15,9 @@
     , relhumid    [%]             array, relative humidity, optional (use empty array if not available)
     , ppf         [μmol m-2 d-1]  array, photosynthetic photon flux. required by grassland model
     , daylength   [seconds]       array, daylength. required by grassland model
-    , f_directrad [h h-1]         array, fraction direct solar radiation. required by grassland model   
+    , f_directrad [h h-1]         array, fraction direct solar radiation. required by grassland model
+    , date        [date]          array, ISO date strings
+    , doy         [#]             array, no. of day
   }
   doDebug         [bool]          debug model and show MSG.DEBUG output
   isVerbose       [bool]          show MSG.INFO output
@@ -536,33 +538,23 @@ var Configuration = function (weather, doDebug, isVerbose) {
     var ok = false;
     var data = [];
 
-    data[WEATHER.TMIN] = new Float64Array(weather.tmin));                  /* [°C] */
-    data[WEATHER.TMAX] = new Float64Array(weather.tmax));                  /* [°C] */
-    data[WEATHER.TAVG] = new Float64Array(weather.tavg));                  /* [°C] */
-    data[WEATHER.GLOBRAD] = new Float64Array(weather.globrad));            /* [MJ m-2] */
-    data[WEATHER.WIND] = new Float64Array(weather.wind));                  /* [m s-1] */
-    data[WEATHER.PRECIP] = new Float64Array(weather.precip));              /* [mm] */
+    data[WEATHER.TMIN] = new Float64Array(weather.tmin);                  /* [°C] */
+    data[WEATHER.TMAX] = new Float64Array(weather.tmax);                  /* [°C] */
+    data[WEATHER.TAVG] = new Float64Array(weather.tavg);                  /* [°C] */
+    data[WEATHER.GLOBRAD] = new Float64Array(weather.globrad);            /* [MJ m-2] */
+    data[WEATHER.WIND] = new Float64Array(weather.wind);                  /* [m s-1] */
+    data[WEATHER.PRECIP] = new Float64Array(weather.precip);              /* [mm] */
 
     /* required for grassland model */
-    if (weather.ppf.length > 0)
-      data[WEATHER.PPF] = new Float64Array(weather.ppf));                  /* [μmol m-2 d-1] photosynthetic photon flux */
-    if (weather.daylength.length > 0)  
-      data[WEATHER.DAYLENGTH] = new Float64Array(weather.daylength));      /* [seconds] */
-    if (weather.f_directrad.length > 0)
-      data[WEATHER.F_DIRECTRAD] = new Float64Array(weather.f_directrad));  /* [h h-1] fraction direct solar radiation */
+    data[WEATHER.PPF] = new Float64Array(weather.ppf);                    /* [μmol m-2 d-1] photosynthetic photon flux */
+    data[WEATHER.DAYLENGTH] = new Float64Array(weather.daylength);        /* [seconds] */
+    data[WEATHER.F_DIRECTRAD] = new Float64Array(weather.f_directrad);    /* [h h-1] fraction direct solar radiation */
 
+    data[WEATHER.SUNHOURS] = new Float64Array(weather.sunhours);          /* [h] */
+    data[WEATHER.RELHUMID] = new Float64Array(weather.relhumid);          /* [%] */
 
-    if (weather.sunhours.length > 0)
-      data[WEATHER.SUNHOURS] = new Float64Array(weather.sunhours));        /* [h] */
-
-    if (weather.relhumid.length > 0)
-      data[WEATHER.RELHUMID] = new Float64Array(weather.relhumid));        /* [%] */
-
-    if (weather.doy.length > 0)
-      data[WEATHER.DOY] = weather.doy;
-
-    if (weather.date.length > 0)
-      data[WEATHER.DATE] = weather.date;
+    data[WEATHER.DOY] = weather.doy;
+    data[WEATHER.DATE] = weather.date;
 
     da = new Weather(startDate, endDate, data);
 

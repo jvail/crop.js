@@ -46,12 +46,6 @@ var FrostComponent = function (sc, cpp) {
 
   var getMeanBulkDensity = function () {
 
-    // in case of sensitivity analysis, this parameter would not be undefined
-    // so return fix value instead of calculating mean bulk density
-    // if (centralParameterProvider.sensitivityAnalysisParameters.p_MeanBulkDensity != UNDEFINED) {
-    //   return centralParameterProvider.sensitivityAnalysisParameters.p_MeanBulkDensity;
-    // }
-
     var vs_number_of_layers = soilColumn.vs_NumberOfLayers();
     var bulk_density_accu = 0.0;
     for (var i_Layer = 0; i_Layer < vs_number_of_layers; i_Layer++) {
@@ -61,12 +55,6 @@ var FrostComponent = function (sc, cpp) {
   };
 
   var getMeanFieldCapacity = function () {
-
-    // in case of sensitivity analysis, this parameter would not be undefined
-    // so return fix value instead of calculating mean bulk density
-    // if (centralParameterProvider.sensitivityAnalysisParameters.p_MeanFieldCapacity != UNDEFINED) {
-    //   return centralParameterProvider.sensitivityAnalysisParameters.p_MeanFieldCapacity;
-    // }
 
     var vs_number_of_layers = soilColumn.vs_NumberOfLayers();
     var mean_field_capacity_accu = 0.0;
@@ -97,12 +85,6 @@ var FrostComponent = function (sc, cpp) {
   var calcHeatConductivityFrozen = function (mean_bulk_density, sii) {
 
     if (DEBUG) debug(arguments);
-    
-    // in case of sensitivity analysis, this parameter would not be undefined
-    // so return fix value instead of calculating heat conductivity
-    // if (centralParameterProvider.sensitivityAnalysisParameters.p_HeatConductivityFrozen != UNDEFINED) {
-    //   return centralParameterProvider.sensitivityAnalysisParameters.p_HeatConductivityFrozen;
-    // }
 
     var cond_frozen = ((3.0 * mean_bulk_density - 1.7) * 0.001) / (1.0
         + (11.5 - 5.0 * mean_bulk_density) * exp((-50.0) * pow((sii / mean_bulk_density), 1.5))) * // [cal cm-1 K-1 s-1]
@@ -120,12 +102,6 @@ var FrostComponent = function (sc, cpp) {
   var calcHeatConductivityUnfrozen = function (mean_bulk_density, mean_field_capacity) {
 
     if (DEBUG) debug(arguments);
-
-    // in case of sensitivity analysis, this parameter would not be undefined
-    // so return fix value instead of calculating heat conductivity
-    // if (centralParameterProvider.sensitivityAnalysisParameters.p_HeatConductivityUnfrozen != UNDEFINED) {
-    //   return centralParameterProvider.sensitivityAnalysisParameters.p_HeatConductivityUnfrozen;
-    // }
 
     var cond_unfrozen = ((3.0 * mean_bulk_density - 1.7) * 0.001) / (1.0 + (11.5 - 5.0
           * mean_bulk_density) * exp((-50.0) * pow(((mean_field_capacity * 100.0) / mean_bulk_density), 1.5)))
@@ -193,12 +169,6 @@ var FrostComponent = function (sc, cpp) {
 
     // Ratio of energy sum from subsoil to vm_LatentHeat
     var latent_heat_transfer = 0.3 * vm_FrostDays / latent_heat;
-
-    // in case of sensitivity analysis, this parameter would not be undefined
-    // so return fix value instead of calculating heat conductivity
-    // if (centralParameterProvider.sensitivityAnalysisParameters.p_LatentHeatTransfer != UNDEFINED) {
-    //   latent_heat_transfer = centralParameterProvider.sensitivityAnalysisParameters.p_LatentHeatTransfer;
-    // }
 
     // Calculate temperature under snowpack
     /** @todo Claas: At a later stage temperature under snow to pass on to soil

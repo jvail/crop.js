@@ -1959,12 +1959,6 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, grassland) { // takes a
     //   vc_MaxRootingDepth += 0.005;
     // }
 
-    // in case of sensitivity analysis, this parameter would not be undefined
-    // so overwrite with fix value
-    // if (centralParameterProvider.sensitivityAnalysisParameters.vc_MaxRootingDepth != UNDEFINED) {
-    //   vc_MaxRootingDepth = centralParameterProvider.sensitivityAnalysisParameters.vc_MaxRootingDepth;
-    // }
-
     if (vc_MaxRootingDepth > (vs_NumberOfLayers * vs_LayerThickness)) {
       vc_MaxRootingDepth = vs_NumberOfLayers * vs_LayerThickness;
     }
@@ -2069,12 +2063,6 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, grassland) { // takes a
     //   } else {
     //     vc_RootDiameter[i_Layer] = 0.0002 - ((i_Layer + 1) * 0.00001); // [m]
     //   }
-
-    //   // in case of sensitivity analysis, this parameter would not be undefined
-    //   // so return fix value instead of calculating mean bulk density
-    //   // if (centralParameterProvider.sensitivityAnalysisParameters.vc_RootDiameter != UNDEFINED) {
-    //   //   vc_RootDiameter[i_Layer] = centralParameterProvider.sensitivityAnalysisParameters.vc_RootDiameter;
-    //   // }
 
     //   // Default root decay - 10 %
     //   vo_FreshSoilOrganicMatter[i_Layer] += vc_RootNIncrement * vc_RootDensity[i_Layer]

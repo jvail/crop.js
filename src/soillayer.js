@@ -78,8 +78,8 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
     var vs_SoilTemperature = 0;
     this.vo_AOM_Pool = [];
 
-    if (!((_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * organicConstants.po_SOM_to_C)) < 0.00001))
-      throw "_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * organicConstants.po_SOM_to_C)) < 0.00001)";
+    if (!((_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001))
+      throw "_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001)";
 
     vs_SoilMoisture_m3 = this.vs_FieldCapacity * cpp.userInitValues.p_initPercentageFC;
     this.vs_SoilMoistureOld_m3 = this.vs_FieldCapacity * cpp.userInitValues.p_initPercentageFC;
@@ -114,7 +114,7 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
       return _vs_SoilOrganicCarbon;
     }
     // calculate soil organic carbon with soil organic matter parameter
-    return _vs_SoilOrganicMatter * organicConstants.po_SOM_to_C;
+    return _vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C;
   };
 
   /**
@@ -135,7 +135,7 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
     }
 
     // ansonsten berechne den Wert aus dem C-Gehalt
-    return (_vs_SoilOrganicCarbon / organicConstants.po_SOM_to_C); //[kg C kg-1]
+    return (_vs_SoilOrganicCarbon / ORGANIC_CONSTANTS.PO_SOM_TO_C); //[kg C kg-1]
   };
 
   /**

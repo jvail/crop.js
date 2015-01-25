@@ -91,7 +91,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
     soilColumn[i_Layer].set_SoilOrganicCarbon((vo_SoilOrganicC[i_Layer] + vo_InertSoilOrganicC[i_Layer]) / soilColumn[i_Layer].vs_SoilBulkDensity()); // [kg C m-3] / [kg m-3] --> [kg C kg-1]
 
-  soilColumn[i_Layer].set_SoilOrganicMatter((vo_SoilOrganicC[i_Layer] + vo_InertSoilOrganicC[i_Layer]) / organicConstants.po_SOM_to_C
+  soilColumn[i_Layer].set_SoilOrganicMatter((vo_SoilOrganicC[i_Layer] + vo_InertSoilOrganicC[i_Layer]) / ORGANIC_CONSTANTS.PO_SOM_TO_C
               / soilColumn[i_Layer].vs_SoilBulkDensity());  // [kg C m-3] / [kg m-3] --> [kg C kg-1]
 
 
@@ -193,7 +193,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
         aom_pool.incorporation = incorporation;
 
         // Converting AOM from kg FM OM ha-1 to kg C m-3
-        vo_AddedOrganicCarbonAmount = vo_AddedOrganicMatterAmount * vo_AOM_DryMatterContent * organicConstants.po_AOM_to_C
+        vo_AddedOrganicCarbonAmount = vo_AddedOrganicMatterAmount * vo_AOM_DryMatterContent * ORGANIC_CONSTANTS.PO_AOM_TO_C
               / 10000.0 / soilColumn[0].vs_LayerThickness;
 
         if(vo_CN_Ratio_AOM_Fast <= 1.0E-7) {
@@ -339,8 +339,8 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
       // kmol urea m-3 soil
       vo_SoilCarbamid_solid[i_Layer] = soilColumn[i_Layer].vs_SoilCarbamid /
-               organicConstants.po_UreaMolecularWeight /
-               organicConstants.po_Urea_to_N / 1000.0;
+               ORGANIC_CONSTANTS.PO_UREAMOLECULARWEIGHT /
+               ORGANIC_CONSTANTS.PO_UREA_TO_N / 1000.0;
 
       // mol urea kg Solution-1
       vo_SoilCarbamid_aq[i_Layer] = (-1258.9 + 13.2843 * (soilColumn[i_Layer].get_Vs_SoilTemperature() + 273.15) -
@@ -366,8 +366,8 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
       vo_HydrolysisRate1[i_Layer] = (po_HydrolysisP1 *
                                     (soilColumn[i_Layer].vs_SoilOrganicMatter() * 100.0) *
-                                    organicConstants.po_SOM_to_C + po_HydrolysisP2) /
-                                    organicConstants.po_UreaMolecularWeight;
+                                    ORGANIC_CONSTANTS.PO_SOM_TO_C + po_HydrolysisP2) /
+                                    ORGANIC_CONSTANTS.PO_UREAMOLECULARWEIGHT;
 
       vo_HydrolysisRate2[i_Layer] = vo_HydrolysisRate1[i_Layer] /
                                     (exp(-po_ActivationEnergy /
@@ -401,13 +401,13 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
         // kg N m soil-3
         soilColumn[i_Layer].vs_SoilCarbamid -= vo_HydrolysisRate[i_Layer] *
-               organicConstants.po_UreaMolecularWeight *
-               organicConstants.po_Urea_to_N * 1000.0;
+               ORGANIC_CONSTANTS.PO_UREAMOLECULARWEIGHT *
+               ORGANIC_CONSTANTS.PO_UREA_TO_N * 1000.0;
 
         // kg N m soil-3
         soilColumn[i_Layer].vs_SoilNH4 += vo_HydrolysisRate[i_Layer] *
-          organicConstants.po_UreaMolecularWeight *
-          organicConstants.po_Urea_to_N * 1000.0;
+          ORGANIC_CONSTANTS.PO_UREAMOLECULARWEIGHT *
+          ORGANIC_CONSTANTS.PO_UREA_TO_N * 1000.0;
       }
 
       // Calculate general volatilisation from NH4-Pool in top layer
@@ -422,7 +422,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
                                   (soilColumn[0].get_Vs_SoilTemperature() + 273.15)) - 2.301));  // K1 in Sadeghi's program
 
         // kmol m-3, assuming that all NH4 is solved
-        vs_SoilNH4aq = soilColumn[0].vs_SoilNH4 / (organicConstants.po_NH4MolecularWeight * 1000.0);
+        vs_SoilNH4aq = soilColumn[0].vs_SoilNH4 / (ORGANIC_CONSTANTS.PO_NH4MOLECULARWEIGHT * 1000.0);
 
 
         // kmol m-3
@@ -433,7 +433,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
         //  vo_NH3gas = vo_NH3aq / vo_NH3_EquilibriumConst;
 
         // kg N m-3 d-1
-         vo_NH3_Volatilising = vo_NH3gas * organicConstants.po_NH3MolecularWeight * 1000.0;
+         vo_NH3_Volatilising = vo_NH3gas * ORGANIC_CONSTANTS.PO_NH3MOLECULARWEIGHT * 1000.0;
 
 
         if (vo_NH3_Volatilising >= soilColumn[0].vs_SoilNH4) {
@@ -1213,7 +1213,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
         vo_N2OProduction[i_Layer] = soilColumn[i_Layer].vs_SoilNO2
              * fo_TempOnNitrification(soilColumn[i_Layer].get_Vs_SoilTemperature())
              * po_N2OProductionRate * (1.0 / (1.0 +
-             (pow(10.0,soilColumn[i_Layer].vs_SoilpH) - organicConstants.po_pKaHNO2)));
+             (pow(10.0,soilColumn[i_Layer].vs_SoilpH) - ORGANIC_CONSTANTS.PO_PKAHNO2)));
 
         vo_N2O_Produced += vo_N2OProduction[i_Layer];
     }
@@ -1267,7 +1267,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       
       soilColumn[i_Layer].set_SoilOrganicCarbon((vo_SoilOrganicC[i_Layer] + vo_InertSoilOrganicC[i_Layer]) / soilColumn[i_Layer].vs_SoilBulkDensity()); // [kg C m-3] / [kg m-3] --> [kg C kg-1]
 
-    soilColumn[i_Layer].set_SoilOrganicMatter((vo_SoilOrganicC[i_Layer] + vo_InertSoilOrganicC[i_Layer])/ organicConstants.po_SOM_to_C
+    soilColumn[i_Layer].set_SoilOrganicMatter((vo_SoilOrganicC[i_Layer] + vo_InertSoilOrganicC[i_Layer])/ ORGANIC_CONSTANTS.PO_SOM_TO_C
                 / soilColumn[i_Layer].vs_SoilBulkDensity()); // [kg C m-3] / [kg m-3] --> [kg C kg-1]
     } // for
   };
@@ -1454,7 +1454,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     var fo_NH3onNitriteOxidation=0.0;
 
     fo_NH3onNitriteOxidation = po_Inhibitor_NH3 + d_SoilNH4 * (1.0 - 1.0 / (1.0
-         + pow(10.0,(d_SoilpH - organicConstants.po_pKaNH3)))) / po_Inhibitor_NH3;
+         + pow(10.0,(d_SoilpH - ORGANIC_CONSTANTS.PO_PKANH3)))) / po_Inhibitor_NH3;
 
     return fo_NH3onNitriteOxidation;
   };

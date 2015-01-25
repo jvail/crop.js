@@ -396,7 +396,7 @@ var SoilColumn = function (gps, sp, cpp) {
     // use calculated mean values for all affected layers
     for (var i = 0; i < layer_index; i++) {
 
-      //assert((soil_organic_carbon - (soil_organic_matter * organicConstants.po_SOM_to_C)) < 0.00001);
+      //assert((soil_organic_carbon - (soil_organic_matter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001);
       this[i].set_SoilOrganicCarbon(soil_organic_carbon);
       this[i].set_SoilOrganicMatter(soil_organic_matter);
       this[i].set_Vs_SoilTemperature(soil_temperature);

@@ -258,12 +258,6 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     vm_SoilMoistureDeficit = (vm_SoilPoreVolume[0] - vm_SoilMoisture[0]) / vm_SoilPoreVolume[0];
     vm_ReducedHydraulicConductivity = vm_SaturatedHydraulicConductivity[0] * vm_HydraulicConductivityRedux;
 
-    // in case of sensitivity analysis, this parameter would not be undefined
-    // if (centralParameterProvider.sensitivityAnalysisParameters.p_ReducedHydraulicConductivity != UNDEFINED) {
-    //   vm_ReducedHydraulicConductivity = centralParameterProvider.sensitivityAnalysisParameters.p_ReducedHydraulicConductivity;
-    //   //cout << "p_ReducedHydraulicConductivity:\t" << vm_ReducedHydraulicConductivity << endl;
-    // }
-
     if (vm_ReducedHydraulicConductivity > 0.0) {
 
       vm_PotentialInfiltration

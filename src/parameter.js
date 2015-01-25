@@ -191,7 +191,7 @@ var SoilParameters = {
     if (this._vs_SoilOrganicMatter < 0)
       return this._vs_SoilOrganicCarbon;
 
-    return this._vs_SoilOrganicMatter * organicConstants.po_SOM_to_C;
+    return this._vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C;
   },
   set_vs_SoilOrganicCarbon: function (soc) {
     this._vs_SoilOrganicCarbon = soc;
@@ -199,7 +199,7 @@ var SoilParameters = {
   vs_SoilOrganicMatter: function () {
     if (this._vs_SoilOrganicCarbon < 0)
       return this._vs_SoilOrganicMatter;
-    return this._vs_SoilOrganicCarbon / organicConstants.po_SOM_to_C;
+    return this._vs_SoilOrganicCarbon / ORGANIC_CONSTANTS.PO_SOM_TO_C;
   },
   set_vs_SoilOrganicMatter: function (som) {
     this._vs_SoilOrganicMatter = som;
