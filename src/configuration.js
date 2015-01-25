@@ -1,5 +1,10 @@
 /*
-  climate = {                     object
+
+  TODO:
+    - run simulation either from startDate till endDate or 
+      if no. days (endDate - startDate) < minLength(weather.arrays) then till startDate + minLength(weather.arrays)
+
+  weather = {                     object
       tmin        [°C]            array, daily minimum temperature
     , tmax        [°C]            array, daily maximum temperature
     , tavg        [°C]            array, daily average temperature
@@ -16,12 +21,12 @@
   isVerbose       [bool]          show MSG.INFO output
 */
 
-var Configuration = function (climate, doDebug, isVerbose) {
+var Configuration = function (weather, doDebug, isVerbose) {
 
   DEBUG = (doDebug === true) ? true : false;
   VERBOSE = (isVerbose === true) ? true : false;
 
-  var pathToOutputDir = './';
+  var pathToOutputDir = '.';
 
   var run = function run(simInput, siteInput, prodInput) {
 
@@ -77,13 +82,13 @@ var Configuration = function (climate, doDebug, isVerbose) {
     logger(MSG.INFO, 'Fetched soil data.');
 
     /* weather */
-    var da = new DataAccessor(new Date(startYear, 0, 1), new Date(endYear, 11, 31));
-    if (!createClimate(da, parameterProvider, siteParameters.vs_Latitude)) {
-      logger(MSG.ERROR, 'Error fetching climate data.');
+    var da = null;
+    if (!createClimate(da, weather, Date.parse(simInput.time.startDate), Date.parse(simInput.time.endDate))) {
+      logger(MSG.ERROR, 'Error fetching weather data.');
       return;
     }
     
-    logger(MSG.INFO, 'Fetched climate data.');
+    logger(MSG.INFO, 'Fetched weather data.');
 
     /* crops */
     var cropRotation = [];
@@ -234,20 +239,23 @@ var Configuration = function (climate, doDebug, isVerbose) {
       var isGrassland = (crop.name === 'grassland');
       var isPermanentGrassland = (isGrassland && cs === 1);
 
-      var sd = new Date(Date.parse(crop.sowingDate));
-      var hd = new Date(Date.parse(crop.finalHarvestDate));
-
-      debug(sd, 'sd');
-      debug(hd, 'hd');
-
-      if (!isPermanentGrassland && (!sd.isValid() || !hd.isValid())) {
-        ok = false;
-        logger(MSG.ERROR, 'Invalid sowing or harvest date.');
+      if (isGrassland) {
+        var sds = getValue(crop, 'sowingDates', []);
+        var hds = getValue(crop, 'harvestDates', []);
+      } else {
+        var sd = new Date(Date.parse(crop.sowingDate));
+        var hd = new Date(Date.parse(crop.finalHarvestDate));
+        debug(sd, 'sd');
+        debug(hd, 'hd');
+        if (!sd.isValid() || !hd.isValid()) {
+          ok = false;
+          logger(MSG.ERROR, 'Invalid sowing or harvest date in ' + crop.name);
+        }
       }
 
       if (isGrassland) {
 
-        var grass = new Grass(sd, hds);
+        var grass = new Grass(sds, hds);
 
         for (var s = 0, ss = crop.species.length; s < ss; s++) {
 
@@ -523,125 +531,45 @@ var Configuration = function (climate, doDebug, isVerbose) {
   // };
 
 
-  function createClimate(da, cpp, latitude, useLeapYears) {
+  function createClimate(da, weather, startDate, endDate) {
 
     var ok = false;
+    var data = [];
 
-    if (climate /* constructor */) {
+    data[WEATHER.TMIN] = new Float64Array(weather.tmin));                  /* [°C] */
+    data[WEATHER.TMAX] = new Float64Array(weather.tmax));                  /* [°C] */
+    data[WEATHER.TAVG] = new Float64Array(weather.tavg));                  /* [°C] */
+    data[WEATHER.GLOBRAD] = new Float64Array(weather.globrad));            /* [MJ m-2] */
+    data[WEATHER.WIND] = new Float64Array(weather.wind));                  /* [m s-1] */
+    data[WEATHER.PRECIP] = new Float64Array(weather.precip));              /* [mm] */
 
-      da.addClimateData(Climate.tmin, new Float64Array(climate.tmin));                  /* [°C] */
-      da.addClimateData(Climate.tmax, new Float64Array(climate.tmax));                  /* [°C] */
-      da.addClimateData(Climate.tavg, new Float64Array(climate.tavg));                  /* [°C] */
-      da.addClimateData(Climate.globrad, new Float64Array(climate.globrad));            /* [MJ m-2] */
-      da.addClimateData(Climate.wind, new Float64Array(climate.wind));                  /* [m s-1] */
-      da.addClimateData(Climate.precip, new Float64Array(climate.precip));              /* [mm] */
-
-      /* required for grassland model */
-      if (climate.ppf.length > 0)
-        da.addClimateData(Climate.ppf, new Float64Array(climate.ppf));                  /* [μmol m-2 d-1] photosynthetic photon flux */
-      if (climate.daylength.length > 0)  
-        da.addClimateData(Climate.daylength, new Float64Array(climate.daylength));      /* [seconds] */
-      if (climate.f_directrad.length > 0)
-        da.addClimateData(Climate.f_directrad, new Float64Array(climate.f_directrad));  /* [h h-1] fraction direct solar radiation */
+    /* required for grassland model */
+    if (weather.ppf.length > 0)
+      data[WEATHER.PPF] = new Float64Array(weather.ppf));                  /* [μmol m-2 d-1] photosynthetic photon flux */
+    if (weather.daylength.length > 0)  
+      data[WEATHER.DAYLENGTH] = new Float64Array(weather.daylength));      /* [seconds] */
+    if (weather.f_directrad.length > 0)
+      data[WEATHER.F_DIRECTRAD] = new Float64Array(weather.f_directrad));  /* [h h-1] fraction direct solar radiation */
 
 
-      if (climate.sunhours.length > 0)
-        da.addClimateData(Climate.sunhours, new Float64Array(climate.sunhours));        /* [h] */
+    if (weather.sunhours.length > 0)
+      data[WEATHER.SUNHOURS] = new Float64Array(weather.sunhours));        /* [h] */
 
-      if (climate.relhumid.length > 0)
-        da.addClimateData(Climate.relhumid, new Float64Array(climate.relhumid));        /* [%] */
+    if (weather.relhumid.length > 0)
+      data[WEATHER.RELHUMID] = new Float64Array(weather.relhumid));        /* [%] */
 
-      /* TODO: add additional checks */
-      ok = true;
-    }
+    if (weather.doy.length > 0)
+      data[WEATHER.DOY] = weather.doy;
+
+    if (weather.date.length > 0)
+      data[WEATHER.DATE] = weather.date;
+
+    da = new Weather(startDate, endDate, data);
+
+    /* TODO: add additional checks */
+    ok = true;
 
     return ok;
-
-    /* we dont use hermes MET files anymore */
-    // var tmin = [];
-    // var tavg = [];
-    // var tmax = [];
-    // var globrad = [];
-    // var relhumid = [];
-    // var wind = [];
-    // var precip = [];
-    // var sunhours = [];
-
-    // var date = new Date(da.startDate().getFullYear(), 0, 1);
-
-    // var idx_t_av = data.met.columns.indexOf('t_av');
-    // var idx_t_min = data.met.columns.indexOf('t_min');
-    // var idx_t_max = data.met.columns.indexOf('t_max');
-    // var idx_t_s10 = data.met.columns.indexOf('t_s10');
-    // var idx_t_s20 = data.met.columns.indexOf('t_s20');
-    // var idx_vappd = data.met.columns.indexOf('vappd');
-    // var idx_wind = data.met.columns.indexOf('wind');
-    // var idx_sundu = data.met.columns.indexOf('sundu');
-    // var idx_radia = data.met.columns.indexOf('radia');
-    // var idx_prec = data.met.columns.indexOf('prec');
-    // var idx_day = data.met.columns.indexOf('day');
-    // var idx_year = data.met.columns.indexOf('year');
-    // var idx_rf = data.met.columns.indexOf('rf');
-
-    // for (var y = da.startDate().getFullYear(), ys = da.endDate().getFullYear(); y <= ys; y++) {
-
-    //   var daysCount = 0;
-    //   var allowedDays = ceil((new Date(y + 1, 0, 1) - new Date(y, 0, 1)) / (24 * 60 * 60 * 1000));
-
-    //   console.log('allowedDays: ' + allowedDays + ' ' + y+ '\t' + useLeapYears + '\tlatitude:\t' + latitude);
-
-    //   for (var r = 0, rs = data.met.rows.length; r < rs; r++) {
-
-    //     var row = data.met.rows[r];
-    //     if (row[idx_year] != y)
-    //       continue;
-
-    //     if (row[idx_radia] >= 0) {
-    //       // use globrad
-    //       // HERMES weather files deliver global radiation as [J cm-2]
-    //       // Here, we push back [MJ m-2 d-1]
-    //       var globradMJpm2pd = row[idx_radia] * 100.0 * 100.0 / 1000000.0;
-    //       globrad.push(globradMJpm2pd);        
-    //     } else if (row[idx_sundu] >= 0.0) {
-    //       // invalid globrad use sunhours
-    //       // convert sunhours into globrad
-    //       // debug() << 'Invalid globrad - use sunhours instead' << endl;
-    //       globrad.push(Tools.sunshine2globalRadiation(r + 1, sunhours, latitude, true));    
-    //       sunhours.push(row[idx_sundu]);
-    //     } else {
-    //       // error case
-    //       console.log('Error: No global radiation or sunhours specified for day ' + date);
-    //       ok = false;
-    //     }
-
-    //     if (row[idx_rf] >= 0.0)
-    //       relhumid.push(row[idx_rf]);
-
-    //     tavg.push(row[idx_t_av]);
-    //     tmin.push(row[idx_t_min]);
-    //     tmax.push(row[idx_t_max]);
-    //     wind.push(row[idx_wind]);
-    //     precip.push(row[idx_prec]);
-
-    //     daysCount++;
-    //     date = new Date(date.getFullYear, date.getMonth(), date.getDate() + 1);
-    //   }
-    // }
-
-    // da.addClimateData(Climate.tmin, new Float64Array(tmin));
-    // da.addClimateData(Climate.tmax, new Float64Array(tmax));
-    // da.addClimateData(Climate.tavg, new Float64Array(tavg));
-    // da.addClimateData(Climate.globrad, new Float64Array(globrad));
-    // da.addClimateData(Climate.wind, new Float64Array(wind));
-    // da.addClimateData(Climate.precip, new Float64Array(precip));
-
-    // if(sunhours.length > 0)
-    //   da.addClimateData(Climate.sunhours, new Float64Array(sunhours));
-
-    // if (relhumid.length > 0)
-    //   da.addClimateData(Climate.relhumid, new Float64Array(relhumid));
-
-    // return ok;
 
   };
 

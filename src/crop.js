@@ -1,307 +1,122 @@
-var runModel = function (env, progress_callback) {
-
-  var res = { crops: [] };
-  
-  ResultId.forEach(function (id) {
-    if (perCropResults.indexOf(id) === -1)
-      res[id] = [];
-  });
-
-  if(env.cropRotation.length === 0) {
-    logger(MSG.ERROR, "rotation is empty");
-    return res;
-  }
+var runModel = function (env, progressCallback) {
 
   logger(MSG.INFO, "starting monica");
+  
+  if(env.cropRotation.length === 0) {
+    logger(MSG.ERROR, "rotation is empty");
+    return;
+  }
 
-  var write_output_files = (env.pathToOutputDir != null && !!fs);
-  var foutFileName = env.pathToOutputDir + '/rmout.dat';
-  var goutFileName = env.pathToOutputDir + '/smout.dat';
-  var monicaParamFileName = env.pathToOutputDir + '/monica_parameters.txt';
+  var model = new Model(env)
+    , currentDate = env.da.startDate()
+    , totalNoDays = env.da.noOfStepsPossible()
+    , dayInMonth = 0 // day in current month
+    , productionProcessIdx = 0 // iterator through the production processes
+    , currentProductionProcess = env.cropRotation[productionProcessIdx] // direct handle to current process
+    , nextProductionProcessApplicationDate = currentProductionProcess.start()
+    ;
 
-  if (write_output_files) {
-    // writes the header line to output files
+  /* output processing */  
+  var doWriteOutputFiles = (env.pathToOutputDir != null && !!fs)
+    , foutFileName = env.pathToOutputDir + '/rmout.dat'
+    , goutFileName = env.pathToOutputDir + '/smout.dat'
+    , monicaParamFileName = env.pathToOutputDir + '/monica_parameters.txt'
+    ;
+
+  if (doWriteOutputFiles) {
+    /* writes the header line to output files */
     initializeFoutHeader(foutFileName);
     initializeGoutHeader(goutFileName);
     dumpMonicaParametersIntoFile(monicaParamFileName, env.centralParameterProvider);
   }
 
-  //debug() << "MonicaModel" << endl;
-  //debug() << env.toString();
-  var model = new Model(env, env.da);
-  var currentDate = env.da.startDate();
-  var nods = env.da.noOfStepsPossible();
+  logger(MSG.INFO, "next app-date: " + nextProductionProcessApplicationDate.toString());
 
-  var currentMonth = currentDate.getMonth();
-  var dim = 0; //day in current month
-
-  var avg10corg = 0, avg30corg = 0, watercontent = 0,
-      groundwater = 0,  nLeaching= 0, yearly_groundwater=0,
-      yearly_nleaching=0, monthSurfaceRunoff = 0.0;
-  var monthPrecip = 0.0;
-  var monthETa = 0.0;
-
-  //iterator through the production processes
-  var ppci = 0;
-  //direct handle to current process
-  var currentPP = env.cropRotation[ppci];
-  //are the dates in the production process relative dates
-  //or are they absolute as produced by the hermes inputs
-  var useRelativeDates =  false;// currentPP.start().isRelativeDate();
-  //the next application date, either a relative or an absolute date
-  //to get the correct applications out of the production processes
-  var nextPPApplicationDate = currentPP.start();
-
-  //a definitely absolute next application date to keep track where
-  //we are in the list of climate data
-  var nextAbsolutePPApplicationDate =
-      useRelativeDates ? nextPPApplicationDate.toAbsoluteDate
-                         (currentDate.year() + 1) : nextPPApplicationDate;
-  logger(MSG.INFO, "next app-date: " + nextPPApplicationDate.toString()
-          + " next abs app-date: " + nextAbsolutePPApplicationDate.toString());
-
-  //if for some reason there are no applications (no nothing) in the
-  //production process: quit
-  if(!nextAbsolutePPApplicationDate.isValid())
-  {
-    logger(MSG.ERROR, "start of production-process: " + currentPP.toString() + " is not valid");
-    return res;
+  /* if for some reason there are no applications (no nothing) in the production process: quit */
+  if(!nextProductionProcessApplicationDate.isValid()) {
+    logger(MSG.ERROR, "start of production-process: " + currentProductionProcess.toString() + " is not valid");
+    return;
   }
 
-  //beware: !!!! if there are absolute days used, then there is basically
-  //no rotation if the last crop in the crop rotation has changed
-  //the loop starts anew but the first crops date has already passed
-  //so the crop won't be seeded again or any work applied
-  //thus for absolute dates the crop rotation has to be as long as there
-  //are climate data !!!!!
+  for (var dayOfSimulation = 0; dayOfSimulation < totalNoDays; dayOfSimulation++) {
 
-  for (var d = 0; d < nods; ++d, currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1), ++dim) {
+    currentDate.setDate(currentDate.getDate() + 1);
+    dayInMonth++;
 
-    logger(MSG.INFO, currentDate.getDate() + "." + (currentDate.getMonth() + 1) + "." + currentDate.getFullYear());
+    logger(MSG.INFO, date.toISOString().split('T')[0]);
+    
     model.resetDailyCounter();
 
-    // test if model's crop has been dying in previous step
-    // if yes, it will be incorporated into soil
-    if (model.cropGrowth() && model.cropGrowth().isDying()) {
+    /* test if model's crop has been dying in previous step if yes, it will be incorporated into soil */
+    if (model.cropGrowth() && model.cropGrowth().isDying())
         model.incorporateCurrentCrop();
-    }
 
-    //there's something to at this day
-    if (nextAbsolutePPApplicationDate.setHours(0,0,0,0) == currentDate.setHours(0,0,0,0)) {
-
-      logger(MSG.INFO, 
-        " applying at: " + nextPPApplicationDate.toString() +
-        " absolute-at: " + nextAbsolutePPApplicationDate.toString()
-      );
-
-      // store yields if cutting
-      // debug('currentPP.getWorksteps()[0]', currentPP.getWorkstep(currentDate));
-      // if (currentPP.getWorkstep(currentDate) instanceof Cutting && currentPP.getWorkstep(currentDate))
-      //   res.crops.push(currentPP.cropResult());
+    /* there's something to apply at this day */
+    if (nextProductionProcessApplicationDate.setHours(0,0,0,0) === currentDate.setHours(0,0,0,0)) {
       
-      //apply everything to do at current day
-      //cout << currentPP.toString() << endl;
-      currentPP.apply(nextPPApplicationDate, model);
+      /* apply everything to do at current day */
+      currentProductionProcess.apply(nextProductionProcessApplicationDate, model);
+      logger(MSG.INFO, 'applied at: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
 
-      //get the next application date to wait for (either absolute or relative)
-      var prevPPApplicationDate = nextPPApplicationDate;
+      /* get the next application date to wait for */
+      var prevPPApplicationDate = nextProductionProcessApplicationDate;
 
-      nextPPApplicationDate =  currentPP.nextDate(nextPPApplicationDate);
+      nextProductionProcessApplicationDate = currentProductionProcess.nextDate(nextProductionProcessApplicationDate);
 
-      nextAbsolutePPApplicationDate =  useRelativeDates ? nextPPApplicationDate.toAbsoluteDate
-          (currentDate.year() + (nextPPApplicationDate.dayOfYear() > prevPPApplicationDate.dayOfYear() ? 0 : 1),
-           true) : nextPPApplicationDate;
+      logger(MSG.INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
 
-      logger(MSG.INFO, 
-        " next app-date: " + nextPPApplicationDate.toString() + 
-        " next abs app-date: " + nextAbsolutePPApplicationDate.toString()
-      );
+      /* if application date was not valid, we're (probably) at the end
+        of the application list of this production process
+        -> go to the next one in the crop rotation */
+      if (!nextProductionProcessApplicationDate.isValid()) {
 
-      //if application date was not valid, we're (probably) at the end
-      //of the application list of this production process
-      //-> go to the next one in the crop rotation
-      if(!nextAbsolutePPApplicationDate.isValid()) {
-        
-        //get yieldresults for crop
-        res.crops.push(currentPP.cropResult());
-
-        // if(!env.useSecondaryYields)
-        //   res.crops[res.crops.length - 1]['secondaryYield'] = 0;
-        // res.crops[res.crops.length - 1]['sumFertiliser'] = model.sumFertiliser();
-        // res.crops[res.crops.length - 1]['daysWithCrop'] = model.daysWithCrop();
-        // res.crops[res.crops.length - 1]['NStress'] = model.getAccumulatedNStress();
-        // res.crops[res.crops.length - 1]['WaterStress'] = model.getAccumulatedWaterStress();
-        // res.crops[res.crops.length - 1]['HeatStress'] = model.getAccumulatedHeatStress();
-        // res.crops[res.crops.length - 1]['OxygenStress'] = model.getAccumulatedOxygenStress();
-
-        //to count the applied fertiliser for the next production process
+        /* to count the applied fertiliser for the next production process */
         model.resetFertiliserCounter();
 
-        //resets crop values for use in next year
-        currentPP.crop().reset();
+        /* resets crop values for use in next year */
+        currentProductionProcess.crop().reset();
 
-        ppci++;
+        productionProcessIdx++;
+        currentProductionProcess = env.cropRotation[productionProcessIdx];
+        nextProductionProcessApplicationDate = currentProductionProcess.start();
 
-        //start anew if we reached the end of the crop rotation
-        if(ppci == env.cropRotation.length)
-          ppci = 0;
-
-        currentPP = env.cropRotation[ppci];
-        nextPPApplicationDate = currentPP.start();
-        nextAbsolutePPApplicationDate =
-            useRelativeDates ? nextPPApplicationDate.toAbsoluteDate
-            (currentDate.year() + (nextPPApplicationDate.dayOfYear() > prevPPApplicationDate.dayOfYear() ? 0 : 1),
-             true) : nextPPApplicationDate;
-
-        logger(MSG.INFO, 
-          " new valid next app-date: " + nextPPApplicationDate.toString() +
-          " next abs app-date: " + nextAbsolutePPApplicationDate.toString()
-        );
+        logger(MSG.INFO, 'new valid next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
       }
 
-      //if we got our next date relative it might be possible that
-      //the actual relative date belongs into the next year
-      //this is the case if we're already (dayOfYear) past the next dayOfYear
-      if(useRelativeDates && currentDate > nextAbsolutePPApplicationDate)
-        nextAbsolutePPApplicationDate.addYears(1);
-    }
-    // write simulation date to file
-    if (write_output_files) {
-        fs.appendFileSync(goutFileName, currentDate.toLocaleDateString(), { encoding: 'utf8' });
-        fs.appendFileSync(foutFileName, currentDate.toLocaleDateString(), { encoding: 'utf8' });
     }
 
-    // run crop step
-    if(model.isCropPlanted()) {
-      model.cropStep(d);
-      // return;
+    /* write simulation date to file */
+    if (doWriteOutputFiles) {
+      fs.appendFileSync(goutFileName, currentDate.toLocaleDateString(), { encoding: 'utf8' });
+      fs.appendFileSync(foutFileName, currentDate.toLocaleDateString(), { encoding: 'utf8' });
     }
 
-    // writes crop results to output file
-    if (write_output_files)
+    /* run crop step */
+    if(model.isCropPlanted())
+      model.cropStep(dayOfSimulation);
+
+    /* writes crop results to output file */
+    if (doWriteOutputFiles)
       writeCropResults(model.cropGrowth(), foutFileName, goutFileName, model.isCropPlanted());
     
-    /* if progress_callback is provided */
-    if (progress_callback)
-      progress_callback(currentDate, model);
+    /* if progressCallback is provided */
+    if (progressCallback)
+      progressCallback(currentDate, model);
 
-    model.generalStep(d);
+    model.generalStep(dayOfSimulation);
 
-    // write special outputs at 31.03.
-    if(currentDate.getDate() == 31 && currentDate.getMonth() == 3) {
-
-      res['sum90cmYearlyNatDay'].push(fixed(10, model.sumNmin(0.9)));
-      //      debug << "N at: " << model.sumNmin(0.9) << endl;
-      res['sum30cmSoilTemperature'].push(fixed(10, model.sumSoilTemperature(3)));
-      res['sum90cmYearlyNO3AtDay'].push(fixed(10, model.sumNO3AtDay(0.9)));
-      res['avg30cmSoilTemperature'].push(fixed(10, model.avg30cmSoilTemperature()));
-      //cout << "MONICA_TEMP:\t" << model.avg30cmSoilTemperature() << endl;
-      res['avg0_30cmSoilMoisture'].push(fixed(10, model.avgSoilMoisture(0,3)));
-      res['avg30_60cmSoilMoisture'].push(fixed(10, model.avgSoilMoisture(3,6)));
-      res['avg60_90cmSoilMoisture'].push(fixed(10, model.avgSoilMoisture(6,9)));
-      res['waterFluxAtLowerBoundary'].push(fixed(10, model.groundWaterRecharge()));
-      res['avg0_30cmCapillaryRise'].push(fixed(10, model.avgCapillaryRise(0,3)));
-      res['avg30_60cmCapillaryRise'].push(fixed(10, model.avgCapillaryRise(3,6)));
-      res['avg60_90cmCapillaryRise'].push(fixed(10, model.avgCapillaryRise(6,9)));
-      res['avg0_30cmPercolationRate'].push(fixed(10, model.avgPercolationRate(0,3)));
-      res['avg30_60cmPercolationRate'].push(fixed(10, model.avgPercolationRate(3,6)));
-      res['avg60_90cmPercolationRate'].push(fixed(10, model.avgPercolationRate(6,9)));
-      res['evapotranspiration'].push(fixed(10, model.getEvapotranspiration()));
-      res['transpiration'].push(fixed(10, model.getTranspiration()));
-      res['evaporation'].push(fixed(10, model.getEvaporation()));
-      res['sum30cmSMB_CO2EvolutionRate'].push(fixed(10, model.get_sum30cmSMB_CO2EvolutionRate()));
-      res['NH3Volatilised'].push(fixed(10, model.getNH3Volatilised()));
-      res['sum30cmActDenitrificationRate'].push(fixed(10, model.getsum30cmActDenitrificationRate()));
-      res['leachingNAtBoundary'].push(fixed(10, model.nLeaching()));
-    }
-
-    if((currentDate.getMonth() != currentMonth) || (d == nods - 1)) {
-      
-      currentMonth = currentDate.getMonth();
-
-      res['avg10cmMonthlyAvgCorg'].push(fixed(10, avg10corg / dim));
-      res['avg30cmMonthlyAvgCorg'].push(fixed(10, avg30corg / dim));
-      res['mean90cmMonthlyAvgWaterContent'].push(fixed(10, model.mean90cmWaterContent()));
-      res['monthlySumGroundWaterRecharge'].push(fixed(10, groundwater));
-      res['monthlySumNLeaching'].push(fixed(10, nLeaching));
-      res['maxSnowDepth'].push(fixed(10, model.maxSnowDepth()));
-      res['sumSnowDepth'].push(fixed(10, model.accumulatedSnowDepth()));
-      res['sumFrostDepth'].push(fixed(10, model.accumulatedFrostDepth()));
-      res['sumSurfaceRunOff'].push(fixed(10, model.sumSurfaceRunOff()));
-      res['sumNH3Volatilised'].push(fixed(10, model.getSumNH3Volatilised()));
-      res['monthlySurfaceRunoff'].push(fixed(10, monthSurfaceRunoff));
-      res['monthlyPrecip'].push(fixed(10, monthPrecip));
-      res['monthlyETa'].push(fixed(10, monthETa));
-      res['monthlySoilMoistureL0'].push(fixed(10, model.avgSoilMoisture(0,1) * 100.0));
-      res['monthlySoilMoistureL1'].push(fixed(10, model.avgSoilMoisture(1,2) * 100.0));
-      res['monthlySoilMoistureL2'].push(fixed(10, model.avgSoilMoisture(2,3) * 100.0));
-      res['monthlySoilMoistureL3'].push(fixed(10, model.avgSoilMoisture(3,4) * 100.0));
-      res['monthlySoilMoistureL4'].push(fixed(10, model.avgSoilMoisture(4,5) * 100.0));
-      res['monthlySoilMoistureL5'].push(fixed(10, model.avgSoilMoisture(5,6) * 100.0));
-      res['monthlySoilMoistureL6'].push(fixed(10, model.avgSoilMoisture(6,7) * 100.0));
-      res['monthlySoilMoistureL7'].push(fixed(10, model.avgSoilMoisture(7,8) * 100.0));
-      res['monthlySoilMoistureL8'].push(fixed(10, model.avgSoilMoisture(8,9) * 100.0));
-      res['monthlySoilMoistureL9'].push(fixed(10, model.avgSoilMoisture(9,10) * 100.0));
-      res['monthlySoilMoistureL10'].push(fixed(10, model.avgSoilMoisture(10,11) * 100.0));
-      res['monthlySoilMoistureL11'].push(fixed(10, model.avgSoilMoisture(11,12) * 100.0));
-      res['monthlySoilMoistureL12'].push(fixed(10, model.avgSoilMoisture(12,13) * 100.0));
-      res['monthlySoilMoistureL13'].push(fixed(10, model.avgSoilMoisture(13,14) * 100.0));
-      res['monthlySoilMoistureL14'].push(fixed(10, model.avgSoilMoisture(14,15) * 100.0));
-      res['monthlySoilMoistureL15'].push(fixed(10, model.avgSoilMoisture(15,16) * 100.0));
-      res['monthlySoilMoistureL16'].push(fixed(10, model.avgSoilMoisture(16,17) * 100.0));
-      res['monthlySoilMoistureL17'].push(fixed(10, model.avgSoilMoisture(17,18) * 100.0));
-      res['monthlySoilMoistureL18'].push(fixed(10, model.avgSoilMoisture(18,19) * 100.0));
-
-      avg10corg = avg30corg = watercontent = groundwater = nLeaching =  monthSurfaceRunoff = 0.0;
-      monthPrecip = 0.0;
-      monthETa = 0.0;
-
-      dim = 0;
-      logger(MSG.INFO, "stored monthly values for month: " + (currentMonth + 1));
-    
-    } else {
-
-      avg10corg += model.avgCorg(0.1);
-      avg30corg += model.avgCorg(0.3);
-      watercontent += model.mean90cmWaterContent();
-      groundwater += model.groundWaterRecharge();
-
-      nLeaching += model.nLeaching();
-      monthSurfaceRunoff += model.surfaceRunoff();
-      monthPrecip += env.da.dataForTimestep(Climate.precip, d);
-      monthETa += model.getETa();
-    }
-
-    // Yearly accumulated values
-    if ((currentDate.getFullYear() != new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 1).getFullYear()) && 
-      (currentDate.getFullYear()!= env.da.startDate().getFullYear())) {
-      res['yearlySumGroundWaterRecharge'].push(yearly_groundwater);
-      res['yearlySumNLeaching'].push(yearly_nleaching);
-      yearly_groundwater = 0.0;
-      yearly_nleaching = 0.0;
-    } else {
-      yearly_groundwater += model.groundWaterRecharge();
-      yearly_nleaching += model.nLeaching();
-    }
-
-    if (model.isCropPlanted())
-      res['dev_stage'].push(model.cropGrowth().get_DevelopmentalStage()+1);
-    else
-      res['dev_stage'].push(0.0);
-
-    // res.dates.push(currentDate.toMysqlString());
-
-    if (write_output_files)
-      writeGeneralResults(foutFileName, goutFileName, env, model, d);
+    if (doWriteOutputFiles)
+      writeGeneralResults(foutFileName, goutFileName, env, model, dayOfSimulation);
   }
 
   logger(MSG.INFO, "returning from runModel");
   
-  /* if progress_callback is provided send null i.e. we are done*/
-  if (progress_callback)
-    progress_callback(null, null);
+  /* if progressCallback is provided send null i.e. we are done*/
+  if (progressCallback)
+    progressCallback(null, null);
 
-  return res;
+  return; /* TODO: what to return? */
+
 };
 
 /**
@@ -839,8 +654,8 @@ var writeCropResults = function (mcg, foutFileName, goutFileName, crop_is_plante
     fout += "\t" + fixed(10, mcg.get_PrimaryCropYield());
     fout += "\t" + 0.0/* fixed(10, mcg.get_AccumulatedPrimaryCropYield())*/;
 
-    fout += "\t" + fixed(10, mcg.get_GrossPhotosynthesisHaRate()); // [kg CH2O ha-1 d-1]
-    fout += "\t" + fixed(10, mcg.get_NetPhotosynthesis());  // [kg CH2O ha-1 d-1]
+    fout += "\t" + fixed(10, mcg.get_GrossPhotosynthesisHaRate()); // [kg CH2O ha-1 dayOfSimulation-1]
+    fout += "\t" + fixed(10, mcg.get_NetPhotosynthesis());  // [kg CH2O ha-1 dayOfSimulation-1]
     fout += "\t" + fixed(10, mcg.get_MaintenanceRespirationAS());// [kg CH2O ha-1]
     fout += "\t" + fixed(10, mcg.get_GrowthRespirationAS());// [kg CH2O ha-1]
 
@@ -1017,9 +832,9 @@ var writeCropResults = function (mcg, foutFileName, goutFileName, crop_is_plante
  * @param gout File pointer to smout.dat
  * @param env Environment object
  * @param monica MONICA model that contains pointer to all submodels
- * @param d Day of simulation
+ * @param dayOfSimulation Day of simulation
  */
-var writeGeneralResults = function (foutFileName, goutFileName, env, monica, d) {
+var writeGeneralResults = function (foutFileName, goutFileName, env, monica, dayOfSimulation) {
 
   var fout = '', gout = '', endl = '\n';
   var mst = monica.soilTemperature();
@@ -1035,7 +850,7 @@ var writeGeneralResults = function (foutFileName, goutFileName, env, monica, d) 
   for (var i_Layer = 0; i_Layer < outLayers; i_Layer++)
     fout += "\t" + fixed(10, msm.get_SoilMoisture(i_Layer));
 
-  fout += "\t" + fixed(10, env.da.dataForTimestep(Climate.precip, d));
+  fout += "\t" + fixed(10, env.da.dataForTimestep(WEATHER.PRECIP, dayOfSimulation));
   fout += "\t" + fixed(10, monica.dailySumIrrigationWater());
   fout += "\t" + fixed(10, msm.get_Infiltration()); // {mm]
   fout += "\t" + fixed(10, msm.get_SurfaceWaterStorage());// {mm]
@@ -1123,16 +938,16 @@ var writeGeneralResults = function (foutFileName, goutFileName, env, monica, d) 
   fout += "\t" + fixed(10, msc.soilLayer(0).get_SoilpH()); // [ ]
   fout += "\t" + fixed(10, mso.get_NetEcosystemProduction()); // [kg C ha-1]
   fout += "\t" + fixed(10, mso.get_NetEcosystemExchange()); // [kg C ha-1]
-  fout += "\t" + fixed(10, mso.get_DecomposerRespiration()); // Rh, [kg C ha-1 d-1]
+  fout += "\t" + fixed(10, mso.get_DecomposerRespiration()); // Rh, [kg C ha-1 dayOfSimulation-1]
 
 
-  fout += "\t" + fixed(10, env.da.dataForTimestep(Climate.tmin, d));
-  fout += "\t" + fixed(10, env.da.dataForTimestep(Climate.tavg, d));
-  fout += "\t" + fixed(10, env.da.dataForTimestep(Climate.tmax, d));
-  fout += "\t" + fixed(10, env.da.dataForTimestep(Climate.wind, d));
-  fout += "\t" + fixed(10, env.da.dataForTimestep(Climate.globrad, d));
-  fout += "\t" + fixed(10, env.da.dataForTimestep(Climate.relhumid, d));
-  fout += "\t" + fixed(10, env.da.dataForTimestep(Climate.sunhours, d));
+  fout += "\t" + fixed(10, env.da.dataForTimestep(WEATHER.TMIN, dayOfSimulation));
+  fout += "\t" + fixed(10, env.da.dataForTimestep(WEATHER.TAVG, dayOfSimulation));
+  fout += "\t" + fixed(10, env.da.dataForTimestep(WEATHER.TMAX, dayOfSimulation));
+  fout += "\t" + fixed(10, env.da.dataForTimestep(WEATHER.WIND, dayOfSimulation));
+  fout += "\t" + fixed(10, env.da.dataForTimestep(WEATHER.GLOBRAD, dayOfSimulation));
+  fout += "\t" + fixed(10, env.da.dataForTimestep(WEATHER.RELHUMID, dayOfSimulation));
+  fout += "\t" + fixed(10, env.da.dataForTimestep(WEATHER.SUNHOURS, dayOfSimulation));
   fout += endl;
 
   // smout
@@ -1219,7 +1034,7 @@ var writeGeneralResults = function (foutFileName, goutFileName, env, monica, d) 
   gout += "\t" + fixed(10, mst.get_SoilTemperature(0));
   gout += "\t" + fixed(10, mst.get_SoilTemperature(2));
   gout += "\t" + fixed(10, mst.get_SoilTemperature(5));
-  gout += "\t" + fixed(10, mso.get_DecomposerRespiration()); // Rh, [kg C ha-1 d-1]
+  gout += "\t" + fixed(10, mso.get_DecomposerRespiration()); // Rh, [kg C ha-1 dayOfSimulation-1]
 
   gout += "\t" + fixed(10, mso.get_NH3_Volatilised()); // [kg N ha-1]
   gout += "\t0"; //! @todo

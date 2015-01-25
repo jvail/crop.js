@@ -1,4 +1,4 @@
-var Model = function (env, da) {
+var Model = function (env) {
 
   var that = this;
 
@@ -19,7 +19,7 @@ var Model = function (env, da) {
     , _sumFertiliser = 0
     , _dailySumFertiliser = 0
     , _dailySumIrrigationWater = 0
-    , _dataAccessor = da
+    , _dataAccessor = _env.da
     , centralParameterProvider = _env.centralParameterProvider
     , p_daysWithCrop = 0
     , p_accuNStress = 0.0
@@ -223,19 +223,19 @@ var Model = function (env, da) {
     var julday = _dataAccessor.julianDayForStep(stepNo);
     var year = currentDate.getFullYear();
     var leapYear = currentDate.isLeapYear();
-    var tmin = _dataAccessor.dataForTimestep(Climate.tmin, stepNo);
-    var tavg = _dataAccessor.dataForTimestep(Climate.tavg, stepNo);
-    var tmax = _dataAccessor.dataForTimestep(Climate.tmax, stepNo);
-    var precip = _dataAccessor.dataForTimestep(Climate.precip, stepNo);
-    var wind = _dataAccessor.dataForTimestep(Climate.wind, stepNo);
-    var globrad = _dataAccessor.dataForTimestep(Climate.globrad, stepNo);
+    var tmin = _dataAccessor.dataForTimestep(WEATHER.TMIN, stepNo);
+    var tavg = _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo);
+    var tmax = _dataAccessor.dataForTimestep(WEATHER.TMAX, stepNo);
+    var precip = _dataAccessor.dataForTimestep(WEATHER.PRECIP, stepNo);
+    var wind = _dataAccessor.dataForTimestep(WEATHER.WIND, stepNo);
+    var globrad = _dataAccessor.dataForTimestep(WEATHER.GLOBRAD, stepNo);
 
     debug("-------- generalStep " + stepNo + " ---------");
     debug(currentDate.toLocaleDateString());
 
     // test if data for relhumid are available; if not, value is set to -1.0
-    var relhumid = _dataAccessor.hasAvailableClimateData(Climate.relhumid) ?
-         _dataAccessor.dataForTimestep(Climate.relhumid, stepNo) : -1.0;
+    var relhumid = _dataAccessor.hasAvailableClimateData(WEATHER.RELHUMID) ?
+         _dataAccessor.dataForTimestep(WEATHER.RELHUMID, stepNo) : -1.0;
 
     var user_env = centralParameterProvider.userEnvironmentParameters;
     that.vw_AtmosphericCO2Concentration = _env.atmosphericCO2 == -1 ? user_env.p_AthmosphericCO2 : _env.atmosphericCO2;
@@ -308,21 +308,21 @@ var Model = function (env, da) {
 
     var julday = _dataAccessor.julianDayForStep(stepNo);
 
-    var tavg = _dataAccessor.dataForTimestep(Climate.tavg, stepNo);
-    var tmax = _dataAccessor.dataForTimestep(Climate.tmax, stepNo);
-    var tmin = _dataAccessor.dataForTimestep(Climate.tmin, stepNo);
-    var globrad = _dataAccessor.dataForTimestep(Climate.globrad, stepNo);
+    var tavg = _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo);
+    var tmax = _dataAccessor.dataForTimestep(WEATHER.TMAX, stepNo);
+    var tmin = _dataAccessor.dataForTimestep(WEATHER.TMIN, stepNo);
+    var globrad = _dataAccessor.dataForTimestep(WEATHER.GLOBRAD, stepNo);
 
     // test if data for sunhours are available; if not, value is set to -1.0
-    var sunhours = _dataAccessor.hasAvailableClimateData(Climate.sunhours) ?
-      _dataAccessor.dataForTimestep(Climate.sunhours, stepNo) : -1.0;    
+    var sunhours = _dataAccessor.hasAvailableClimateData(WEATHER.SUNHOURS) ?
+      _dataAccessor.dataForTimestep(WEATHER.SUNHOURS, stepNo) : -1.0;    
 
     // test if data for relhumid are available; if not, value is set to -1.0
-    var relhumid = _dataAccessor.hasAvailableClimateData(Climate.relhumid) ?
-        _dataAccessor.dataForTimestep(Climate.relhumid, stepNo) : -1.0;
+    var relhumid = _dataAccessor.hasAvailableClimateData(WEATHER.RELHUMID) ?
+        _dataAccessor.dataForTimestep(WEATHER.RELHUMID, stepNo) : -1.0;
 
-    var wind =  _dataAccessor.dataForTimestep(Climate.wind, stepNo);
-    var precip =  _dataAccessor.dataForTimestep(Climate.precip, stepNo);
+    var wind =  _dataAccessor.dataForTimestep(WEATHER.WIND, stepNo);
+    var precip =  _dataAccessor.dataForTimestep(WEATHER.PRECIP, stepNo);
 
     var vw_WindSpeedHeight =
         centralParameterProvider.userEnvironmentParameters.p_WindSpeedHeight;

@@ -55,6 +55,7 @@ var abs    = Math.abs
   , sqrt   = Math.sqrt
   , tan    = Math.tan
   , PI     = Math.PI
+  , MS_PER_DAY = 1000 * 60 * 60 * 24
   ;
 
 
@@ -224,18 +225,20 @@ var organicConstants = {
   , po_AOM_to_C: 0.45 // [] converts added organic matter to carbon
 };
 
-var Climate = {
-    tmin: 0
-  , tmax: 1
-  , tavg: 2
-  , globrad: 3
-  , wind: 4
-  , precip: 5
-  , sunhours: 6
-  , relhumid: 7
-  , ppf: 8            /* [μmol m-2 d-1] photosynthetic photon flux. required by grassland model */
-  , daylength: 9      /* [seconds]      daylength. required by grassland model */
-  , f_directrad: 10   /* [h h-1]        fraction direct solar radiation. required by grassland model */
+var WEATHER = {
+    TMIN: 0
+  , TMAX: 1
+  , TAVG: 2
+  , GLOBRAD: 3
+  , WIND: 4
+  , PRECIP: 5
+  , SUNHOURS: 6
+  , RELHUMID: 7
+  , PPF: 8            /* [μmol m-2 d-1] photosynthetic photon flux. required by grassland model */
+  , DAYLENGTH: 9      /* [seconds]      daylength. required by grassland model */
+  , F_DIRECTRAD: 10   /* [h h-1]        fraction direct solar radiation. required by grassland model */
+  , DATE: 11          /* ISO date string */
+  , DOY: 12           /* day of year */
 };
 
 // TODO: do not change JS types. Instead create own type.

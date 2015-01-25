@@ -24,7 +24,7 @@
           } 
         })
       ],
-      DM: [...,...,...]
+      DM: [] fraction of total dry matter
     }
 */
 
@@ -33,7 +33,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, grassland) { // takes a
   if (DEBUG) debug(arguments); // JS!
 
   /* grassland growth */
-  var gGrowth = new grassland.Growth(grassland.species, grassland.DM);
+  var gGrowth = new grassland.Growth(grassland.species, { DM: grassland.DM } );
 
   var soilColumn = sc
     , generalParams = gps
