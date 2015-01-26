@@ -231,7 +231,7 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     vc_TotalBiomass += pc_InitialOrganBiomass[i_Organ]; // [kg ha-1]
 
     // Define storage organ
-    if (pc_StorageOrgan[i_Organ] == 1)
+    if (pc_StorageOrgan[i_Organ] == 1) /* make sure it is == instead of === so that (true == 1) is also true */
       vc_StorageOrgan = i_Organ;
 
     // Define storage organ
@@ -2876,31 +2876,13 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
   };
 
   return {
-      accumulateEvapotranspiration: accumulateEvapotranspiration
-    , applyCutting: applyCutting
-    , fc_CropDevelopmentalStage: fc_CropDevelopmentalStage
-    , fc_CropDryMatter: fc_CropDryMatter
-    , fc_CropGreenArea: fc_CropGreenArea
-    , fc_CropNUptake: fc_CropNUptake
-    , fc_CropNitrogen: fc_CropNitrogen
-    , fc_CropPhotosynthesis: fc_CropPhotosynthesis
-    , fc_CropSize: fc_CropSize
-    , fc_CropWaterUptake: fc_CropWaterUptake
-    , fc_DaylengthFactor: fc_DaylengthFactor
-    , fc_DroughtImpactOnFertility: fc_DroughtImpactOnFertility
-    , fc_GrossPrimaryProduction: fc_GrossPrimaryProduction
-    , fc_HeatStressImpact: fc_HeatStressImpact
-    , fc_KcFactor: fc_KcFactor
-    , fc_NetPrimaryProduction: fc_NetPrimaryProduction
-    , fc_OxygenDeficiency: fc_OxygenDeficiency
-    , fc_Radiation: fc_Radiation
-    , fc_ReferenceEvapotranspiration: fc_ReferenceEvapotranspiration
-    , fc_SoilCoverage: fc_SoilCoverage
-    , fc_VernalisationFactor: fc_VernalisationFactor
+      step: calculateCropGrowthStep
+    , accumulateEvapotranspiration: accumulateEvapotranspiration
+    , isDying: isDying
+    , totalBiomass: totalBiomass
     , getEffectiveRootingDepth: getEffectiveRootingDepth
     , get_AbovegroundBiomass: get_AbovegroundBiomass
     , get_AbovegroundBiomassNConcentration: get_AbovegroundBiomassNConcentration
-    , get_AbovegroundBiomassNContent: get_AbovegroundBiomassNContent
     , get_AbovegroundBiomassNContent: get_AbovegroundBiomassNContent
     , get_AccumulatedETa: get_AccumulatedETa
     , get_ActNUptake: get_ActNUptake
@@ -2929,15 +2911,12 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     , get_LeafAreaIndex: get_LeafAreaIndex
     , get_MaintenanceRespirationAS: get_MaintenanceRespirationAS
     , get_NUptakeFromLayer: get_NUptakeFromLayer
-    , get_NUptakeFromLayer: get_NUptakeFromLayer
     , get_NetMaintenanceRespiration: get_NetMaintenanceRespiration
     , get_NetPhotosynthesis: get_NetPhotosynthesis
     , get_NetPrecipitation: get_NetPrecipitation
     , get_NetPrimaryProduction: get_NetPrimaryProduction
     , get_NumberOfOrgans: get_NumberOfOrgans
     , get_OrganBiomass: get_OrganBiomass
-    , get_OrganBiomass: get_OrganBiomass
-    , get_OrganGrowthIncrement: get_OrganGrowthIncrement
     , get_OrganGrowthIncrement: get_OrganGrowthIncrement
     , get_OrganSpecificNPP: get_OrganSpecificNPP
     , get_OrganSpecificTotalRespired: get_OrganSpecificTotalRespired
@@ -2955,7 +2934,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     , get_ResiduesNConcentration: get_ResiduesNConcentration
     , get_ResiduesNContent: get_ResiduesNContent
     , get_RootNConcentration: get_RootNConcentration
-    , get_RootNConcentration: get_RootNConcentration
     , get_RootingDepth: get_RootingDepth
     , get_SecondaryCropYield: get_SecondaryCropYield
     , get_SecondaryYieldNContent: get_SecondaryYieldNContent
@@ -2965,14 +2943,9 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     , get_TargetNConcentration: get_TargetNConcentration
     , get_TotalBiomassNContent: get_TotalBiomassNContent
     , get_Transpiration: get_Transpiration
-    , get_Transpiration: get_Transpiration
     , get_TranspirationDeficit: get_TranspirationDeficit
     , get_VernalisationFactor: get_VernalisationFactor
-    , isDying: isDying
-    , pc_NumberOfAbovegroundOrgans: pc_NumberOfAbovegroundOrgans
-    , step: calculateCropGrowthStep
-    , totalBiomass: totalBiomass
-  }
+  };
 
 };
 

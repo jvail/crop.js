@@ -29,9 +29,7 @@ var Model = function (env) {
 
   var run = function (progressCallback) {
 
-    logger(MSG.INFO, "starting monica");
-    
-    if(env.cropRotation.length === 0) {
+    if (env.cropRotation.length === 0) {
       logger(MSG.ERROR, "rotation is empty");
       return;
     }
@@ -146,9 +144,6 @@ var Model = function (env) {
       if (doWriteOutputFiles)
         writeGeneralResults(foutFileName, goutFileName, env, this, dayOfSimulation);
     }
-
-    console.log(this);
-    console.log(that);
 
     logger(MSG.INFO, "returning from runModel");
     
