@@ -31,9 +31,6 @@ _worksteps.upper_bound = function (date) {
   return null;
 };
 
-debug("ProductionProcess: " + name);
-//_cropResult.id = _crop.id();
-
 var addApplication = function (app) {
 
   _worksteps.push(app);

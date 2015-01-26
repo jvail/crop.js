@@ -78,7 +78,7 @@ var WEATHER = {
   , PPF: 8            /* [μmol m-2 d-1] photosynthetic photon flux. required by grassland model */
   , DAYLENGTH: 9      /* [seconds]      daylength. required by grassland model */
   , F_DIRECTRAD: 10   /* [h h-1]        fraction direct solar radiation. required by grassland model */
-  , DATE: 11          /* ISO date string */
+  , ISODATESTRING: 11          /* ISO date string */
   , DOY: 12           /* day of year */
 };
 

@@ -3,6 +3,7 @@
   TODO:
     - date, doy optional?
     - use date string instead of Date obj?
+    - what if sunhours not available?
 
   weather = {                     object
       tmin        [°C]            array, daily minimum temperature
@@ -40,8 +41,10 @@ var Configuration = function (weather, doDebug, isVerbose) {
     var generalParameters = new GeneralParameters();
 
     /* sim */
-    var startYear = new Date(Date.parse(simInput.time.startDate)).getFullYear();
-    var endYear = new Date(Date.parse(simInput.time.endDate)).getFullYear();
+    var startDate = new Date(Date.parse(simInput.time.startDate));
+    var endDate = new Date(Date.parse(simInput.time.endDate));
+    var startYear = startDate.getFullYear();
+    var endYear = endDate.getFullYear();
 
     parameterProvider.userInitValues.p_initPercentageFC = getValue(simInput.init, 'percentageFC', parameterProvider.userInitValues.p_initPercentageFC);
     parameterProvider.userInitValues.p_initSoilNitrate = getValue(simInput.init, 'soilNitrate', parameterProvider.userInitValues.p_initSoilNitrate);
@@ -84,11 +87,14 @@ var Configuration = function (weather, doDebug, isVerbose) {
     logger(MSG.INFO, 'Fetched soil data.');
 
     /* weather */
-    var da = null;
+    var da = new Weather(startDate, endDate);
     if (!createClimate(da, weather, Date.parse(simInput.time.startDate), Date.parse(simInput.time.endDate))) {
       logger(MSG.ERROR, 'Error fetching weather data.');
       return;
     }
+
+    if (!(da instanceof Weather))
+      throw da;
     
     logger(MSG.INFO, 'Fetched weather data.');
 
@@ -121,9 +127,12 @@ var Configuration = function (weather, doDebug, isVerbose) {
     //   env.nMinFertiliserPartition = getMineralFertiliserParametersFromMonicaDB(hermes_config->getMineralFertiliserID());
     // }
 
+    var model = new Model(env);
+
     logger(MSG.INFO, 'Start model run.');
 
-    return runModel(env, setProgress);
+    return model.run(setProgress);
+    
   };
 
   /* read value from JSON input and return default value if parameter is not available */
@@ -255,6 +264,8 @@ var Configuration = function (weather, doDebug, isVerbose) {
         }
       }
 
+      debug('isGrassland', isGrassland);
+
       if (isGrassland) {
 
         var grass = new Grass(sds, hds);
@@ -280,6 +291,7 @@ var Configuration = function (weather, doDebug, isVerbose) {
         cropRotation[c] = new ProductionProcess(crop.name, fieldcrop);
       
       }
+
 
       /* tillage */
       var tillageOperations = crop.tillageOperations;
@@ -533,31 +545,31 @@ var Configuration = function (weather, doDebug, isVerbose) {
   // };
 
 
-  function createClimate(da, weather, startDate, endDate) {
+  function createClimate(da, weatherInput) {
 
     var ok = false;
     var data = [];
 
-    data[WEATHER.TMIN] = new Float64Array(weather.tmin);                  /* [°C] */
-    data[WEATHER.TMAX] = new Float64Array(weather.tmax);                  /* [°C] */
-    data[WEATHER.TAVG] = new Float64Array(weather.tavg);                  /* [°C] */
-    data[WEATHER.GLOBRAD] = new Float64Array(weather.globrad);            /* [MJ m-2] */
-    data[WEATHER.WIND] = new Float64Array(weather.wind);                  /* [m s-1] */
-    data[WEATHER.PRECIP] = new Float64Array(weather.precip);              /* [mm] */
+    data[WEATHER.TMIN] = new Float64Array(weatherInput.tmin);                  /* [°C] */
+    data[WEATHER.TMAX] = new Float64Array(weatherInput.tmax);                  /* [°C] */
+    data[WEATHER.TAVG] = new Float64Array(weatherInput.tavg);                  /* [°C] */
+    data[WEATHER.GLOBRAD] = new Float64Array(weatherInput.globrad);            /* [MJ m-2] */
+    data[WEATHER.WIND] = new Float64Array(weatherInput.wind);                  /* [m s-1] */
+    data[WEATHER.PRECIP] = new Float64Array(weatherInput.precip);              /* [mm] */
 
     /* required for grassland model */
-    data[WEATHER.PPF] = new Float64Array(weather.ppf);                    /* [μmol m-2 d-1] photosynthetic photon flux */
-    data[WEATHER.DAYLENGTH] = new Float64Array(weather.daylength);        /* [seconds] */
-    data[WEATHER.F_DIRECTRAD] = new Float64Array(weather.f_directrad);    /* [h h-1] fraction direct solar radiation */
+    data[WEATHER.PPF] = new Float64Array(weatherInput.ppf);                    /* [μmol m-2 d-1] photosynthetic photon flux */
+    data[WEATHER.DAYLENGTH] = new Float64Array(weatherInput.daylength);        /* [seconds] */
+    data[WEATHER.F_DIRECTRAD] = new Float64Array(weatherInput.f_directrad);    /* [h h-1] fraction direct solar radiation */
 
-    data[WEATHER.SUNHOURS] = new Float64Array(weather.sunhours);          /* [h] */
-    data[WEATHER.RELHUMID] = new Float64Array(weather.relhumid);          /* [%] */
+    data[WEATHER.SUNHOURS] = new Float64Array(weatherInput.sunhours);          /* [h] */
+    data[WEATHER.RELHUMID] = new Float64Array(weatherInput.relhumid);          /* [%] */
 
-    data[WEATHER.DOY] = weather.doy;
-    data[WEATHER.DATE] = weather.date;
+    data[WEATHER.DOY] = weatherInput.doy;
+    data[WEATHER.ISODATESTRING] = weatherInput.date;
 
-    da = new Weather(startDate, endDate, data);
-
+    da.setData(data);
+  
     /* TODO: add additional checks */
     ok = true;
 

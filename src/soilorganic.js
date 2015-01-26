@@ -109,7 +109,6 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     vc_NetPrimaryProduction = crop ? crop.get_NetPrimaryProduction() : 0;
 
     debug("vc_NetPrimaryProduction: " + vc_NetPrimaryProduction);
-    debug("crop: " + crop);
 
     //fo_OM_Input(vo_AOM_Addition);
     fo_Urea(vw_Precipitation + irrigationAmount);
@@ -148,7 +147,6 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
   {
     debug("SoilOrganic: addOrganicMatter: " + params.toString());
     var vo_AddedOrganicMatterAmount = amount;
-    // TODO: nConcentration is immer 0. Warum?
     var vo_AddedOrganicMatterNConcentration = nConcentration;
 
 
