@@ -1,8 +1,8 @@
 /*
 
   TODO:
-    - run simulation either from startDate till endDate or 
-      if no. days (endDate - startDate) < minLength(weather.arrays) then till startDate + minLength(weather.arrays)
+    - date, doy optional?
+    - use date string instead of Date obj?
 
   weather = {                     object
       tmin        [°C]            array, daily minimum temperature
