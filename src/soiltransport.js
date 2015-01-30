@@ -1,3 +1,7 @@
+/*
+  TODO: crop NH4 uptake?
+
+*/
 
 var SoilTransport = function (sc, sps, cpp) {
 

@@ -26,2153 +26,2399 @@
       ],
       DM: [] fraction of total dry matter
     }
+
+    TODO:
+      - vc_VapourPressure as input?
+      - add interception and evaporation
+      - account for groundwater in E_T
+      - add litter and dead root to soilorganic?
+      - move Mixture and species? 
 */
 
 var GrasslandGrowth = function (sc, gps, cps, stps, cpp, grassland) { // takes additional grassland param
+  'use strict';
 
-  if (DEBUG) debug(arguments); // JS!
-
-  /* grassland growth */
-  var gGrowth = new grassland.Growth(grassland.species, { DM: grassland.DM } );
+  if (DEBUG) debug(arguments);
 
   var soilColumn = sc
     , generalParams = gps
     , cropParams = cps
     , centralParameterProvider = cpp
-    , vs_NumberOfLayers  = sc.vs_NumberOfLayers() 
+    , vs_NumberOfLayers  = sc.vs_NumberOfLayers()
+    , vs_LayerThickness = soilColumn.vs_LayerThickness()
     , vs_Latitude  = stps.vs_Latitude
-    ;
-
-  var vc_AbovegroundBiomass = 0.0 
-    , vc_AbovegroundBiomassOld = 0.0 
-    , pc_AbovegroundOrgan = cropParams.pc_AbovegroundOrgan 
-    , vc_ActualTranspiration = 0.0 
-    , pc_AssimilatePartitioningCoeff = cropParams.pc_AssimilatePartitioningCoeff
-    , vc_Assimilates = 0.0 
-    , vc_AssimilationRate = 0.0 
-    , vc_AstronomicDayLenght = 0.0
-    , pc_BaseDaylength = cropParams.pc_BaseDaylength
-    , pc_BaseTemperature = cropParams.pc_BaseTemperature
-    , pc_BeginSensitivePhaseHeatStress = cropParams.pc_BeginSensitivePhaseHeatStress
-    , vc_BelowgroundBiomass = 0.0 
-    , vc_BelowgroundBiomassOld = 0.0 
-    , pc_CO2Method = 3 
-    , pc_CarboxylationPathway = cropParams.pc_CarboxylationPathway 
-    , vc_ClearDayRadiation = 0.0 
-    , vc_CriticalNConcentration = 0.0 
-    , pc_CriticalOxygenContent = cropParams.pc_CriticalOxygenContent 
-    , pc_CriticalTemperatureHeatStress = cropParams.pc_CriticalTemperatureHeatStress 
-    , vc_CropDiameter = 0.0 
-    , vc_CropHeatRedux = 1.0 
-    , vc_CropHeight = 0.0 
-    , pc_CropHeightP1 = cropParams.pc_CropHeightP1 
-    , pc_CropHeightP2 = cropParams.pc_CropHeightP2 
-    , vc_CropNDemand = 0.0 
-    , vc_CropNRedux = 1.0 
-    , pc_CropName = cropParams.pc_CropName 
-    , pc_CropSpecificMaxRootingDepth = cropParams.pc_CropSpecificMaxRootingDepth 
-    , vc_CurrentTemperatureSum = new Float64Array(cropParams.pc_NumberOfDevelopmentalStages) 
-    , vc_CurrentTotalTemperatureSum = 0.0 
-    , vc_CurrentTotalTemperatureSumRoot = 0.0 
-    , vc_DaylengthFactor = 0.0 
-    , pc_DaylengthRequirement = cropParams.pc_DaylengthRequirement 
-    , vc_DaysAfterBeginFlowering = 0 
-    , vc_Declination = 0.0
-    , pc_DefaultRadiationUseEfficiency = cropParams.pc_DefaultRadiationUseEfficiency
-    , vm_DepthGroundwaterTable = 0
-    , pc_DevelopmentAccelerationByNitrogenStress = cropParams.pc_DevelopmentAccelerationByNitrogenStress
-    , vc_DevelopmentalStage = 0
-    , vc_DroughtImpactOnFertility = 1.0
-    , pc_DroughtImpactOnFertilityFactor = cropParams.pc_DroughtImpactOnFertilityFactor
-    , pc_DroughtStressThreshold = cropParams.pc_DroughtStressThreshold
-    , vc_EffectiveDayLength = 0.0
-    , pc_EmergenceFloodingControlOn = generalParams.pc_EmergenceFloodingControlOn
-    , pc_EmergenceMoistureControlOn = generalParams.pc_EmergenceMoistureControlOn
-    , pc_EndSensitivePhaseHeatStress = cropParams.pc_EndSensitivePhaseHeatStress
-    , vc_ErrorStatus = false
-    , vc_EvaporatedFromIntercept = 0.0
-    , vc_ExtraterrestrialRadiation = 0.0
-    , vc_FinalDevelopmentalStage = 0
-    , vc_FixedN = 0
-    , pc_FixingN = cropParams.pc_FixingN
-    , vo_FreshSoilOrganicMatter = new Float64Array(vs_NumberOfLayers)
-    , vc_GlobalRadiation = 0.0
-    , vc_GreenAreaIndex = 0.0
-    , vc_GrossAssimilates = 0.0
-    , vc_GrossPhotosynthesis = 0.0
-    , vc_GrossPhotosynthesisReference_mol = 0.0
-    , vc_GrossPhotosynthesis_mol = 0.0
-    , vc_GrossPrimaryProduction = 0.0
-    , vc_GrowthRespirationAS = 0.0
     , vs_HeightNN = stps.vs_HeightNN
-    , pc_InitialKcFactor = cropParams.pc_InitialKcFactor
-    , pc_InitialOrganBiomass = cropParams.pc_InitialOrganBiomass
-    , pc_InitialRootingDepth = cropParams.pc_InitialRootingDepth
     , vc_InterceptionStorage = 0.0
-    , vc_KcFactor = 0.6
-    , vc_LeafAreaIndex = 0.0
-    , pc_LimitingTemperatureHeatStress = cropParams.pc_LimitingTemperatureHeatStress
-    , pc_LuxuryNCoeff = cropParams.pc_LuxuryNCoeff
-    , vc_MaintenanceRespirationAS = 0.0
-    , pc_MaxAssimilationRate = cropParams.pc_MaxAssimilationRate
-    , pc_MaxCropDiameter = cropParams.pc_MaxCropDiameter
-    , pc_MaxCropHeight = cropParams.pc_MaxCropHeight
-    , vs_MaxEffectiveRootingDepth = stps.vs_MaxEffectiveRootingDepth
-    , vc_MaxNUptake = 0.0
-    , pc_MaxNUptakeParam = cropParams.pc_MaxNUptakeParam
-    , vc_MaxRootingDepth = 0.0
-    , pc_MinimumNConcentration = cropParams.pc_MinimumNConcentration
-    , pc_MinimumTemperatureForAssimilation = cropParams.pc_MinimumTemperatureForAssimilation
-    , pc_MinimumTemperatureRootGrowth = cropParams.pc_MinimumTemperatureRootGrowth
-    , pc_NConcentrationAbovegroundBiomass = cropParams.pc_NConcentrationAbovegroundBiomass
-    , vc_NConcentrationAbovegroundBiomass = 0.0
-    , vc_NConcentrationAbovegroundBiomassOld = 0.0
-    , pc_NConcentrationB0 = cropParams.pc_NConcentrationB0
-    , pc_NConcentrationPN = cropParams.pc_NConcentrationPN
-    , pc_NConcentrationRoot = cropParams.pc_NConcentrationRoot
-    , vc_NConcentrationRoot = 0.0
-    , vc_NConcentrationRootOld = 0.0
-    , vc_NContentDeficit = 0.0
-    , vc_NUptakeFromLayer = new Float64Array(vs_NumberOfLayers)
-    , vc_NetMaintenanceRespiration = 0.0
-    , vc_NetPhotosynthesis = 0.0
-    , vc_NetPrecipitation = 0.0
-    , vc_NetPrimaryProduction = 0.0
-    , pc_NitrogenResponseOn = generalParams.pc_NitrogenResponseOn
-    , pc_NumberOfDevelopmentalStages = cropParams.pc_NumberOfDevelopmentalStages
-    , pc_NumberOfOrgans = cropParams.pc_NumberOfOrgans
-    , pc_OptimumTemperature = cropParams.pc_OptimumTemperature
-    , vc_OrganBiomass = new Float64Array(cropParams.pc_NumberOfOrgans)
-    , vc_OrganDeadBiomass = new Float64Array(cropParams.pc_NumberOfOrgans)
-    , vc_OrganGreenBiomass = new Float64Array(cropParams.pc_NumberOfOrgans)
-    , vc_OrganGrowthIncrement = new Float64Array(cropParams.pc_NumberOfOrgans)
-    , pc_OrganGrowthRespiration = cropParams.pc_OrganGrowthRespiration
-    , pc_OrganMaintenanceRespiration = cropParams.pc_OrganMaintenanceRespiration
-    , vc_OrganSenescenceIncrement = new Float64Array(cropParams.pc_NumberOfOrgans)
-    , pc_OrganSenescenceRate = cropParams.pc_OrganSenescenceRate
-    , vc_OvercastDayRadiation = 0.0
-    , vc_OxygenDeficit = 0.0
-    , vc_PhotActRadiationMean = 0.0
-    , vc_PhotoperiodicDaylength = 0.0
-    , pc_PlantDensity = cropParams.pc_PlantDensity
-    , vc_PotentialTranspiration = 0.0
-    , vc_ReferenceEvapotranspiration = 0.0
-    , vc_RelativeTotalDevelopment = 0.0
-    , vc_RemainingEvapotranspiration = 0.0
-    , vc_ReserveAssimilatePool = 0.0
-    , pc_ResidueNRatio = cropParams.pc_ResidueNRatio
-    , vc_Respiration = 0.0
-    , vc_RootBiomass = 0.0
-    , vc_RootBiomassOld = 0.0
-    , vc_RootDensity = new Float64Array(vs_NumberOfLayers)
-    , vc_RootDiameter = new Float64Array(vs_NumberOfLayers)
-    , pc_RootDistributionParam = cropParams.pc_RootDistributionParam
-    , vc_RootEffectivity = new Float64Array(vs_NumberOfLayers)
-    , pc_RootFormFactor = cropParams.pc_RootFormFactor
-    , pc_RootGrowthLag = cropParams.pc_RootGrowthLag
-    , pc_RootPenetrationRate = cropParams.pc_RootPenetrationRate
-    , vc_RootingDepth = 0
-    , vc_RootingDepth_m = 0.0
-    , vc_RootingZone = 0
-    , vm_SaturationDeficit = 0.0
-    , vc_SoilCoverage = 0.0
-    , vs_SoilMineralNContent = new Float64Array(vs_NumberOfLayers)
-    , vc_SoilSpecificMaxRootingDepth = 0.0
-    , vs_SoilSpecificMaxRootingDepth = 0.0
-    , pc_SpecificLeafArea = cropParams.pc_SpecificLeafArea
-    , pc_SpecificRootLength = cropParams.pc_SpecificRootLength
-    , pc_StageAtMaxDiameter = cropParams.pc_StageAtMaxDiameter
-    , pc_StageAtMaxHeight = cropParams.pc_StageAtMaxHeight
-    , pc_StageKcFactor = cropParams.pc_StageKcFactor
-    , pc_StageMaxRootNConcentration = cropParams.pc_StageMaxRootNConcentration
-    , pc_StageTemperatureSum = cropParams.pc_StageTemperatureSum
-    , vc_StomataResistance = 0.0
-    , pc_StorageOrgan = cropParams.pc_StorageOrgan
-    , vc_StorageOrgan = 4
-    , vc_SumTotalNUptake = 0.0
-    , vc_TargetNConcentration = 0.0
-    , vc_TimeStep = 1.0
-    , vc_TimeUnderAnoxia = 0
-    , vs_Tortuosity = 0.0
-    , vc_TotalBiomass = 0.0
-    , vc_TotalBiomassNContent = 0.0
-    , vc_TotalCropHeatImpact = 0.0
-    , vc_TotalNUptake = 0.0
-    , vc_TotalRespired = 0.0
-    , vc_TotalRootLength = 0.0
-    , vc_TotalTemperatureSum = 0.0
-    , vc_Transpiration = new Float64Array(vs_NumberOfLayers)
-    , vc_TranspirationDeficit = 1.0
-    , vc_TranspirationRedux = new Float64Array(vs_NumberOfLayers)
-    , vc_VernalisationDays = 0.0
-    , vc_VernalisationFactor = 0.0
-    , pc_VernalisationRequirement = cropParams.pc_VernalisationRequirement
-    , pc_WaterDeficitResponseOn = generalParams.pc_WaterDeficitResponseOn
-    , vc_accumulatedETa = 0.0
-    , cutting_delay_days = 0
-    , dyingOut = false
+    , vc_accumulatedETa = 0
     ;
 
-    // , vc_CropWaterUptake = new Array() // JS! unused
+  var numberOfSpecies = grassland.species.length
+    ;
 
-  // for (var i = 0; i < cropParams.pc_NumberOfDevelopmentalStages; i++) 
-  //   vc_CurrentTemperatureSum[i] = 0.0;
+  var f_r = [] /* root fration per species and soil layer */
+    , f_r_sum = []  /* root fraction sum per species */
+    , W_r = []  /* root kg C m-2 per species and soil layer */
+    , W_r_sum = [] /* root kg C m-2 sum per soil layer */
+    , N_up = [] /* N uptake kg N m-2 per species and soil layer */
+    , N_up_sum = [] /* N uptake kg N m-2 per soil layer */
+    , E_T = [] /* actual transpiration per species and layer */
+    , E_T_sum = []  /* actual transpiration per species */
+    , f_g = 0   /* soil coverage */
+    ;
 
-  for (var i = 0; i < vs_NumberOfLayers; i++) {
-    // vc_NUptakeFromLayer[i] = 0.0;
-    // vc_RootDensity[i] = 0.0;
-    // vc_RootDiameter[i] = 0.0;
-    // vc_RootEffectivity[i] = 0.0;
-    // vs_SoilMineralNContent[i] = 0.0
-    // vc_Transpiration[i] = 0.0;
-    vc_TranspirationRedux[i] = 1.0;
+  /* initialize arrays */
+  for (var s = 0; s < numberOfSpecies; s++) {
+    f_r[s] = [];
+    W_r[s] = [];
+    N_up[s] = [];
+    E_T[s] = [];
+    f_r_sum[s] = 0;
+    for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
+      f_r[s][i_Layer] = 0;
+      W_r[s][i_Layer] = 0;
+      W_up[s][i_Layer] = 0;
+      E_T[s][i_Layer] = 0;
+    }
+  }
+  for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
+    W_r_sum[i_Layer] = 0;
+    N_up_sum[i_Layer] = 0;
+    vc_RootDensity[i_Layer] = 0;
   }
 
-  // for (var i = 0; i < pc_NumberOfOrgans; i++) {
-  //   vc_OrganBiomass[i] = 0.0;
-  //   vc_OrganDeadBiomass[i] = 0.0;
-  //   vc_OrganGreenBiomass[i] = 0.0;
-  //   vc_OrganGrowthIncrement[i] = 0.0;
-  //   vc_OrganSenescenceIncrement[i] = 0.0;
-  // }
+  var mixture = null;
 
-  // Initialising the crop
-  vs_Tortuosity = centralParameterProvider.userCropParameters.pc_Tortuosity;
+  /* C_amb [μmol (CO2) mol-1]  reference ambient CO2 concentration */
+  var C_amb = 380;
 
-  // Determining the total temperature sum of all developmental stages after
-  // emergence (that's why i_Stage starts with 1) until before senescence
-  for (var i_Stage = 1; i_Stage < pc_NumberOfDevelopmentalStages - 1; i_Stage++)
-     vc_TotalTemperatureSum += pc_StageTemperatureSum[i_Stage];
+  /* Y growth efficiencies. Thornley JHM & Johnson IR (2000), s. 351f */
+  var Y_cellulose =      0.95  // 1 - (30 / 44) * (0.018 / 0.226)
+    , Y_hemicellulose =  0.94  // 1 - (30 / 44) * (0.015 / 0.167)
+    , Y_starch =         0.95  // 1 - (30 / 44) * (0.013 / 0.161)
+    , Y_sucrose =        0.95  // 1 - (30 / 44) * (0.004 / 0.060)
+    , Y_protein_N03 =    0.58  // 1 - (30 / 44) * (0.263 / 0.422) // from nitrate
+    , Y_protein_NH4 =    0.84  // 1 - (30 / 44) * (0.069 / 0.290) // from ammonium
+    , Y_lignin =         0.83  // 1 - (30 / 44) * (0.045 / 0.181)
+    , Y_lipids =         0.68  // 1 - (30 / 44) * (0.066 / 0.142)
+    , Y_ash =            1.00  
+    , Y_sc =             0.85  // Johnson (2013) 
+    , Y_nc =             0.95  // non-structural carbon hydrates
+    , Y_pn =             0.55  // Johnson (2013)
+    ;
 
-  vc_FinalDevelopmentalStage = pc_NumberOfDevelopmentalStages - 1;
+  /* carbon fractions */
+  var fC_cellulose =     0.44
+    , fC_hemicellulose = 0.40
+    , fC_starch =        0.44
+    , fC_sucrose =       0.42
+    , fC_protein =       0.53
+    , fC_lignin =        0.67
+    , fC_lipids =        0.77
+    , fC_ash =           0.00
+    ;
 
-  // Determining the initial crop organ's biomass
-  for (var i_Organ = 0; i_Organ < pc_NumberOfOrgans; i_Organ++) {
+  /* carbon fraction carbon hydrate pools */
+  var fC_sc = 0.6 * fC_cellulose + 0.2 * fC_hemicellulose + 0.2 * fC_lignin
+    , fC_nc = 0.7 * fC_starch + 0.3 * fC_sucrose
+    , fC_ld = fC_lipids
+    , fC_pn = fC_protein
+    ;
 
-    vc_OrganBiomass[i_Organ] = pc_InitialOrganBiomass[i_Organ]; // [kg ha-1]
+  /* nitrogen fraction in protein */
+  var fN_pn = 0.16; 
 
-    if (pc_AbovegroundOrgan[i_Organ] == 1)
-      vc_AbovegroundBiomass += pc_InitialOrganBiomass[i_Organ]; // [kg ha-1]
+  /* species object to store species specific parameters for a mixture */
+  var Species = function (cfg) {
 
-    vc_TotalBiomass += pc_InitialOrganBiomass[i_Organ]; // [kg ha-1]
+    var that = this;
 
-    // Define storage organ
-    if (pc_StorageOrgan[i_Organ] == 1)
-      vc_StorageOrgan = i_Organ;
+    /* defaults */
+    this.isLegume = false;
+    this.isC4 = false;
+    this.type = 'pasture grass';
 
-    // Define storage organ
-    if (pc_StorageOrgan[i_Organ] == 1)
-        vc_StorageOrgan = i_Organ;
+    /* 
+      constants; defaults for rye grass 
 
-  } // for
+      h_m           [m]                         maximum height
+      L_half        [m2 (leaf) m-2 (ground)]    leaf area at half h_mx
+      σ             [m2 (leaf) kg-1 (d.wt)]     specific leaf area
+      N_ref         [kg (N) kg-1 (d.wt)]        reference (optimum) N concentration
+      d_r_h         [m]                         depth at 50% root mass
+      d_r_mx        [m]                         maximum root depth
+      τ_veg         [days]                      total no. days in vegetative phase TODO: days since what? 
 
-  vc_RootBiomass = pc_InitialOrganBiomass[0]; // [kg ha-1]
+      photosynthesis
+      T_ref         [°C]                        reference temperature 
+      T_mn          [°C]                        minimum temperature 
+      T_opt_Pm_amb  [°C]                        optimum temperature
+      ξ             [-]                         non‐rectangular hyperbola curvatur parameter
+      α_amb_15      [mol (CO2) mol-1 (photons)] photosythetic efficiency α at ambient CO2 (C_amb) and 15 °C
+      k             [-]                         leaf extinction coefficient
+      m             [-]                         leaf transmisson coefficient (unused)
+      P_m_ref       [μmol (CO2) m-2 (leaf) s-1] reference value for P_m
+      λ             []                          CO2 response parameter
+      f_C_m         []                          CO2 response parameter
+      γ_Pm          []                          CO2 & T response parameter
+      λ_α           [°C]                        CO2 & T response parameter
+      γ_α           [°C]                        CO2 & T response parameter
 
-  // Initialisisng the leaf area index
-  vc_LeafAreaIndex = vc_OrganBiomass[1] * pc_SpecificLeafArea[vc_DevelopmentalStage]; // [ha ha-1]
+      partitioning
+      ρ_shoot_ref   [-]                         reference shoot partitioning fraction
+      ρ_l           [-]                         fraction partitioned to leaf
 
-  if (vc_LeafAreaIndex <= 0.0)
-    vc_LeafAreaIndex = 0.001;
+      digestibility
+      δ_ndf_x       [kg (d.wt) kg (d.wt)]       organ and age specific NDF digestibility
+      δ_nc          [kg (d.wt) kg (d.wt)]       NDSC digestibility
+      δ_pn          [kg (d.wt) kg (d.wt)]       PN digestibility as a function of CP [kg (CP) kg (d.wt)]
+    */
+    this.cons = {
+        h_m: 0.5
+      , L_half: 2.0
+      , σ: 20.0
+      , fAsh_leaf: 0.03
+      , fAsh_stem: 0.05
+      , N_ref: 0.04
+      , d_r_h: 0.25
+      , d_r_mx: 1.0
+      , τ_veg: 200
+      , photo: {
+            T_ref: this.isC4 ? 25 : 20
+          , T_mn: this.isC4 ? 12 : 3
+          , T_opt_Pm_amb: this.isC4 ? 35 : 23
+          , ξ: 0.8
+          , k: this.isLegume ? 0.8 : 0.5
+          , m: 0.0
+          , α_amb_15: 0.05
+          , P_m_ref: this.isC4 ? 22 : 16
+          , λ: this.isC4 ? 1.05 : 1.2
+          , f_C_m: this.isC4 ? 1.1 : 1.5
+          , γ_Pm: 10
+          , λ_α: 0.02 
+          , γ_α: 6
+        }
+      , part: {
+            ρ_shoot_ref: 0.8  // TODO: source?
+          , ρ_l: 0.7 // TODO: source?
+        }
+        /* NDF digestibility per age class */
+      , δ_ndf_l_1: 0.7
+      , δ_ndf_l_2: 0.6
+      , δ_ndf_l_3: 0.5
+      , δ_ndf_l_dead: 0.2
+      , δ_ndf_s_1: 0.5
+      , δ_ndf_s_2: 0.4
+      , δ_ndf_s_3: 0.3
+      , δ_ndf_s_dead: 0.2
+        /* NDSC digestibility per age class */
+      , δ_nc: 0.97
+        /* reference composition of new tissue dry matter, fractions */ 
+      , dW_l_fdwt_ref: { sc: 0.50, nc: 0.22, pn: 0.25, ah: 0.03 }
+      , dW_s_fdwt_ref: { sc: 0.63, nc: 0.18, pn: 0.13, ah: 0.05 }
+      , dW_r_fdwt_ref: { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 }
+      , N_leaf: { // TODO: remove?
+        opt: 0.100,    //[kg (N) kg-1 (C)] AgPasture: 0.04 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
+        max: 0.125,    //[kg (N) kg-1 (C)] AgPasture: 0.05 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
+        min: 0.030,    //[kg (N) kg-1 (C)] AgPasture: 0.012 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
+        ref: 0.100    //[kg (N) kg-1 (C)] TODO: source?
+       }
+    };
 
-  // Initialising the root
-  vc_RootBiomass = vc_OrganBiomass[0];
+    /*
+      variables (only those that are temporarily stored during calculations)
 
-  /** @todo Christian: Umrechnung korrekt wenn Biomasse in [kg m-2]? */
-  vc_TotalRootLength = (vc_RootBiomass * 100000.0 * 100.0 / 7.0) / (0.015 * 0.015 * PI);
+      Ω_N     [0-1]                       limiting factor nitrogen (1 = no stress)
+      Ω_water [0-1]                       limiting factor water (1 = no stress)
 
-  vc_TotalBiomassNContent = (vc_AbovegroundBiomass * pc_NConcentrationAbovegroundBiomass)
-      + (vc_RootBiomass * pc_NConcentrationRoot);
-  vc_NConcentrationAbovegroundBiomass = pc_NConcentrationAbovegroundBiomass;
-  vc_NConcentrationRoot = pc_NConcentrationRoot;
+      P_g_day [kg (C) m-2 d-1]            daily canopy gross photosynthesis in response to irradiance
+      G       [kg (C) m-2 d-1]            daily net growth rate
 
-  // Initialising the initial maximum rooting depth
-  var vc_SandContent = soilColumn[0].vs_SoilSandContent; // [kg kg-1]
-  var vc_BulkDensity = soilColumn[0].vs_SoilBulkDensity(); // [kg m-3]
-  if (vc_SandContent < 0.55) vc_SandContent = 0.55;
-  if (vs_SoilSpecificMaxRootingDepth > 0.0) {
-    vc_SoilSpecificMaxRootingDepth  = vs_SoilSpecificMaxRootingDepth;
-  } else {
-    vc_SoilSpecificMaxRootingDepth = vc_SandContent * ((1.1 - vc_SandContent)
-             / 0.275) * (1.4 / (vc_BulkDensity / 1000.0)
-             + (vc_BulkDensity * vc_BulkDensity / 40000000.0)); // [m]
-  }
+      Y       [-]                         total growth efficiency
+      Y_leaf  [-]                         leaf growth efficiency
+      Y_stem  [-]                         stem growth efficiency
+      Y_root  [-]                         root growth efficiency
 
-  /* grassland: depth of species with deepest root */
-  pc_CropSpecificMaxRootingDepth = gGrowth.mixture.d_mx();
-  vc_MaxRootingDepth = (vc_SoilSpecificMaxRootingDepth + (pc_CropSpecificMaxRootingDepth * 2.0)) / 3.0; //[m]
-  
-  /* grassland: make sure it does not grow deeper */
-  if (vc_MaxRootingDepth > pc_CropSpecificMaxRootingDepth)
-    vc_MaxRootingDepth = pc_CropSpecificMaxRootingDepth
+      d_r     [m]                         root depth
+      τ       [days]                      no. of days in pheno. phase (e.g. vegetative)
+      k_sum   [-]                         pheno. phase development (0-1)
 
-  // change organs for yield components in case of eva2 simulation
-  // if type of usage is defined
-  //   debug() << "EVA2 Nutzungsart " << eva2_usage << "\t" << pc_CropName.c_str() << endl;
-  //   if (eva2_usage == NUTZUNG_GANZPFLANZE) {
-  //       debug() << "Ganzpflanze" << endl;
-  //       std::vector<YieldComponent> prim = cropParams.organIdsForPrimaryYield;
-  //       std::vector<YieldComponent> sec = cropParams.organIdsForSecondaryYield;
-
-  //       BOOST_FOREACH(YieldComponent yc, prim){
-  //         eva2_primaryYieldComponents.push_back(yc);
-  //       }
-  // //      vector<YieldComponent>::iterator it = prim.begin();
-  // //      for (it; it!=prim.end(); it++) {
-  // //          YieldComponent y = *it;
-  // //          eva2_primaryYieldComponents.push_back(y);
-  // //      }
-
-  //       BOOST_FOREACH(YieldComponent yc, sec){
-  //          eva2_primaryYieldComponents.push_back(yc);
-  //       }
-  // //      it = sec.begin();
-  // //      for (it; it!=sec.end(); it++) {
-  // //          YieldComponent y = *it;
-  // //          eva2_primaryYieldComponents.push_back(y);
-  // //      }
-  //       eva2_secondaryYieldComponents.clear();
-  //   }
-
-  //   if (eva2_usage == NUTZUNG_GRUENDUENGUNG) {
-  //       // if gruenduengung, put all organs that are in primary yield components
-  //       // into secondary yield component, because the secondary yield stays on
-  //       // the farm
-  //       debug() << "Gründüngung" << endl;
-  //       std::vector<YieldComponent> prim = cropParams.organIdsForPrimaryYield;
-
-  //       for (vector<YieldComponent>::iterator it = prim.begin(); it!=prim.end(); it++) {
-  //           YieldComponent y = *it;
-  //           eva2_secondaryYieldComponents.push_back(y);
-  //       }
-  //   }
-
-
-
-  /* TEST re-initialize grassland: overwrite monica values */
-  var sqmInha = 10000;
-  vc_OrganBiomass[ROOT] = gGrowth.mixture.dwt_root() * sqmInha; // [kg DM ha-1]
-  vc_OrganBiomass[LEAF] = gGrowth.mixture.dwt_leaf() * sqmInha; // [kg DM ha-1]
-  vc_OrganBiomass[SHOOT] = gGrowth.mixture.dwt_stem() * sqmInha; // [kg DM ha-1]
-  vc_OrganBiomass[STORAGE_ORGAN] = 0;
-
-  vc_AbovegroundBiomass = vc_OrganBiomass[LEAF] + vc_OrganBiomass[SHOOT] + vc_OrganBiomass[STORAGE_ORGAN];
-  vc_TotalBiomass = vc_AbovegroundBiomass  + vc_OrganBiomass[ROOT];
-
-
-  vc_RootBiomass = vc_OrganBiomass[ROOT]; // [kg ha-1]
-
-  // Initialisisng the leaf area index
-  // vc_LeafAreaIndex = vc_OrganBiomass[1] * pc_SpecificLeafArea[vc_DevelopmentalStage]; // [ha ha-1]
-
-  // if (vc_LeafAreaIndex <= 0.0)
-  //   vc_LeafAreaIndex = 0.001;
-
-  /** @todo Christian: Umrechnung korrekt wenn Biomasse in [kg m-2]? */
-  vc_TotalRootLength = (vc_RootBiomass * 100000.0 * 100.0 / 7.0) / (0.015 * 0.015 * PI);
-
-  // vc_TotalBiomassNContent = (vc_AbovegroundBiomass * pc_NConcentrationAbovegroundBiomass)
-  //     + (vc_RootBiomass * pc_NConcentrationRoot);
-  // vc_NConcentrationAbovegroundBiomass = pc_NConcentrationAbovegroundBiomass;
-  // vc_NConcentrationRoot = pc_NConcentrationRoot;
-
-
-
-  var calculateCropGrowthStep = function (
-    vw_MeanAirTemperature, 
-    vw_MaxAirTemperature,
-    vw_MinAirTemperature,
-    vw_GlobalRadiation,
-    vw_SunshineHours,
-    vs_JulianDay,
-    vw_RelativeHumidity,
-    vw_WindSpeed,
-    vw_WindSpeedHeight,
-    vw_AtmosphericCO2Concentration,
-    vw_GrossPrecipitation,
-    f_s /* fraction direct radiation, grassland additional parameter */
-  ) {
-
-    if (DEBUG) debug(arguments);
-
-    // if (cutting_delay_days>0) {
-    //     cutting_delay_days--;
-    // }
-
-    fc_Radiation(vs_JulianDay, vs_Latitude, vw_GlobalRadiation, vw_SunshineHours);
-
-    vc_OxygenDeficit = fc_OxygenDeficiency(pc_CriticalOxygenContent[vc_DevelopmentalStage]);
-
-    fc_CropDevelopmentalStage(
-      vw_MeanAirTemperature,
-      pc_BaseTemperature,
-      pc_OptimumTemperature,
-      pc_StageTemperatureSum,
-      vc_TimeStep,
-      soilColumn[0].get_Vs_SoilMoisture_m3(),
-      soilColumn[0].get_FieldCapacity(),
-      soilColumn[0].get_PermanentWiltingPoint(),
-      pc_NumberOfDevelopmentalStages,
-      vc_VernalisationFactor,
-      vc_DaylengthFactor,
-      vc_CropNRedux
-    );  
-
-    vc_DaylengthFactor =
-      fc_DaylengthFactor(
-      pc_DaylengthRequirement[vc_DevelopmentalStage],
-      vc_EffectiveDayLength,
-      vc_PhotoperiodicDaylength,
-      pc_BaseDaylength[vc_DevelopmentalStage]
-    );
-
-    // C++: returns pair<double, double> 
-    var fc_VernalisationResult =
-      fc_VernalisationFactor(
-      vw_MeanAirTemperature,
-      vc_TimeStep,
-      pc_VernalisationRequirement[vc_DevelopmentalStage],
-      vc_VernalisationDays
-    );    
-
-    vc_VernalisationFactor = fc_VernalisationResult[0];
-    vc_VernalisationDays = fc_VernalisationResult[1];
-
-    vc_RelativeTotalDevelopment = vc_CurrentTotalTemperatureSum / vc_TotalTemperatureSum;
-
-    if (vc_DevelopmentalStage == 0) {
-      vc_KcFactor = 0.4; /** @todo Claas: muss hier etwas Genaueres hin, siehe FAO? */
-    } else {
-      vc_KcFactor = 
-        fc_KcFactor(
-          vc_DevelopmentalStage,
-          pc_StageTemperatureSum[vc_DevelopmentalStage],
-          vc_CurrentTemperatureSum[vc_DevelopmentalStage],
-          pc_InitialKcFactor,
-          pc_StageKcFactor[vc_DevelopmentalStage],
-          pc_StageKcFactor[vc_DevelopmentalStage - 1]
-        );
-    }
-
-    if (vc_DevelopmentalStage > 0) {
-
-      fc_CropSize(pc_MaxCropHeight,
-        pc_MaxCropDiameter,
-        pc_StageAtMaxHeight,
-        pc_StageAtMaxDiameter,
-        pc_StageTemperatureSum,
-        vc_CurrentTotalTemperatureSum,
-        pc_CropHeightP1,
-        pc_CropHeightP2
-      );
-
-      fc_CropGreenArea(
-        vc_OrganGrowthIncrement[1],
-        vc_OrganSenescenceIncrement[1],
-        vc_CropHeight,
-        vc_CropDiameter,
-        pc_SpecificLeafArea[vc_DevelopmentalStage - 1],
-        pc_SpecificLeafArea[vc_DevelopmentalStage],
-        pc_SpecificLeafArea[1],
-        pc_StageTemperatureSum[vc_DevelopmentalStage],
-        vc_CurrentTemperatureSum[vc_DevelopmentalStage],
-        pc_PlantDensity,
-        vc_TimeStep
-      );
-
-      vc_SoilCoverage = fc_SoilCoverage(vc_LeafAreaIndex);
-
-      // fc_CropPhotosynthesis(
-      //   vw_MeanAirTemperature,
-      //   vw_MaxAirTemperature,
-      //   vw_MinAirTemperature,
-      //   vc_GlobalRadiation,
-      //   vw_AtmosphericCO2Concentration,
-      //   vs_Latitude,
-      //   vc_LeafAreaIndex,
-      //   pc_DefaultRadiationUseEfficiency,
-      //   pc_MaxAssimilationRate,
-      //   pc_MinimumTemperatureForAssimilation,
-      //   vc_AstronomicDayLenght,
-      //   vc_Declination,
-      //   vc_ClearDayRadiation,
-      //   vc_EffectiveDayLength,
-      //   vc_OvercastDayRadiation
-      // );
-
-      // TEST
-      /*
-        T     [C°]            mean daily temperature
-        T_mn  [C°]            minimum daily temperature
-        T_mx  [C°]            maximum daily temperature
-        PPF   [μmol m-2 d-1]  photosynthetic photon flux
-        τ     [s]             daylength
-        f_s   [-]             fraction direct solar radiation
-        N_up  [kg m-2]        available N for uptake
-      */ 
-      var T = vw_MeanAirTemperature
-        , T_mn = vw_MinAirTemperature
-        , T_mx = vw_MaxAirTemperature
-        , PPF = vc_GlobalRadiation * 0.5 * 1e6  / 0.218 // Radiation to PAR & MJ to J & PAR to PPF
-        , τ = vc_AstronomicDayLenght * 3600.0 // hours to sec.
-        , f_s = 0.7
-        , N_up = vc_NUptakeFromLayer
-        , E_T = vc_Transpiration // from previous day
-        , E_T_demand = vc_PotentialTranspiration // from previous day
-        ;
-
-      gGrowth.step(T, T_mn, T_mx, PPF, τ, f_s, N_up, E_T, E_T_demand);
-
-      // fc_HeatStressImpact(
-      //   vw_MaxAirTemperature,
-      //   vw_MinAirTemperature,
-      //   vc_CurrentTotalTemperatureSum
-      // );
-
-      // fc_DroughtImpactOnFertility(vc_TranspirationDeficit);
-
-      // fc_CropNitrogen();
-
-      fc_CropDryMatter(
-        vs_NumberOfLayers,
-        soilColumn.vs_LayerThickness(),
-        vc_DevelopmentalStage,
-        vc_Assimilates,
-      /*vc_NetMaintenanceRespiration,*/   // hermes o. agrosim
-      /*pc_CropSpecificMaxRootingDepth,*/ // JS! unused
-      /*vs_SoilSpecificMaxRootingDepth,*/ // JS! unused
-        vw_MeanAirTemperature
-      );
-
-      vc_ReferenceEvapotranspiration = 
-        fc_ReferenceEvapotranspiration(
-          vs_HeightNN,
-          vw_MaxAirTemperature,
-          vw_MinAirTemperature,
-          vw_RelativeHumidity,
-          vw_MeanAirTemperature,
-          vw_WindSpeed,
-          vw_WindSpeedHeight,
-          vc_GlobalRadiation,
-          vw_AtmosphericCO2Concentration,
-          vc_GrossPhotosynthesisReference_mol
-        );
-
-      fc_CropWaterUptake(
-        vs_NumberOfLayers,
-        soilColumn.vs_LayerThickness(),
-        vc_SoilCoverage,
-        vc_RootingZone, // JS! int TODO crop.h vc_RootingDepth?
-        soilColumn.vm_GroundwaterTable, // JS! int
-        vc_ReferenceEvapotranspiration,
-        vw_GrossPrecipitation,
-        vc_CurrentTotalTemperatureSum,
-        vc_TotalTemperatureSum
-      );
-
-      fc_CropNUptake(
-        vs_NumberOfLayers,
-        soilColumn.vs_LayerThickness(),
-        vc_RootingZone, // JS! int TODO crop.h vc_RootingDepth?
-        soilColumn.vm_GroundwaterTable, // JS! int
-        vc_CurrentTotalTemperatureSum,
-        vc_TotalTemperatureSum
-      );
+      dW_x_fdwt (leaf, stem, root)
+      sc      [kg (d.wt) kg (d.wt)]       fraction structural carbon hydrates in new tissue
+      nc      [kg (d.wt) kg (d.wt)]       fraction non-structural carbon hydrates in new tissue
+      pn      [kg (d.wt) kg (d.wt)]       fraction protein in new tissue
+      ah      [kg (d.wt) kg (d.wt)]       fraction ashes in new tissue
       
+      SC      [kg (C) m-2]                total structural carbon hydrates (cellulose, hemicellulose, lignin)
+      dSC     [kg (C) m-2 d-1]            daily structural carbon hydrates growth
+      NC      [kg (C) m-2]                total (per organ) non-structural carbon hydrates (starch, sugars, fat)
+      dNC     [kg (C) m-2 d-1]            daily (per organ) non-structural carbon hydrates growth
+      PN      [kg (C) m-2]                total (per organ) protein carbon
+      dPN     [kg (C) m-2 d-]             daily (per organ) protein carbon growth
 
-      // vc_GrossPrimaryProduction = fc_GrossPrimaryProduction(vc_GrossAssimilates);
+      Λ_litter, Λ_r
+      sc      [kg (C) m-2]                structural carbon hydrates
+      nc      [kg (C) m-2]                non-structural carbon hydrates
+      pn      [kg (C) m-2]                protein carbon
 
-      // vc_NetPrimaryProduction = fc_NetPrimaryProduction(vc_GrossPrimaryProduction, vc_TotalRespired);
-    }
+    */
+    this.vars = {
+        Ω_N: 1.0
+      , Ω_water: 1.0 
+      , P_g_day: 0.0
+      , G: 0.0
+      , Y: 0.75
+      , Y_leaf: 0.75
+      , Y_stem: 0.75
+      , Y_root: 0.75
+      , d_r: 1.0
+      , τ: 0
+      , k_sum: 0
+      , N_up: 0
+      , N_fix: 0
+      , N_avail: 0
+      , N_remob: 0
+      , N_req_opt: 0
+        /* d.wt composition of new tissue, fractions d.wt */ 
+      , dW_l_fdwt: { sc: 0.54, nc: 0.22, pn: 0.19, ah: 0.03 }
+      , dW_s_fdwt: { sc: 0.63, nc: 0.18, pn: 0.13, ah: 0.05 }
+      , dW_r_fdwt: { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 }
+        /* structural carbon hydrate pools kg (C) m-2 */
+      , SC: {
+            live_l_1: 0.0
+          , live_l_2: 0.0
+          , live_l_3: 0.0
+          , dead_l:   0.0
+          , live_s_1: 0.0
+          , live_s_2: 0.0
+          , live_s_3: 0.0
+          , dead_s:   0.0
+          , r:        0.0
+        }
+        /* daily structural carbon hydrate growth pool kg (C) m-2 */
+      , dSC: {
+            live_l_1: 0.0
+          , live_l_2: 0.0
+          , live_l_3: 0.0
+          , dead_l:   0.0
+          , live_s_1: 0.0
+          , live_s_2: 0.0
+          , live_s_3: 0.0
+          , dead_s:   0.0
+          , r:        0.0
+        }
+        /* non-structural carbon hydrate pool kg (C) m-2 */
+      , NC: { l: 0.0, s: 0.0, r: 0.0 }
+        /* daily non-structural carbon hydrate growth pool kg (C) m-2 */
+      , dNC: { l: 0.0, s: 0.0, r: 0.0 }
+        /* protein pool kg (C) m-2 */
+      , PN: { l: 0.0, s: 0.0, r: 0.0 }
+        /* daily protein growth pool kg (C) m-2 */
+      , dPN: { l: 0.0, s: 0.0, r: 0.0 }
+        /* total litter; from senecenced leaf and stem */
+      , Λ_litter: { sc: 0.0, pn: 0.0 }
+        /* total senecenced root */ 
+      , Λ_r: { sc: 0, pn: 0 }
+    };
 
-  };
 
-  var fc_Radiation = function (
-    vs_JulianDay,
-    vs_Latitude,
-    vw_GlobalRadiation,
-    vw_SunshineHours
-  ) {
+    /* initialze constants with pre-defined values by type; defaults to rye grass */
+    if (cfg && cfg.type) {
+    
+      switch (cfg.type) {
 
+      case 'white clover':
 
-    var vc_DeclinationSinus = 0.0; // old SINLD
-    var vc_DeclinationCosinus = 0.0; // old COSLD
+        this.isLegume = true;
+        this.type = 'white clover';
 
-    // Calculation of declination - old DEC
-    vc_Declination = -23.4 * cos(2.0 * PI * ((vs_JulianDay + 10.0) / 365.0));
+        this.cons.h_m = 0.5;
+        this.cons.L_half = 2.0;
+        this.cons.σ = 36.8; // Topp (2004)
+        this.cons.fAsh_leaf = 0.03;
+        this.cons.fAsh_stem = 0.05;
 
-    vc_DeclinationSinus = sin(vc_Declination * PI / 180.0) * sin(vs_Latitude * PI / 180.0);
-    vc_DeclinationCosinus = cos(vc_Declination * PI / 180.0) * cos(vs_Latitude * PI / 180.0);
+        /* photosysthesis */
+        this.cons.photo.T_ref = 20;
+        this.cons.photo.T_mn = 3;
+        this.cons.photo.T_opt_Pm_amb = 23;
+        this.cons.photo.ξ = 0.8;
+        this.cons.photo.k = 0.8;
+        this.cons.photo.m = 0.0;
+        this.cons.photo.α_amb_15 = 0.05;
+        this.cons.photo.P_m_ref = 16;
+        this.cons.photo.λ = 1.2;
+        this.cons.photo.f_C_m = 1.5;
+        this.cons.photo.γ_Pm = 10;
+        this.cons.photo.λ_α = 0.02; 
+        this.cons.photo.γ_α = 6;
 
-    // Calculation of the atmospheric day lenght - old DL
-    vc_AstronomicDayLenght = 12.0 * (PI + 2.0 * asin(vc_DeclinationSinus / vc_DeclinationCosinus)) / PI;
+        /* partitioning */
+        this.cons.part.ρ_shoot_ref = 0.71;  // Topp (2004)
+        this.cons.part.ρ_l = 0.33; // Topp (2004)
 
+        /* NDF digestibility per age class */
+        this.cons.δ_ndf_l_1 = 0.7;
+        this.cons.δ_ndf_l_2 = 0.6;
+        this.cons.δ_ndf_l_3 = 0.5;
+        this.cons.δ_ndf_l_dead = 0.2;
+        this.cons.δ_ndf_s_1 = 0.5;
+        this.cons.δ_ndf_s_2 = 0.4;
+        this.cons.δ_ndf_s_3 = 0.3;
+        this.cons.δ_ndf_s_dead = 0.2;
 
-    // Calculation of the effective day length - old DLE
+        /* NDSC digestibility per age class */
+        this.cons.δ_nc = 1.00;
+        
+        /* reference composition of new tissue dry matter, fractions */ 
+        this.cons.dW_l_fdwt_ref = { sc: 0.27, nc: 0.18, pn: 0.26, ah: 0.11 };
+        this.cons.dW_s_fdwt_ref = { sc: 0.63, nc: 0.18, pn: 0.26, ah: 0.05 };
+        this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.26, ah: 0.03 };
 
-    var EDLHelper = (-sin(8.0 * PI / 180.0) + vc_DeclinationSinus) / vc_DeclinationCosinus;
+        /* leaf nitrogen TODO: remove? */
+        this.cons.N_leaf.opt = 0.100;
+        this.cons.N_leaf.max = 0.125;
+        this.cons.N_leaf.min = 0.030;
+        this.cons.N_leaf.ref = 0.100;
 
-    if ((EDLHelper < -1.0) || (EDLHelper > 1.0))
-    {
-        vc_EffectiveDayLength = 0.01;
-    } else {
-        vc_EffectiveDayLength = 12.0 * (PI + 2.0 * asin(EDLHelper)) / PI;
-    }
+        break;
+      case 'red clover':
 
-    // old DLP
-    vc_PhotoperiodicDaylength = 12.0 * (PI + 2.0 * asin((-sin(-6.0 * PI / 180.0) + vc_DeclinationSinus)
-        / vc_DeclinationCosinus)) / PI;
+        this.isLegume = true;
+        this.type = 'red clover';
 
-    // Calculation of the mean photosynthetically active radiation [J m-2] - old RDN
-    vc_PhotActRadiationMean = 3600.0 * (vc_DeclinationSinus * vc_AstronomicDayLenght + 24.0 / PI * vc_DeclinationCosinus
-        * sqrt(1.0 - ((vc_DeclinationSinus / vc_DeclinationCosinus) * (vc_DeclinationSinus / vc_DeclinationCosinus))));
+        this.cons.h_m = 0.3;
+        this.cons.L_half = 2.0;
+        this.cons.σ = 24.0; // Topp (2004)
+        this.cons.fAsh_leaf = 0.03;
+        this.cons.fAsh_stem = 0.05;
 
-    // Calculation of radiation on a clear day [J m-2] - old DRC
-    vc_ClearDayRadiation = 0.5 * 1300.0 * vc_PhotActRadiationMean * exp(-0.14 / (vc_PhotActRadiationMean
-        / (vc_AstronomicDayLenght * 3600.0)));
+        /* photosysthesis */
+        this.cons.photo.T_ref = 25; // Topp (2004)
+        this.cons.photo.T_mn = 3;
+        this.cons.photo.T_opt_Pm_amb = 25;
+        this.cons.photo.ξ = 0.8;
+        this.cons.photo.k = 1.0; // Topp (2004)
+        this.cons.photo.m = 0.0;
+        this.cons.photo.α_amb_15 = 0.05;
+        this.cons.photo.P_m_ref = 12.9; // Topp (2004)
+        this.cons.photo.λ = 1.2;
+        this.cons.photo.f_C_m = 1.5;
+        this.cons.photo.γ_Pm = 10;
+        this.cons.photo.λ_α = 0.02; 
+        this.cons.photo.γ_α = 6;
 
-    // Calculation of radiation on an overcast day [J m-2] - old DRO
-    vc_OvercastDayRadiation = 0.2 * vc_ClearDayRadiation;
+        /* partitioning */
+        this.cons.part.ρ_shoot_ref = 0.71;  // Topp (2004)
+        this.cons.part.ρ_l = 0.55; // Topp (2004)
 
-    // Calculation of extraterrestrial radiation - old EXT
-    var pc_SolarConstant = 0.082; //[MJ m-2 d-1] Note: Here is the difference to HERMES, which calculates in [J cm-2 d-1]!
-    var SC = 24.0 * 60.0 / PI * pc_SolarConstant *(1.0 + 0.033 * cos(2.0 * PI * vs_JulianDay / 365.0));
-    var vc_SunsetSolarAngle = acos(-tan(vs_Latitude * PI / 180.0) * tan(vc_Declination * PI / 180.0));
-    vc_ExtraterrestrialRadiation = SC * (vc_SunsetSolarAngle * vc_DeclinationSinus + vc_DeclinationCosinus * sin(vc_SunsetSolarAngle)); // [MJ m-2]
+        /* NDF digestibility per age class */
+        this.cons.δ_ndf_l_1 = 0.7;
+        this.cons.δ_ndf_l_2 = 0.6;
+        this.cons.δ_ndf_l_3 = 0.5;
+        this.cons.δ_ndf_l_dead = 0.2;
+        this.cons.δ_ndf_s_1 = 0.5;
+        this.cons.δ_ndf_s_2 = 0.4;
+        this.cons.δ_ndf_s_3 = 0.3;
+        this.cons.δ_ndf_s_dead = 0.2;
 
-    if (vw_GlobalRadiation > 0.0)
-      vc_GlobalRadiation = vw_GlobalRadiation;
-    else
-      vc_GlobalRadiation = vc_ExtraterrestrialRadiation * (0.19 + 0.55 * vw_SunshineHours / vc_AstronomicDayLenght);
-  };
-      
-  var fc_DaylengthFactor = function (
-  d_DaylengthRequirement,
-  _vc_EffectiveDayLength, /* JS! overwrites public var */ 
-  _vc_PhotoperiodicDaylength, /* JS! overwrites public var */ 
-  d_BaseDaylength
-  ) {
+        /* NDSC digestibility per age class */
+        this.cons.δ_nc = 1.00;
+        
+        /* reference composition of new tissue dry matter, fractions */ 
+        this.cons.dW_l_fdwt_ref = { sc: 0.50, nc: 0.22, pn: 0.25, ah: 0.03 };
+        this.cons.dW_s_fdwt_ref = { sc: 0.63, nc: 0.18, pn: 0.13, ah: 0.05 };
+        this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 };
 
-    if (DEBUG) debug(arguments);
+        /* leaf nitrogen TODO: remove? */
+        this.cons.N_leaf.opt = 0.100;
+        this.cons.N_leaf.max = 0.125;
+        this.cons.N_leaf.min = 0.030;
+        this.cons.N_leaf.ref = 0.100;
 
-    if (d_DaylengthRequirement > 0.0) {
+        break;
+      case 'pasture grass':
 
-      // ************ Long-day plants **************
-      // * Development acceleration by day length. *
-      // *  (Day lenght requirement is positive.)  *
-      // *******************************************
+        this.isLegume = false;
+        this.type = 'pasture grass';
 
-      vc_DaylengthFactor = (vc_PhotoperiodicDaylength - d_BaseDaylength) /
-        (d_DaylengthRequirement - d_BaseDaylength);
+        this.cons.h_m = 0.5;
+        this.cons.L_half = 2.0;
+        this.cons.σ = 25.8; // Topp (2004)
+        this.cons.fAsh_leaf = 0.03;
+        this.cons.fAsh_stem = 0.05;
 
-    } else if (d_DaylengthRequirement < 0.0) {
+        /* photosysthesis */
+        this.cons.photo.T_ref = 20;
+        this.cons.photo.T_mn = 3;
+        this.cons.photo.T_opt_Pm_amb = 23;
+        this.cons.photo.ξ = 0.8;
+        this.cons.photo.k = 0.5;
+        this.cons.photo.m = 0.0;
+        this.cons.photo.α_amb_15 = 0.05;
+        this.cons.photo.P_m_ref = 16;
+        this.cons.photo.λ = 1.2;
+        this.cons.photo.f_C_m = 1.5;
+        this.cons.photo.γ_Pm = 10;
+        this.cons.photo.λ_α = 0.02; 
+        this.cons.photo.γ_α = 6;
 
-      // ************* Short-day plants **************
-      // * Development acceleration by night lenght. *
-      // *  (Day lenght requirement is negative and  *
-      // *      represents critical day length.)     *
-      // *********************************************
+        /* partitioning */
+        this.cons.part.ρ_shoot_ref = 0.8;
+        this.cons.part.ρ_l = 0.7;
 
-      var vc_CriticalDayLenght = -d_DaylengthRequirement;
-      var vc_MaximumDayLength = -d_BaseDaylength;
-      
-      if (vc_EffectiveDayLength <= vc_CriticalDayLenght)
-        vc_DaylengthFactor = 1.0;
-      else
-        vc_DaylengthFactor = (vc_EffectiveDayLength - vc_MaximumDayLength) / (vc_CriticalDayLenght - vc_MaximumDayLength);
+        /* NDF digestibility per age class */
+        this.cons.δ_ndf_l_1 = 0.7;
+        this.cons.δ_ndf_l_2 = 0.6;
+        this.cons.δ_ndf_l_3 = 0.5;
+        this.cons.δ_ndf_l_dead = 0.2;
+        this.cons.δ_ndf_s_1 = 0.5;
+        this.cons.δ_ndf_s_2 = 0.4;
+        this.cons.δ_ndf_s_3 = 0.3;
+        this.cons.δ_ndf_s_dead = 0.2;
 
-    } else vc_DaylengthFactor = 1.0;
+        /* NDSC digestibility per age class */
+        this.cons.δ_nc = 1.00;
+        
+        /* reference composition of new tissue dry matter, fractions */ 
+        this.cons.dW_l_fdwt_ref = { sc: 0.50, nc: 0.22, pn: 0.25, ah: 0.03 };
+        this.cons.dW_s_fdwt_ref = { sc: 0.63, nc: 0.18, pn: 0.13, ah: 0.05 };
+        this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 };
 
-    if (vc_DaylengthFactor > 1.0) vc_DaylengthFactor = 1.0;
+        /* leaf nitrogen TODO: remove? */
+        this.cons.N_leaf.opt = 0.100;
+        this.cons.N_leaf.max = 0.125;
+        this.cons.N_leaf.min = 0.030;
+        this.cons.N_leaf.ref = 0.100;
 
-    if (vc_DaylengthFactor < 0.0) vc_DaylengthFactor = 0.0;
+        break;
+      case 'meadow grass early':
 
-    return vc_DaylengthFactor;
-  };
+        this.isLegume = false;
+        this.type = 'meadow grass early';
 
-  /*std::pair<double, double>*/    
-  var fc_VernalisationFactor = function (
-    vw_MeanAirTemperature, 
-    vc_TimeStep,
-    d_VernalisationRequirement,
-    d_VernalisationDays
-  ) {
+        this.cons.h_m = 0.7;
+        this.cons.L_half = 2.0;
+        this.cons.σ = 25.8; // Topp (2004)
+        this.cons.fAsh_leaf = 0.03;
+        this.cons.fAsh_stem = 0.05;
 
-    if (DEBUG) debug(arguments);
+        /* photosysthesis */
+        this.cons.photo.T_ref = 20;
+        this.cons.photo.T_mn = 3;
+        this.cons.photo.T_opt_Pm_amb = 23;
+        this.cons.photo.ξ = 0.8;
+        this.cons.photo.k = 0.5;
+        this.cons.photo.m = 0.0;
+        this.cons.photo.α_amb_15 = 0.05;
+        this.cons.photo.P_m_ref = 16;
+        this.cons.photo.λ = 1.2;
+        this.cons.photo.f_C_m = 1.5;
+        this.cons.photo.γ_Pm = 10;
+        this.cons.photo.λ_α = 0.02; 
+        this.cons.photo.γ_α = 6;
 
-    var vc_EffectiveVernalisation;
+        /* partitioning */
+        this.cons.part.ρ_shoot_ref = 0.8;  // Johnson (2013)
+        this.cons.part.ρ_l = 0.5; // estimate (early flowering)
+        this.cons.part.ρ_l_after_defoliation = 0.75; // estimate (early flowering)
 
-    if (d_VernalisationRequirement == 0.0) {
-      vc_VernalisationFactor = 1.0;
-    } else {
-      if ((vw_MeanAirTemperature > -4.0) && (vw_MeanAirTemperature <= 0.0))
-        vc_EffectiveVernalisation = (vw_MeanAirTemperature + 4.0) / 4.0;
-      else if ((vw_MeanAirTemperature > 0.0) && (vw_MeanAirTemperature <= 3.0))
-        vc_EffectiveVernalisation = 1.0;
-      else if ((vw_MeanAirTemperature > 3.0) && (vw_MeanAirTemperature <= 7.0))
-        vc_EffectiveVernalisation = 1.0 - (0.2 * (vw_MeanAirTemperature - 3.0) / 4.0);
-      else if ((vw_MeanAirTemperature > 7.0) && (vw_MeanAirTemperature <= 9.0))
-        vc_EffectiveVernalisation = 0.8 - (0.4 * (vw_MeanAirTemperature - 7.0) / 2.0);
-      else if ((vw_MeanAirTemperature > 9.0) && (vw_MeanAirTemperature <= 18.0))
-        vc_EffectiveVernalisation = 0.4 - (0.4 * (vw_MeanAirTemperature - 9.0) / 9.0);
-      else if ((vw_MeanAirTemperature <= -4.0) || (vw_MeanAirTemperature > 18.0))
-        vc_EffectiveVernalisation = 0.0;
-      else
-        vc_EffectiveVernalisation = 1.0;
-      
-      // old VERNTAGE
-      d_VernalisationDays += vc_EffectiveVernalisation * vc_TimeStep;
+        /* NDF digestibility per age class */
+        this.cons.δ_ndf_l_1 = 0.7;
+        this.cons.δ_ndf_l_2 = 0.6;
+        this.cons.δ_ndf_l_3 = 0.5;
+        this.cons.δ_ndf_l_dead = 0.2;
+        this.cons.δ_ndf_s_1 = 0.5;
+        this.cons.δ_ndf_s_2 = 0.4;
+        this.cons.δ_ndf_s_3 = 0.3;
+        this.cons.δ_ndf_s_dead = 0.2;
 
-      // old VERSCHWELL
-      var vc_VernalisationThreshold = min(d_VernalisationRequirement, 9.0) - 1.0;
+        /* NDSC digestibility per age class */
+        this.cons.δ_nc = 1.00;
+        
+        /* reference composition of new tissue dry matter, fractions */ 
+        this.cons.dW_l_fdwt_ref = { sc: 0.50, nc: 0.22, pn: 0.25, ah: 0.03 };
+        this.cons.dW_s_fdwt_ref = { sc: 0.63, nc: 0.18, pn: 0.13, ah: 0.05 };
+        this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 };
 
-      if (vc_VernalisationThreshold >= 1) {
-        vc_VernalisationFactor = (d_VernalisationDays - vc_VernalisationThreshold) / (d_VernalisationRequirement - vc_VernalisationThreshold);
-        if (vc_VernalisationFactor < 0)
-          vc_VernalisationFactor = 0.0;
-      } else {
-        vc_VernalisationFactor = 1.0;
+        /* leaf nitrogen TODO: remove? */
+        this.cons.N_leaf.opt = 0.100;
+        this.cons.N_leaf.max = 0.125;
+        this.cons.N_leaf.min = 0.030;
+        this.cons.N_leaf.ref = 0.100;
+
+        break;
+      case 'meadow grass late':
+
+        this.isLegume = false;
+        this.type = 'meadow grass late';
+
+        this.cons.h_m = 0.7;
+        this.cons.L_half = 2.0;
+        this.cons.σ = 25.8 // Topp (2004)
+        this.cons.fAsh_leaf = 0.03;
+        this.cons.fAsh_stem = 0.05;
+
+        /* photosysthesis */
+        this.cons.photo.T_ref = 20;
+        this.cons.photo.T_mn = 3;
+        this.cons.photo.T_opt_Pm_amb = 23;
+        this.cons.photo.ξ = 0.8;
+        this.cons.photo.k = 0.5;
+        this.cons.photo.m = 0.0;
+        this.cons.photo.α_amb_15 = 0.05;
+        this.cons.photo.P_m_ref = 16;
+        this.cons.photo.λ = 1.2;
+        this.cons.photo.f_C_m = 1.5;
+        this.cons.photo.γ_Pm = 10;
+        this.cons.photo.λ_α = 0.02; 
+        this.cons.photo.γ_α = 6;
+
+        /* partitioning */
+        this.cons.part.ρ_shoot_ref = 0.8;  // Johnson (2013)
+        this.cons.part.ρ_l = 0.6; // estimate (late flowering)
+        this.cons.part.ρ_l_after_defoliation = 0.75; // estimate (late flowering)
+
+        /* NDF digestibility per age class */
+        this.cons.δ_ndf_l_1 = 0.7;
+        this.cons.δ_ndf_l_2 = 0.6;
+        this.cons.δ_ndf_l_3 = 0.5;
+        this.cons.δ_ndf_l_dead = 0.2;
+        this.cons.δ_ndf_s_1 = 0.5;
+        this.cons.δ_ndf_s_2 = 0.4;
+        this.cons.δ_ndf_s_3 = 0.3;
+        this.cons.δ_ndf_s_dead = 0.2;
+
+        /* NDSC digestibility per age class */
+        this.cons.δ_nc = 1.00;
+        
+        /* reference composition of new tissue dry matter, fractions */ 
+        this.cons.dW_l_fdwt_ref = { sc: 0.50, nc: 0.22, pn: 0.25, ah: 0.03 };
+        this.cons.dW_s_fdwt_ref = { sc: 0.63, nc: 0.18, pn: 0.13, ah: 0.05 };
+        this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 };
+
+        /* leaf nitrogen TODO: remove? */
+        this.cons.N_leaf.opt = 0.100;
+        this.cons.N_leaf.max = 0.125;
+        this.cons.N_leaf.min = 0.030;
+        this.cons.N_leaf.ref = 0.100;
+
+        break;
       }
     }
 
-    return [
-      vc_VernalisationFactor, 
-      d_VernalisationDays
-    ];
-  };
+    /* overwrite initial values with provided (optional) configuration values */
+    if (cfg) {
 
-  var fc_OxygenDeficiency = function (
-    d_CriticalOxygenContent, 
-    vc_AirFilledPoreVolume, 
-    vc_MaxOxygenDeficit
-  ) {
+      this.isLegume = cfg.isLegume || false;
+      this.isC4 = cfg.isC4 || false;
 
-    if (DEBUG) debug(arguments);
-
-    var vc_AirFilledPoreVolume = vc_AirFilledPoreVolume || 0.0;
-    var vc_MaxOxygenDeficit = vc_MaxOxygenDeficit || 0.0;
-
-    // Reduktion bei Luftmangel Stauwasser berücksichtigen!!!!
-    vc_AirFilledPoreVolume = ((soilColumn[0].get_Saturation() + soilColumn[1].get_Saturation()
-        + soilColumn[2].get_Saturation()) - (soilColumn[0].get_Vs_SoilMoisture_m3() + soilColumn[1].get_Vs_SoilMoisture_m3()
-        + soilColumn[2].get_Vs_SoilMoisture_m3())) / 3.0;
-    if (vc_AirFilledPoreVolume < d_CriticalOxygenContent) {
-      vc_TimeUnderAnoxia += int(vc_TimeStep);
-      if (vc_TimeUnderAnoxia > 4)
-        vc_TimeUnderAnoxia = 4;
-      if (vc_AirFilledPoreVolume < 0.0)
-        vc_AirFilledPoreVolume = 0.0;
-      vc_MaxOxygenDeficit = vc_AirFilledPoreVolume / d_CriticalOxygenContent;
-      // JS! c++ : double (int / int) -> js int(double / double) !! took hours to debug!
-      vc_OxygenDeficit = 1.0 - int(vc_TimeUnderAnoxia / 4) * (1.0 - vc_MaxOxygenDeficit);
-    } else {
-      vc_TimeUnderAnoxia = 0;
-      vc_OxygenDeficit = 1.0;
-    }
-    if (vc_OxygenDeficit > 1.0)
-      vc_OxygenDeficit = 1.0;
-
-    return vc_OxygenDeficit;
-  };
-
-  var fc_CropDevelopmentalStage = function (
-    vw_MeanAirTemperature,
-    pc_BaseTemperature,
-    pc_OptimumTemperature,
-    pc_StageTemperatureSum,
-    vc_TimeStep,
-    d_SoilMoisture_m3,
-    d_FieldCapacity,
-    d_PermanentWiltingPoint,
-    pc_NumberOfDevelopmentalStages,
-    vc_VernalisationFactor,
-    vc_DaylengthFactor,
-    vc_CropNRedux
-  ) {
-
-    if (DEBUG) debug(arguments);
-
-    var vc_CapillaryWater;
-    var vc_DevelopmentAccelerationByNitrogenStress = 0.0; // old NPROG
-    var vc_DevelopmentAccelerationByWaterStress = 0.0; // old WPROG
-    var vc_DevelopmentAccelerationByStress = 0.0; // old DEVPROG
-    var vc_SoilTemperature = soilColumn[0].get_Vs_SoilTemperature();
-
-    if (vc_DevelopmentalStage == 0) {
-
-      if (vc_SoilTemperature > pc_BaseTemperature[vc_DevelopmentalStage]) {
-
-        vc_CapillaryWater = d_FieldCapacity - d_PermanentWiltingPoint;
-
-        /** @todo Claas: Schränkt trockener Boden das Aufsummieren der Wärmeeinheiten ein, oder
-         sollte nicht eher nur der Wechsel in das Stadium 1 davon abhängen? --> Christian */
-
-        if (pc_EmergenceMoistureControlOn == true && pc_EmergenceFloodingControlOn == true) {
-
-          if (d_SoilMoisture_m3 > ((0.2 * vc_CapillaryWater) + d_PermanentWiltingPoint)
-            && (soilColumn.vs_SurfaceWaterStorage < 0.001)) {
-          // Germination only if soil water content in top layer exceeds
-          // 20% of capillary water, but is not beyond field capacity and
-          // if no water is stored on the soil surface.
-
-            vc_CurrentTemperatureSum[vc_DevelopmentalStage] += (vc_SoilTemperature
-              - pc_BaseTemperature[vc_DevelopmentalStage]) * vc_TimeStep;
-
-            if (vc_CurrentTemperatureSum[vc_DevelopmentalStage] >= pc_StageTemperatureSum[vc_DevelopmentalStage]) {
-              vc_DevelopmentalStage++;
-            }
-          }
-        } else if (pc_EmergenceMoistureControlOn == true && pc_EmergenceFloodingControlOn == false) {
-
-          if (d_SoilMoisture_m3 > ((0.2 * vc_CapillaryWater) + d_PermanentWiltingPoint)) {
-          // Germination only if soil water content in top layer exceeds
-          // 20% of capillary water, but is not beyond field capacity.
-
-            vc_CurrentTemperatureSum[vc_DevelopmentalStage] += (vc_SoilTemperature
-              - pc_BaseTemperature[vc_DevelopmentalStage]) * vc_TimeStep;
-
-            if (vc_CurrentTemperatureSum[vc_DevelopmentalStage] >= pc_StageTemperatureSum[vc_DevelopmentalStage]) {
-              vc_DevelopmentalStage++;
-
-            }
-          }
-        } else if (pc_EmergenceMoistureControlOn == false && pc_EmergenceFloodingControlOn == true) {
-
-          if (soilColumn.vs_SurfaceWaterStorage < 0.001) {
-            // Germination only if no water is stored on the soil surface.
-
-            vc_CurrentTemperatureSum[vc_DevelopmentalStage] += (vc_SoilTemperature
-              - pc_BaseTemperature[vc_DevelopmentalStage]) * vc_TimeStep;
-
-            if (vc_CurrentTemperatureSum[vc_DevelopmentalStage] >= pc_StageTemperatureSum[vc_DevelopmentalStage]) {
-              vc_DevelopmentalStage++;
-            }
-          }
-
-        } else {
-          vc_CurrentTemperatureSum[vc_DevelopmentalStage] += (vc_SoilTemperature
-                - pc_BaseTemperature[vc_DevelopmentalStage]) * vc_TimeStep;
-
-          if (vc_CurrentTemperatureSum[vc_DevelopmentalStage] >= pc_StageTemperatureSum[vc_DevelopmentalStage]) {
-            vc_DevelopmentalStage++;
+      if (cfg.constants) {
+        var constants = cfg.constants;
+        for (var prop in constants) {
+          if (constants.hasOwnProperty(prop)) {
+            if (typeof this.cons[prop] != undefined)
+              this.cons[prop] = constants[prop]
           }
         }
       }
-    } else if (vc_DevelopmentalStage > 0) {
-
-      // Development acceleration by N deficit in crop tissue
-      if ((pc_DevelopmentAccelerationByNitrogenStress == 1) &&
-          (pc_AssimilatePartitioningCoeff[vc_DevelopmentalStage][vc_StorageOrgan] > 0.9)){
-
-        vc_DevelopmentAccelerationByNitrogenStress = 1.0 + ((1.0 - vc_CropNRedux) * (1.0 - vc_CropNRedux));
-
-      } else {
-
-        vc_DevelopmentAccelerationByNitrogenStress = 1.0;
-      }
-
-      // Development acceleration by water deficit
-      if ((vc_TranspirationDeficit < pc_DroughtStressThreshold[vc_DevelopmentalStage]) &&
-          (pc_AssimilatePartitioningCoeff[vc_DevelopmentalStage][vc_StorageOrgan] > 0.9)){
-
-        if (vc_OxygenDeficit < 1.0) {
-          vc_DevelopmentAccelerationByWaterStress = 1.0;
-        } else {
-          vc_DevelopmentAccelerationByWaterStress = 1.0 + ((1.0 - vc_TranspirationDeficit)
-          * (1.0 - vc_TranspirationDeficit));
-        }
-
-      } else {
-        vc_DevelopmentAccelerationByWaterStress = 1.0;
-      }
-
-      vc_DevelopmentAccelerationByStress = max(vc_DevelopmentAccelerationByNitrogenStress,
-          vc_DevelopmentAccelerationByWaterStress);
-
-      if (vw_MeanAirTemperature > pc_BaseTemperature[vc_DevelopmentalStage]) {
-
-        if (vw_MeanAirTemperature > pc_OptimumTemperature[vc_DevelopmentalStage]){
-                  vw_MeanAirTemperature = pc_OptimumTemperature[vc_DevelopmentalStage];
-        }
-
-        vc_CurrentTemperatureSum[vc_DevelopmentalStage] += (vw_MeanAirTemperature
-            - pc_BaseTemperature[vc_DevelopmentalStage]) * vc_VernalisationFactor * vc_DaylengthFactor
-            * vc_DevelopmentAccelerationByStress * vc_TimeStep;
-
-        vc_CurrentTotalTemperatureSum += (vw_MeanAirTemperature - pc_BaseTemperature[vc_DevelopmentalStage])
-            * vc_VernalisationFactor * vc_DaylengthFactor * vc_DevelopmentAccelerationByStress * vc_TimeStep;
-
-      }
-
-      if (vc_CurrentTemperatureSum[vc_DevelopmentalStage] >= pc_StageTemperatureSum[vc_DevelopmentalStage]) {
-
-        if (vc_DevelopmentalStage < (pc_NumberOfDevelopmentalStages - 1)) {
-
-          vc_DevelopmentalStage++;
-        }
-      }
-
-    } else {
-
-      console.log("irregular developmental stage");
-    }
-
-  };
-
-  // double 
-  var fc_KcFactor = function (
-  vc_DevelopmentalStage, 
-  d_StageTemperatureSum,
-  d_CurrentTemperatureSum,
-  pc_InitialKcFactor,
-  d_StageKcFactor,
-  d_EarlierStageKcFactor
-  ) {
-
-    if (DEBUG) debug(arguments);
-
-    var vc_KcFactor;
-
-    var vc_RelativeDevelopment = d_CurrentTemperatureSum / d_StageTemperatureSum; // old relint
-
-    if (vc_RelativeDevelopment > 1.0) vc_RelativeDevelopment = 1.0;
-
-    if (vc_DevelopmentalStage == 0)
-      vc_KcFactor = pc_InitialKcFactor + (d_StageKcFactor - pc_InitialKcFactor) * vc_RelativeDevelopment;
-    else // Interpolating the Kc Factors
-      vc_KcFactor = d_EarlierStageKcFactor + ((d_StageKcFactor - d_EarlierStageKcFactor) * vc_RelativeDevelopment);
-
-    return vc_KcFactor;
-  };
-
-  var fc_CropSize = function (
-    pc_MaxCropHeight,
-    pc_MaxCropDiameter,
-    pc_StageAtMaxHeight,
-    pc_StageAtMaxDiameter,
-    pc_StageTemperatureSum,
-    vc_CurrentTotalTemperatureSum,
-    pc_CropHeightP1,
-    pc_CropHeightP2
-  ) {
-
-    if (DEBUG) debug(arguments);
-
-    var vc_TotalTemperatureSumForHeight = 0.0;
-    for (var i_Stage = 1; i_Stage < pc_StageAtMaxHeight + 1; i_Stage++)
-      vc_TotalTemperatureSumForHeight += pc_StageTemperatureSum[i_Stage];
-
-    var vc_TotalTemperatureSumForDiameter = 0.0;
-    for (var i_Stage = 1; i_Stage < pc_StageAtMaxDiameter + 1; i_Stage++)
-      vc_TotalTemperatureSumForDiameter += pc_StageTemperatureSum[i_Stage];
-
-    var vc_RelativeTotalDevelopmentForHeight = vc_CurrentTotalTemperatureSum / vc_TotalTemperatureSumForHeight;
-    if (vc_RelativeTotalDevelopmentForHeight > 1.0)
-      vc_RelativeTotalDevelopmentForHeight = 1.0;
-
-    var vc_RelativeTotalDevelopmentForDiameter = vc_CurrentTotalTemperatureSum / vc_TotalTemperatureSumForDiameter;
-    if (vc_RelativeTotalDevelopmentForDiameter > 1.0)
-      vc_RelativeTotalDevelopmentForDiameter = 1.0;
-
-    // if (vc_RelativeTotalDevelopmentForHeight > 0.0)
-    //   vc_CropHeight = pc_MaxCropHeight / (1.0 + exp(-pc_CropHeightP1 * (vc_RelativeTotalDevelopmentForHeight- pc_CropHeightP2)));
-    // else 
-    //   vc_CropHeight = 0.0;
-
-    // TEST
-    vc_CropHeight = gGrowth.mixture.h_mx();
-
-    if (vc_RelativeTotalDevelopmentForDiameter > 0.0)
-      vc_CropDiameter = pc_MaxCropDiameter * vc_RelativeTotalDevelopmentForDiameter;
-    else
-      vc_CropDiameter = 0.0;
-  };
-
-  var fc_CropGreenArea = function (
-    d_LeafBiomassIncrement,
-    d_LeafBiomassDecrement,
-    vc_CropHeight,
-    vc_CropDiameter,
-    d_SpecificLeafAreaStart,
-    d_SpecificLeafAreaEnd,
-    d_SpecificLeafAreaEarly,
-    d_StageTemperatureSum,
-    d_CurrentTemperatureSum,
-    pc_PlantDensity,
-    vc_TimeStep
-  ) {
-
-    if (DEBUG) debug(arguments);
-
-    // vc_LeafAreaIndex += (
-    //   (d_LeafBiomassIncrement * (d_SpecificLeafAreaStart + (d_CurrentTemperatureSum /
-    //   d_StageTemperatureSum * (d_SpecificLeafAreaEnd - d_SpecificLeafAreaStart))) * vc_TimeStep) -
-    //   (d_LeafBiomassDecrement * d_SpecificLeafAreaEarly * vc_TimeStep)
-    // ); // [ha ha-1]
-
-    // if (vc_LeafAreaIndex <= 0.0)
-    //   vc_LeafAreaIndex = 0.001;
-
-    // vc_GreenAreaIndex = vc_LeafAreaIndex + (vc_CropHeight * PI * vc_CropDiameter * pc_PlantDensity); // [m2 m-2]
-
-    // TEST
-    vc_LeafAreaIndex = gGrowth.mixture.L_tot(); // [ha ha-1]
-
-    if (vc_LeafAreaIndex <= 0.0)
-      vc_LeafAreaIndex = 0.001;
-
-    vc_GreenAreaIndex = vc_LeafAreaIndex + (vc_CropHeight * PI * vc_CropDiameter * pc_PlantDensity); // [m2 m-2]
-
-  };
-
-    // double 
-  var fc_SoilCoverage = function (vc_LeafAreaIndex) {
-
-    vc_SoilCoverage = 1.0 - (exp(-0.5 * vc_LeafAreaIndex));
-
-    return vc_SoilCoverage;
-
-  };
-
-  var fc_CropPhotosynthesis = function (
-    vw_MeanAirTemperature,
-    vw_MaxAirTemperature,
-    vw_MinAirTemperature,
-    vc_GlobalRadiation,
-    vw_AtmosphericCO2Concentration,
-    vs_Latitude,
-    vc_LeafAreaIndex,
-    pc_DefaultRadiationUseEfficiency,
-    pc_MaxAssimilationRate,
-    pc_MinimumTemperatureForAssimilation,
-    vc_AstronomicDayLenght,
-    vc_Declination,
-    vc_ClearDayRadiation,
-    vc_EffectiveDayLength,
-    vc_OvercastDayRadiation
-  ) {
-
-    if (DEBUG) debug(arguments);
-
-    var vc_CO2CompensationPoint = 0.0; // old COcomp
-    var vc_CO2CompensationPointReference = 0.0;
-    var vc_RadiationUseEfficiency = 0.0; // old EFF
-    var vc_RadiationUseEfficiencyReference = 0.0;
-    var KTvmax = 0.0; // old KTvmax
-    var KTkc = 0.0; // old KTkc
-    var KTko = 0.0; // old KTko
-    var vc_AmaxFactor = 0.0; // old fakamax
-    var vc_AmaxFactorReference = 0.0;
-    var vc_Vcmax = 0.0; // old vcmax
-    var vc_VcmaxReference = 0.0;
-    var Mkc = 0.0; // old Mkc
-    var Mko = 0.0; // old Mko
-    var Oi = 0.0; // old Oi
-    var Ci = 0.0; // old Ci
-    var vc_AssimilationRateReference = 0.0;
-    var vc_HoffmannK1 = 0.0; // old KCo1
-    var vc_HoffmannC0 = 0.0; // old coco
-    var vc_HoffmannKCO2 = 0.0; // old KCO2
-    var vc_NetRadiationUseEfficiency = 0.0; // old EFFE;
-    var vc_NetRadiationUseEfficiencyReference = 0.0;
-    var SSLAE = 0.0; // old SSLAE;
-    var X = 0.0; // old X;
-    var XReference = 0.0;
-    var PHCH1 = 0.0; // old PHCH1;
-    var PHCH1Reference = 0.0;
-    var Y = 0.0; // old Y;
-    var YReference = 0.0;
-    var PHCH2 = 0.0; // old PHCH2;
-    var PHCH2Reference = 0.0;
-    var PHCH = 0.0; // old PHCH;
-    var PHCHReference = 0.0;
-    var PHC3 = 0.0; // old PHC3;
-    var PHC3Reference = 0.0;
-    var PHC4 = 0.0; // old PHC4;
-    var PHC4Reference = 0.0;
-    var PHCL = 0.0; // old PHCL;
-    var PHCLReference = 0.0;
-    var Z = 0.0; // old Z;
-    var PHOH1 = 0.0; // old PHOH1;
-    var PHOH = 0.0; // old PHOH;
-    var PHO3 = 0.0; // old PHO3;
-    var PHO3Reference = 0.0;
-    var PHOL = 0.0; // old PHOL;
-    var PHOLReference = 0.0;
-    var vc_ClearDayCO2AssimilationReference = 0.0;
-    var vc_OvercastDayCO2AssimilationReference = 0.0;
-    var vc_ClearDayCO2Assimilation = 0.0; // old DGAC;
-    var vc_OvercastDayCO2Assimilation = 0.0; // old DGAO;
-    //var vc_GrossAssimilates = 0.0;
-    var vc_GrossCO2Assimilation = 0.0; // old DTGA;
-    var vc_GrossCO2AssimilationReference = 0.0; // used for ET0 calculation
-    var vc_OvercastSkyTimeFraction = 0.0; // old FOV;
-    var vc_MaintenanceTemperatureDependency = 0.0; // old TEFF
-    var vc_MaintenanceRespiration = 0.0; // old MAINTS
-    var vc_DroughtStressThreshold = 0.0; // old VSWELL;
-    var vc_PhotoTemperature = 0.0;
-    var vc_NightTemperature = 0.0;
-    var vc_PhotoMaintenanceRespiration = 0.0;
-    var vc_DarkMaintenanceRespiration = 0.0;
-    var vc_PhotoGrowthRespiration = 0.0;
-    var vc_DarkGrowthRespiration = 0.0;
-
-    var user_crops = centralParameterProvider.userCropParameters;
-    var pc_ReferenceLeafAreaIndex = user_crops.pc_ReferenceLeafAreaIndex;
-    var pc_ReferenceMaxAssimilationRate = user_crops.pc_ReferenceMaxAssimilationRate;
-    var pc_MaintenanceRespirationParameter_1 = user_crops.pc_MaintenanceRespirationParameter1;
-    var pc_MaintenanceRespirationParameter_2 = user_crops.pc_MaintenanceRespirationParameter2;
-
-    var pc_GrowthRespirationParameter_1 = user_crops.pc_GrowthRespirationParameter1;
-    var pc_GrowthRespirationParameter_2 = user_crops.pc_GrowthRespirationParameter2;
-    var pc_CanopyReflectionCoeff = user_crops.pc_CanopyReflectionCoefficient; // old REFLC;
-
-    // Calculation of CO2 impact on crop growth
-    if (pc_CO2Method == 3) {
-
-      //////////////////////////////////////////////////////////////////////////
-      // Method 3:
-      // Long, S.P. 1991. Modification of the response of photosynthetic
-      // productivity to rising temperature by atmospheric CO2
-      // concentrations - Has its importance been underestimated. Plant
-      // Cell Environ. 14(8): 729-739.
-      // and
-      // Mitchell, R.A.C., D.W. Lawlor, V.J. Mitchell, C.L. Gibbard, E.M.
-      // White, and J.R. Porter. 1995. Effects of elevated CO2
-      // concentration and increased temperature on winter-wheat - Test
-      // of ARCWHEAT1 simulation model. Plant Cell Environ. 18(7):736-748.
-      //////////////////////////////////////////////////////////////////////////
-
-      KTvmax = exp(68800.0 * ((vw_MeanAirTemperature + 273.0) - 298.0)
-          / (298.0 * (vw_MeanAirTemperature + 273.0) * 8.314)) * pow(((vw_MeanAirTemperature + 273.0) / 298.0), 0.5);
-
-      KTkc = exp(65800.0 * ((vw_MeanAirTemperature + 273.0) - 298.0) / (298.0 * (vw_MeanAirTemperature + 273.0) * 8.314))
-          * pow(((vw_MeanAirTemperature + 273.0) / 298.0), 0.5);
-
-      KTko = exp(1400.0 * ((vw_MeanAirTemperature + 273.0) - 298.0) / (298.0 * (vw_MeanAirTemperature + 273.0) * 8.314))
-          * pow(((vw_MeanAirTemperature + 273.0) / 298.0), 0.5);
-
-      // Berechnung des Transformationsfaktors fr pflanzenspez. AMAX bei 25 grad
-      vc_AmaxFactor = pc_MaxAssimilationRate / 34.668;
-      vc_AmaxFactorReference = pc_ReferenceMaxAssimilationRate / 34.668;
-      vc_Vcmax = 98.0 * vc_AmaxFactor * KTvmax;
-      vc_VcmaxReference = 98.0 * vc_AmaxFactorReference * KTvmax;
-
-      Mkc = 460.0 * KTkc; //[µmol mol-1]
-      Mko = 330.0 * KTko; //[mmol mol-1]
-
-      Oi = 210.0 + (0.047 - 0.0013087 * vw_MeanAirTemperature + 0.000025603 * (vw_MeanAirTemperature
-          * vw_MeanAirTemperature) - 0.00000021441 * (vw_MeanAirTemperature * vw_MeanAirTemperature
-          * vw_MeanAirTemperature)) / 0.026934;
-
-      Ci = vw_AtmosphericCO2Concentration * 0.7 * (1.674 - 0.061294 * vw_MeanAirTemperature + 0.0011688
-          * (vw_MeanAirTemperature * vw_MeanAirTemperature) - 0.0000088741 * (vw_MeanAirTemperature
-          * vw_MeanAirTemperature * vw_MeanAirTemperature)) / 0.73547;
-
-      vc_CO2CompensationPoint = 0.5 * 0.21 * vc_Vcmax * Oi / (vc_Vcmax * Mko);
-      vc_CO2CompensationPointReference = 0.5 * 0.21 * vc_VcmaxReference * Oi / (vc_VcmaxReference * Mko);
-
-      vc_RadiationUseEfficiency = min((0.77 / 2.1 * (Ci - vc_CO2CompensationPoint) / (4.5 * Ci + 10.5
-          * vc_CO2CompensationPoint) * 8.3769), 0.5);
-      vc_RadiationUseEfficiencyReference = min((0.77 / 2.1 * (Ci - vc_CO2CompensationPointReference) / (4.5 * Ci + 10.5
-          * vc_CO2CompensationPointReference) * 8.3769), 0.5);
-
-    } else {
-      vc_RadiationUseEfficiency = pc_DefaultRadiationUseEfficiency;
-      vc_RadiationUseEfficiencyReference = pc_DefaultRadiationUseEfficiency;
-    }
-
-    if (pc_CarboxylationPathway == 1) {
-
-      if (pc_CO2Method == 2) {
-
-        //////////////////////////////////////////////////////////////////////////
-        // Method 2:
-        // Hoffmann, F. 1995. Fagus, a model for growth and development of
-        // beech. Ecol. Mod. 83 (3):327-348.
-        //////////////////////////////////////////////////////////////////////////
-
-        if (vw_MeanAirTemperature < pc_MinimumTemperatureForAssimilation) {
-          vc_AssimilationRate = 0.0;
-          vc_AssimilationRateReference = 0.0;
-        } else if (vw_MeanAirTemperature < 10.0) {
-          vc_AssimilationRate = pc_MaxAssimilationRate * vw_MeanAirTemperature / 10.0 * 0.4;
-          vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate * vw_MeanAirTemperature / 10.0 * 0.4;
-        } else if (vw_MeanAirTemperature < 15.0) {
-          vc_AssimilationRate = pc_MaxAssimilationRate * (0.4 + (vw_MeanAirTemperature - 10.0) / 5.0 * 0.5);
-          vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate * (0.4 + (vw_MeanAirTemperature - 10.0) / 5.0
-              * 0.5);
-        } else if (vw_MeanAirTemperature < 25.0) {
-          vc_AssimilationRate = pc_MaxAssimilationRate * (0.9 + (vw_MeanAirTemperature - 15.0) / 10.0 * 0.1);
-          vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate * (0.9 + (vw_MeanAirTemperature - 15.0) / 10.0
-              * 0.1);
-        } else if (vw_MeanAirTemperature < 35.0) {
-          vc_AssimilationRate = pc_MaxAssimilationRate * (1.0 - (vw_MeanAirTemperature - 25.0) / 10.0);
-          vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate * (1.0 - (vw_MeanAirTemperature - 25.0) / 10.0);
-        } else {
-          vc_AssimilationRate = 0.0;
-          vc_AssimilationRateReference = 0.0;
-        }
-
-
-        /** @FOR_PARAM */
-        vc_HoffmannK1 = 220.0 + 0.158 * (vc_GlobalRadiation * 86400.0 / 1000000.0);
-
-        // PAR [MJ m-2], Hoffmann's model requires [W m-2] ->
-        // conversion of [MJ m-2] to [W m-2]
-
-        vc_HoffmannC0 = 80.0 - 0.036 * (vc_GlobalRadiation * 86400.0 / 1000000.0);
-
-
-        vc_HoffmannKCO2 = ((vw_AtmosphericCO2Concentration - vc_HoffmannC0) / (vc_HoffmannK1
-            + vw_AtmosphericCO2Concentration - vc_HoffmannC0)) / ((350.0 - vc_HoffmannC0) / (vc_HoffmannK1 + 350.0
-            - vc_HoffmannC0));
-
-        vc_AssimilationRate = vc_AssimilationRate * vc_HoffmannKCO2;
-        vc_AssimilationRateReference = vc_AssimilationRateReference * vc_HoffmannKCO2;
-
-      } else if (pc_CO2Method == 3) {
-
-        vc_AssimilationRate = (Ci - vc_CO2CompensationPoint) * vc_Vcmax / (Ci + Mkc * (1.0 + Oi / Mko)) * 1.656;
-        vc_AssimilationRateReference = (Ci - vc_CO2CompensationPointReference) * vc_VcmaxReference / (Ci + Mkc * (1.0
-            + Oi / Mko)) * 1.656;
-
-        if (vw_MeanAirTemperature < pc_MinimumTemperatureForAssimilation) {
-          vc_AssimilationRate = 0.0;
-          vc_AssimilationRateReference = 0.0;
-        }
-      }
-
-
-    } else { //if pc_CarboxylationPathway = 2
-      if (vw_MeanAirTemperature < pc_MinimumTemperatureForAssimilation) {
-        vc_AssimilationRate = 0;
-        vc_AssimilationRateReference = 0.0;
-
-        // Sage & Kubien (2007): The temperature response of C3 and C4 phtotsynthesis.
-        // Plant, Cell and Environment 30, 1086 - 1106.
-
-      } else if (vw_MeanAirTemperature < 9.0) {
-        vc_AssimilationRate = pc_MaxAssimilationRate * vw_MeanAirTemperature / 10.0 * 0.08;
-        vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate * vw_MeanAirTemperature / 10.0 * 0.08;
-      } else if (vw_MeanAirTemperature < 14.0) {
-        vc_AssimilationRate = pc_MaxAssimilationRate * (0.071 + (vw_MeanAirTemperature - 9.0) * 0.03);
-        vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate * (0.071 + (vw_MeanAirTemperature - 9.0) * 0.03);
-      } else if (vw_MeanAirTemperature < 20.0) {
-        vc_AssimilationRate = pc_MaxAssimilationRate * (0.221 + (vw_MeanAirTemperature - 14.0) * 0.09);
-        vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate * (0.221 + (vw_MeanAirTemperature - 14.0) * 0.09);
-      } else if (vw_MeanAirTemperature < 24.0) {
-        vc_AssimilationRate = pc_MaxAssimilationRate * (0.761 + (vw_MeanAirTemperature - 20.0) * 0.04);
-        vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate * (0.761 + (vw_MeanAirTemperature - 20.0) * 0.04);
-      } else if (vw_MeanAirTemperature < 32.0) {
-        vc_AssimilationRate = pc_MaxAssimilationRate * (0.921 + (vw_MeanAirTemperature - 24.0) * 0.01);
-        vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate * (0.921 + (vw_MeanAirTemperature - 24.0) * 0.01);
-      } else if (vw_MeanAirTemperature < 38.0) {
-        vc_AssimilationRate = pc_MaxAssimilationRate;
-        vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate;
-      } else if (vw_MeanAirTemperature < 42.0) {
-        vc_AssimilationRate = pc_MaxAssimilationRate * (1.0 - (vw_MeanAirTemperature - 38.0) * 0.01);
-        vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate * (1.0 - (vw_MeanAirTemperature - 38.0) * 0.01);
-      } else if (vw_MeanAirTemperature < 45.0) {
-        vc_AssimilationRate = pc_MaxAssimilationRate * (0.96 - (vw_MeanAirTemperature - 42.0) * 0.04);
-        vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate * (0.96 - (vw_MeanAirTemperature - 42.0) * 0.04);
-      } else if (vw_MeanAirTemperature < 54.0) {
-        vc_AssimilationRate = pc_MaxAssimilationRate * (0.84 - (vw_MeanAirTemperature - 45.0) * 0.09);
-        vc_AssimilationRateReference = pc_ReferenceMaxAssimilationRate * (0.84 - (vw_MeanAirTemperature - 45.0) * 0.09);
-      } else {
-        vc_AssimilationRate = 0;
-        vc_AssimilationRateReference = 0;
-      }
-    }
-
-    if (cutting_delay_days>0) {
-        vc_AssimilationRate = 0.0;
-        vc_AssimilationRateReference = 0.0;
-    }
-
-    if (vc_AssimilationRate < 0.1) {
-      vc_AssimilationRate = 0.1;
-    }
-
-    if (vc_AssimilationRateReference < 0.1) {
-      vc_AssimilationRateReference = 0.1;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Calculation of light interception in the crop
-    //
-    // Penning De Vries, F.W.T and H.H. van Laar (1982): Simulation of
-    // plant growth and crop production. Pudoc, Wageningen, The
-    // Netherlands, p. 87-97.
-    ///////////////////////////////////////////////////////////////////////////
-
-    vc_NetRadiationUseEfficiency = (1.0 - pc_CanopyReflectionCoeff) * vc_RadiationUseEfficiency;
-    vc_NetRadiationUseEfficiencyReference = (1.0 - pc_CanopyReflectionCoeff) * vc_RadiationUseEfficiencyReference;
-
-    SSLAE = sin((90.0 + vc_Declination - vs_Latitude) * PI / 180.0); // = HERMES
-
-    X = log(1.0 + 0.45 * vc_ClearDayRadiation / (vc_EffectiveDayLength * 3600.0) * vc_NetRadiationUseEfficiency / (SSLAE
-        * vc_AssimilationRate)); // = HERMES
-    XReference = log(1.0 + 0.45 * vc_ClearDayRadiation / (vc_EffectiveDayLength * 3600.0)
-        * vc_NetRadiationUseEfficiencyReference / (SSLAE * vc_AssimilationRateReference));
-
-    PHCH1 = SSLAE * vc_AssimilationRate * vc_EffectiveDayLength * X / (1.0 + X); // = HERMES
-    PHCH1Reference = SSLAE * vc_AssimilationRateReference * vc_EffectiveDayLength * XReference / (1.0 + XReference);
-
-    Y = log(1.0 + 0.55 * vc_ClearDayRadiation / (vc_EffectiveDayLength * 3600.0) * vc_NetRadiationUseEfficiency / ((5.0
-        - SSLAE) * vc_AssimilationRate)); // = HERMES
-    YReference = log(1.0 + 0.55 * vc_ClearDayRadiation / (vc_EffectiveDayLength * 3600.0) * vc_NetRadiationUseEfficiency
-        / ((5.0 - SSLAE) * vc_AssimilationRateReference));
-
-    PHCH2 = (5.0 - SSLAE) * vc_AssimilationRate * vc_EffectiveDayLength * Y / (1.0 + Y); // = HERMES
-    PHCH2Reference = (5.0 - SSLAE) * vc_AssimilationRateReference * vc_EffectiveDayLength * YReference / (1.0
-        + YReference);
-
-    PHCH = 0.95 * (PHCH1 + PHCH2) + 20.5; // = HERMES
-    PHCHReference = 0.95 * (PHCH1Reference + PHCH2Reference) + 20.5;
-
-    PHC3 = PHCH * (1.0 - exp(-0.8 * vc_LeafAreaIndex));
-    PHC3Reference = PHCHReference * (1.0 - exp(-0.8 * pc_ReferenceLeafAreaIndex));
-
-    PHC4 = vc_AstronomicDayLenght * vc_LeafAreaIndex * vc_AssimilationRate;
-    PHC4Reference = vc_AstronomicDayLenght * pc_ReferenceLeafAreaIndex * vc_AssimilationRateReference;
-
-    if (PHC3 < PHC4) {
-      PHCL = PHC3 * (1.0 - exp(-PHC4 / PHC3));
-    } else {
-      PHCL = PHC4 * (1.0 - exp(-PHC3 / PHC4));
-    }
-
-    if (PHC3Reference < PHC4Reference) {
-      PHCLReference = PHC3Reference * (1.0 - exp(-PHC4Reference / PHC3Reference));
-    } else {
-      PHCLReference = PHC4Reference * (1.0 - exp(-PHC3Reference / PHC4Reference));
-    }
-
-    Z = vc_OvercastDayRadiation / (vc_EffectiveDayLength * 3600.0) * vc_NetRadiationUseEfficiency / (5.0
-        * vc_AssimilationRate);
-
-    PHOH1 = 5.0 * vc_AssimilationRate * vc_EffectiveDayLength * Z / (1.0 + Z);
-    PHOH = 0.9935 * PHOH1 + 1.1;
-    PHO3 = PHOH * (1.0 - exp(-0.8 * vc_LeafAreaIndex));
-    PHO3Reference = PHOH * (1.0 - exp(-0.8 * pc_ReferenceLeafAreaIndex));
-
-    if (PHO3 < PHC4) {
-      PHOL = PHO3 * (1.0 - exp(-PHC4 / PHO3));
-    } else {
-      PHOL = PHC4 * (1.0 - exp(-PHO3 / PHC4));
-    }
-
-    if (PHO3Reference < PHC4Reference) {
-      PHOLReference = PHO3Reference * (1.0 - exp(-PHC4Reference / PHO3Reference));
-    } else {
-      PHOLReference = PHC4Reference * (1.0 - exp(-PHO3Reference / PHC4Reference));
-    }
-
-    if (vc_LeafAreaIndex < 5.0) {
-      vc_ClearDayCO2Assimilation = PHCL; // [J m-2]
-      vc_OvercastDayCO2Assimilation = PHOL; // [J m-2]
-    } else {
-      vc_ClearDayCO2Assimilation = PHCH; // [J m-2]
-      vc_OvercastDayCO2Assimilation = PHOH; // [J m-2]
-    }
-
-    vc_ClearDayCO2AssimilationReference = PHCLReference;
-    vc_OvercastDayCO2AssimilationReference = PHOLReference;
-
-    // Calculation of time fraction for overcast sky situations by
-    // comparing clear day radiation and measured PAR in [J m-2].
-    // HERMES uses PAR as 50% of global radiation
-
-    vc_OvercastSkyTimeFraction = (vc_ClearDayRadiation - (1000000.0 * vc_GlobalRadiation * 0.50)) / (0.8
-        * vc_ClearDayRadiation); // [J m-2]
-
-    if (vc_OvercastSkyTimeFraction > 1.0) {
-      vc_OvercastSkyTimeFraction = 1.0;
-    }
-
-    if (vc_OvercastSkyTimeFraction < 0.0) {
-      vc_OvercastSkyTimeFraction = 0.0;
-    }
-
-    // Calculation of gross CO2 assimilation in dependence of cloudiness
-    vc_GrossCO2Assimilation = vc_OvercastSkyTimeFraction * vc_OvercastDayCO2Assimilation + (1.0
-        - vc_OvercastSkyTimeFraction) * vc_ClearDayCO2Assimilation;
-
-    vc_GrossCO2AssimilationReference = vc_OvercastSkyTimeFraction * vc_OvercastDayCO2AssimilationReference + (1.0
-        - vc_OvercastSkyTimeFraction) * vc_ClearDayCO2AssimilationReference;
-
-    if (vc_OxygenDeficit < 1.0) {
-
-      // vc_OxygenDeficit separates drought stress (ETa/Etp) from saturation stress.
-      vc_DroughtStressThreshold = 0.0;
-    } else {
-      vc_DroughtStressThreshold = pc_DroughtStressThreshold[vc_DevelopmentalStage];
-    }
-
-    // Gross CO2 assimilation is used for reference evapotranspiration calculation.
-    // For this purpose it must not be affected by drought stress, as the grass
-    // reference is defined as being always well supplied with water. Water stress
-    // is acting at a later stage.
-
-    if (vc_TranspirationDeficit < vc_DroughtStressThreshold) {
-      vc_GrossCO2Assimilation = vc_GrossCO2Assimilation; // *  vc_TranspirationDeficit;
-    }
-
-    // Calculation of photosynthesis rate from [kg CO2 ha-1 d-1] to [kg CH2O ha-1 d-1]
-    vc_GrossPhotosynthesis = vc_GrossCO2Assimilation * 30.0 / 44.0;
-
-    // Calculation of photosynthesis rate from [kg CO2 ha-1 d-1]  to [mol m-2 s-1] or [cm3 cm-2 s-1]
-    vc_GrossPhotosynthesis_mol = vc_GrossCO2Assimilation * 22414.0 / (10.0 * 3600.0 * 24.0 * 44.0);
-    vc_GrossPhotosynthesisReference_mol = vc_GrossCO2AssimilationReference * 22414.0 / (10.0 * 3600.0 * 24.0 * 44.0);
-
-    // Converting photosynthesis rate from [kg CO2 ha leaf-1 d-1] to [kg CH2O ha-1  d-1]
-    vc_Assimilates = vc_GrossCO2Assimilation * 30.0 / 44.0;
-
-    // reduction value for assimilate amount to simulate field conditions;
-    vc_Assimilates *= cropParams.pc_FieldConditionModifier;
-
-    if (vc_TranspirationDeficit < vc_DroughtStressThreshold) {
-      vc_Assimilates = vc_Assimilates * vc_TranspirationDeficit;
 
     }
 
-    vc_GrossAssimilates = vc_Assimilates;
 
-    // ########################################################################
-    // #                              AGROSIM                                 #
-    // ########################################################################
+    /* shoot protein fraction [kg (protein) kg-1 (d.wt)] */
+    this.fdwt_pn = function () {
 
-    // AGROSIM night and day temperatures
-    vc_PhotoTemperature = vw_MaxAirTemperature - ((vw_MaxAirTemperature - vw_MinAirTemperature) / 4.0);
-    vc_NightTemperature = vw_MinAirTemperature + ((vw_MaxAirTemperature - vw_MinAirTemperature) / 4.0);
+      var PN = that.vars.PN;
 
-    var vc_MaintenanceRespirationSum = 0.0;
-    // AGOSIM night and day maintenance and growth respiration
-    for (var i_Organ = 0; i_Organ < pc_NumberOfOrgans; i_Organ++) {
-      vc_MaintenanceRespirationSum += (vc_OrganBiomass[i_Organ] - vc_OrganDeadBiomass[i_Organ])
-          * pc_OrganMaintenanceRespiration[i_Organ]; // [kg CH2O ha-1]
-      // * vc_ActiveFraction[i_Organ]; wenn nicht schon durch acc dead matter abgedeckt
-    }
-
-    var vc_NormalisedDayLength = 2.0 - (vc_PhotoperiodicDaylength / 12.0);
-
-    vc_PhotoMaintenanceRespiration = vc_MaintenanceRespirationSum * pow(2.0, (pc_MaintenanceRespirationParameter_1
-                      * (vc_PhotoTemperature - pc_MaintenanceRespirationParameter_2))) * (2.0 - vc_NormalisedDayLength);// @todo: [g m-2] --> [kg ha-1]
-
-    vc_DarkMaintenanceRespiration = vc_MaintenanceRespirationSum * pow(2.0, (pc_MaintenanceRespirationParameter_1
-                     * (vc_NightTemperature - pc_MaintenanceRespirationParameter_2))) * vc_NormalisedDayLength; // @todo: [g m-2] --> [kg ha-1]
-
-    vc_MaintenanceRespirationAS = vc_PhotoMaintenanceRespiration + vc_DarkMaintenanceRespiration; // [kg CH2O ha-1]
-
-
-    vc_Assimilates -= vc_PhotoMaintenanceRespiration + vc_DarkMaintenanceRespiration; // [kg CH2O ha-1]
-    var vc_GrowthRespirationSum = 0.0;
-
-    for (var i_Organ = 0; i_Organ < pc_NumberOfOrgans; i_Organ++) {
-      vc_GrowthRespirationSum += (vc_OrganBiomass[i_Organ] - vc_OrganDeadBiomass[i_Organ])
-          * pc_OrganGrowthRespiration[i_Organ];
-    }
-
-    if (vc_Assimilates > 0.0) {
-      vc_PhotoGrowthRespiration = vc_GrowthRespirationSum * pow(2.0, (pc_GrowthRespirationParameter_1
-          * (vc_PhotoTemperature - pc_GrowthRespirationParameter_2))) * (2.0 - vc_NormalisedDayLength); // [kg CH2O ha-1]
-      if (vc_Assimilates > vc_PhotoGrowthRespiration) {
-        vc_Assimilates -= vc_PhotoGrowthRespiration;
-
-      } else {
-        vc_PhotoGrowthRespiration = vc_Assimilates; // in this case the plant will be restricted in growth!
-        vc_Assimilates = 0.0;
-      }
-    }
-
-    if (vc_Assimilates > 0.0) {
-      vc_DarkGrowthRespiration = vc_GrowthRespirationSum * pow(2.0, (pc_GrowthRespirationParameter_1
-          * (vc_PhotoTemperature - pc_GrowthRespirationParameter_2))) * vc_NormalisedDayLength; // [kg CH2O ha-1]
-      if (vc_Assimilates > vc_DarkGrowthRespiration) {
-
-        vc_Assimilates -= vc_DarkGrowthRespiration;
-      } else {
-        vc_DarkGrowthRespiration = vc_Assimilates; // in this case the plant will be restricted in growth!
-        vc_Assimilates = 0.0;
-      }
-
-    }
-    vc_GrowthRespirationAS = vc_PhotoGrowthRespiration + vc_DarkGrowthRespiration; // [kg CH2O ha-1]
-    vc_TotalRespired = vc_GrossAssimilates - vc_Assimilates; // [kg CH2O ha-1]
-
-    /** to reactivate HERMES algorithms, needs to be vc_NetPhotosynthesis
-     * used instead of  vc_Assimilates in the subsequent methods */
-
-    // #########################################################################
-    // HERMES calculation of maintenance respiration in dependence of temperature
-
-    vc_MaintenanceTemperatureDependency = pow(2.0, (0.1 * vw_MeanAirTemperature - 2.5));
-
-    vc_MaintenanceRespiration = 0.0;
-
-    for (var i_Organ = 0; i_Organ < pc_NumberOfOrgans; i_Organ++) {
-      vc_MaintenanceRespiration += (vc_OrganBiomass[i_Organ] - vc_OrganDeadBiomass[i_Organ])
-          * pc_OrganMaintenanceRespiration[i_Organ];
-    }
-
-    if (vc_GrossPhotosynthesis < (vc_MaintenanceRespiration * vc_MaintenanceTemperatureDependency)) {
-      vc_NetMaintenanceRespiration = vc_GrossPhotosynthesis;
-    } else {
-      vc_NetMaintenanceRespiration = vc_MaintenanceRespiration * vc_MaintenanceTemperatureDependency;
-    }
-
-    if (vw_MeanAirTemperature < pc_MinimumTemperatureForAssimilation) {
-      vc_GrossPhotosynthesis = vc_NetMaintenanceRespiration;
-    }
-    // This section is now inactive
-    // #########################################################################
-
-  };
-
-  var fc_HeatStressImpact = function (
-    vw_MaxAirTemperature,
-    vw_MinAirTemperature,
-    vc_CurrentTotalTemperatureSum
-  ) {
-
-    // AGROSIM night and day temperatures
-    var vc_PhotoTemperature = vw_MaxAirTemperature - ((vw_MaxAirTemperature - vw_MinAirTemperature) / 4.0);
-    var vc_FractionOpenFlowers = 0.0;
-    var vc_YesterdaysFractionOpenFlowers = 0.0;
-
-    if ((pc_BeginSensitivePhaseHeatStress == 0.0) && (pc_EndSensitivePhaseHeatStress == 0.0)){
-      vc_TotalCropHeatImpact = 1.0;
-    }
-
-    if ((vc_CurrentTotalTemperatureSum >= pc_BeginSensitivePhaseHeatStress) &&
-        vc_CurrentTotalTemperatureSum < pc_EndSensitivePhaseHeatStress){
-
-      // Crop heat redux: Challinor et al. (2005): Simulation of the impact of high
-      // temperature stress on annual crop yields. Agricultural and Forest
-      // Meteorology 135, 180 - 189.
-
-      var vc_CropHeatImpact = 1.0 - ((vc_PhotoTemperature - pc_CriticalTemperatureHeatStress)
-               / (pc_LimitingTemperatureHeatStress - pc_CriticalTemperatureHeatStress));
-
-      if (vc_CropHeatImpact > 1.0)
-        vc_CropHeatImpact = 1.0;
-
-      if (vc_CropHeatImpact < 0.0)
-        vc_CropHeatImpact = 0.0;
-
-      // Fraction open flowers from Moriondo et al. (2011): Climate change impact
-      // assessment: the role of climate extremes in crop yield simulation. Climatic
-      // Change 104 (3-4), 679-701.
-
-      vc_FractionOpenFlowers = 1.0 / (1.0 + ((1.0 / 0.015) - 1.0) * exp(-1.4 * vc_DaysAfterBeginFlowering));
-      if (vc_DaysAfterBeginFlowering > 0){
-        vc_YesterdaysFractionOpenFlowers = 1.0 / (1.0 + ((1.0 / 0.015) - 1.0) * exp(-1.4 * (vc_DaysAfterBeginFlowering - 1)));
-      } else {
-        vc_YesterdaysFractionOpenFlowers = 0.0;
-      }
-
-      var vc_DailyFloweringRate = vc_FractionOpenFlowers - vc_YesterdaysFractionOpenFlowers;
-
-      // Total effect: Challinor et al. (2005): Simulation of the impact of high
-      // temperature stress on annual crop yields. Agricultural and Forest
-      // Meteorology 135, 180 - 189.
-      vc_TotalCropHeatImpact += vc_CropHeatImpact * vc_DailyFloweringRate;
-
-      vc_DaysAfterBeginFlowering += 1;
-
-    }
-
-    if (vc_CurrentTotalTemperatureSum >= pc_EndSensitivePhaseHeatStress){
-      if (vc_TotalCropHeatImpact < vc_CropHeatRedux){
-        vc_CropHeatRedux = vc_TotalCropHeatImpact;
-      }
-    }
-
+      return ((PN.l + PN.s) / fC_pn) / that.dwt_shoot();
 
     };
 
-    var fc_DroughtImpactOnFertility = function (vc_TranspirationDeficit) {
 
-    if (DEBUG) debug(arguments);
+    /* 
+      protein digestibility Van Niekerk (1967) 
+      
+      pn  [g (crude protein) kg-1 (d.wt)]
+    */
+    this.δ_pn = function (pn) { 
 
-    if (vc_TranspirationDeficit < 0.0) vc_TranspirationDeficit = 0.0;
+      return 0.956 - (34.3 / pn); 
 
-    // Fertility of the crop is reduced in cases of severe drought during bloom
-    if ((vc_TranspirationDeficit < (pc_DroughtImpactOnFertilityFactor *
-         pc_DroughtStressThreshold[vc_DevelopmentalStage])) &&
-         (pc_AssimilatePartitioningCoeff[vc_DevelopmentalStage][vc_StorageOrgan] > 0.0)){
+    };  
 
-      var vc_TranspirationDeficitHelper = vc_TranspirationDeficit /
-          (pc_DroughtImpactOnFertilityFactor * pc_DroughtStressThreshold[vc_DevelopmentalStage]);
+    /* total shoot digestibility including dead tissue */
+    this.δ_shoot = function () {
 
-      if (vc_OxygenDeficit < 1.0) {
-        vc_DroughtImpactOnFertility = 1.0;
-      } else {
-        vc_DroughtImpactOnFertility = 1.0 - ((1.0 - vc_TranspirationDeficitHelper) * (1.0 - vc_TranspirationDeficitHelper));
+      var cons = that.cons
+        , vars = that.vars
+        , SC = that.vars.SC
+        , δ_ndf_l_1 = cons.δ_ndf_l_1
+        , δ_ndf_l_2 = cons.δ_ndf_l_2
+        , δ_ndf_l_3 = cons.δ_ndf_l_3
+        , δ_ndf_l_dead = cons.δ_ndf_l_dead
+        , δ_ndf_s_1 = cons.δ_ndf_s_1
+        , δ_ndf_s_2 = cons.δ_ndf_s_2
+        , δ_ndf_s_3 = cons.δ_ndf_s_3
+        , δ_ndf_s_dead = cons.δ_ndf_s_dead
+        , δ_nc = cons.δ_nc
+        , δ_pn = this.δ_pn(this.fdwt_pn() * 1000) // kg to grams
+        ;
+
+      /* total ndf d.wt */
+      var dwt_sc = (
+        SC.live_l_1 +
+        SC.live_l_2 +
+        SC.live_l_3 +
+        SC.dead_l +
+        SC.live_s_1 +
+        SC.live_s_2 +
+        SC.live_s_3 +
+        SC.dead_s
+      ) / fC_sc;
+
+      /* total nds d.wt */
+      var dwt_nc = (
+        vars.NC.l +
+        vars.NC.s
+      ) / fC_nc;
+
+      /* total protein d.wt */
+      var dwt_pn = (
+        vars.PN.l +
+        vars.PN.s
+      ) / fC_pn;
+
+      var dwt = dwt_sc + dwt_nc + dwt_pn;
+
+      var δ_sc = (
+        (δ_ndf_l_1 * (SC.live_l_1 / fC_sc / dwt_sc)) +
+        (δ_ndf_l_2 * (SC.live_l_2 / fC_sc / dwt_sc)) +
+        (δ_ndf_l_3 * (SC.live_l_3 / fC_sc / dwt_sc)) +
+        (δ_ndf_l_dead * (SC.dead_l / fC_sc / dwt_sc)) +
+        (δ_ndf_s_1 * (SC.live_s_1 / fC_sc / dwt_sc)) +
+        (δ_ndf_s_2 * (SC.live_s_2 / fC_sc / dwt_sc)) +
+        (δ_ndf_s_3 * (SC.live_s_3 / fC_sc / dwt_sc)) +
+        (δ_ndf_s_dead * (SC.dead_s / fC_sc / dwt_sc))
+      );
+
+      return (
+        (δ_sc * dwt_sc / dwt) + 
+        (δ_nc * dwt_nc / dwt) + 
+        (δ_pn * dwt_pn / dwt)
+      );
+
+    };
+
+
+    /* C_root [kg (c) m-2] root C */
+    this.C_root = function () {
+
+      var vars = that.vars;
+
+      return  vars.SC.r + vars.NC.r + vars.PN.r;
+
+    };
+
+
+    /* C_live_shoot [kg (C) m-2] live shoot C */
+    this.C_live_shoot = function () {
+
+      var vars = that.vars
+        , SC = vars.SC
+        , NC = vars.NC
+        , PN = vars.PN
+        ;
+
+      return (
+        SC.live_l_1 +
+        SC.live_l_2 +
+        SC.live_l_3 +
+        SC.live_s_1 +
+        SC.live_s_2 +
+        SC.live_s_3 +
+        NC.l + NC.s +
+        PN.l + PN.s
+      );
+
+    };
+
+
+    /* C_live_leaf [kg (C) m-2] live leaf C */
+    this.C_live_leaf = function () {
+
+      var vars = that.vars
+        , SC = vars.SC
+        , NC = vars.NC
+        , PN = vars.PN
+        ;
+
+      return (
+        SC.live_l_1 +
+        SC.live_l_2 +
+        SC.live_l_3 +
+        NC.l + PN.l
+      );
+
+    };
+
+    /* N_root [kg (N) m-2] root N */
+    this.N_root = function () {
+
+      return that.vars.PN.r * fN_pn / fC_pn;
+
+    };
+
+
+    /* N_live_shoot [kg (N) m-2] live shoot N */
+    this.N_live_shoot = function () {
+
+      var PN = that.vars.PN;
+
+      return (PN.l + PN.s) * fN_pn / fC_pn;
+
+    };
+
+
+    /* N_live_leaf [kg (N) m-2] live leaf N */
+    this.N_live_leaf = function () {
+
+      return that.vars.PN.l * fN_pn / fC_pn;
+
+    };
+
+
+    /* reference nitrogen content [kg (N) kg-1 (C)] */
+    this.f_N_ref = function () {
+
+        return that.cons.N_ref / that.F_C();
+
+    };
+
+
+    this.dW_dwt_leaf = function () {
+
+      var dSC = that.vars.dSC
+        , dNC = that.vars.dNC
+        , dPN = that.vars.dPN
+        ;
+
+      return (
+        /* convert leaf kg C to kg d.wt incl. ashes TODO: ashes */
+        (dSC.live_l_1 + dSC.live_l_2 + dSC.live_l_3 + dSC.dead_l) / fC_sc + 
+        dNC.l / fC_nc + 
+        dPN.l / fC_pn
+      ); 
+
+    };
+
+    this.dW_dwt_stem = function () {
+
+      var dSC = that.vars.dSC
+        , dNC = that.vars.dNC
+        , dPN = that.vars.dPN
+        ;
+
+      return (
+        /* convert stem kg C to kg d.wt incl. ashes TODO: ashes */
+        (dSC.live_s_1 + dSC.live_s_2 + dSC.live_s_3 + dSC.dead_s) / fC_sc + 
+        dNC.s / fC_nc + 
+        dPN.s / fC_pn
+      ); 
+
+    };
+
+
+    this.dW_dwt_shoot = function () {
+
+      return that.dW_dwt_leaf() + that.dW_dwt_stem();
+
+    };
+
+    this.W_dwt_litter = function () {
+
+      var Λ_litter = that.vars.Λ_litter;
+
+      return Λ_litter.sc / fC_sc + Λ_litter.pn / fC_pn;
+
+    };
+
+
+    this.dwt_shoot = function () {
+
+      return (
+        that.dwt_live_leaf() + that.dwt_dead_leaf() +
+        that.dwt_live_stem() + that.dwt_dead_stem()
+      );
+
+    };
+
+
+    /* dwt live leaf [kg (leaf) m-2] */
+    this.dwt_live_leaf = function () {
+
+      var SC = that.vars.SC
+        , NC = that.vars.NC
+        , PN = that.vars.PN
+        ;
+
+      return (
+        /* convert leaf kg C to kg d.wt incl. ashes TODO: ashes */
+        (SC.live_l_1 + SC.live_l_2 + SC.live_l_3) / fC_sc + 
+        NC.l / fC_nc + 
+        PN.l / fC_pn
+      );  
+
+    };
+
+
+    this.dwt_leaf = function () {
+
+      var SC = that.vars.SC
+        , NC = that.vars.NC
+        , PN = that.vars.PN
+        ;
+
+      return (
+        /* convert leaf kg C to kg d.wt incl. ashes TODO: ashes */
+        (SC.live_l_1 + SC.live_l_2 + SC.live_l_3 + SC.dead_l) / fC_sc + 
+        NC.l / fC_nc + 
+        PN.l / fC_pn
+      );  
+
+    };
+
+
+    this.dwt_dead_leaf = function () {
+
+      return that.vars.SC.dead_l / fC_sc; 
+
+    };
+
+
+
+    /* dwt_stem [kg m-2] */
+    this.dwt_live_stem = function () {
+
+      var SC = that.vars.SC
+        , NC = that.vars.NC
+        , PN = that.vars.PN
+        ;
+
+      return (
+        /* convert leaf kg C to kg d.wt incl. ashes TODO: ashes */
+        (SC.live_s_1 + SC.live_s_2 + SC.live_s_3) / fC_sc + 
+        NC.s / fC_nc + 
+        PN.s / fC_pn
+      );   
+
+    };
+
+
+    this.dwt_stem = function () {
+      var SC = that.vars.SC
+        , NC = that.vars.NC
+        , PN = that.vars.PN
+        ;
+
+      return (
+        /* convert leaf kg C to kg d.wt incl. ashes TODO: ashes */
+        (SC.live_s_1 + SC.live_s_2 + SC.live_s_3 + SC.dead_s) / fC_sc + 
+        NC.s / fC_nc + 
+        PN.s / fC_pn
+      ); 
+
+    };
+
+
+    this.dwt_dead_stem = function () {
+
+      return that.vars.SC.dead_s / fC_sc; 
+
+    };
+
+
+    /* dwt_root [kg m-2] */
+    this.dwt_root = function () {
+
+      var vars = that.vars;
+
+      return (
+        vars.SC.r / fC_sc +
+        vars.NC.r / fC_nc +
+        vars.PN.r / fC_pn
+      );
+
+    };
+
+
+    /* (3.83) L [m2 (leaf) m-2 (ground) leaf area (CO2 dependence not included (3.84)) */
+    this.L = function () {
+
+      return that.cons.σ * that.dwt_live_leaf();
+
+    };
+
+
+    /* (3.101) h [m] height relationship between canopy height and leaf area */
+    this.h = function (L_tot) {
+
+      var h = 0
+        , cons = that.cons
+        , L = L_tot // scale to m2; assume same total dwt per m2 TODO: assumtion?
+        , h_m = cons.h_m
+        , L_half = cons.L_half
+        , ξ = 0.9 // fixed curvatur parameter
+        , α = h_m * (2 - ξ) / (2 * L_half)
+        ;
+
+      h = 1 / (2 * ξ) * (α * L + h_m - sqrt(pow(α * L  + h_m, 2) - 4 * α * ξ * h_m * L)); 
+    
+      return h;
+
+    };
+
+    /* carbon fraction of dwt */
+    this.F_C = function () {
+
+      return (
+        (that.C_live_shoot() + that.C_root()) / 
+        (that.dwt_live_leaf() + that.dwt_live_stem() + that.dwt_root())
+      );
+
+    };
+
+    /* f_N_live_leaf  [kg (N) kg-1 (C)] */
+    this.f_N_live_leaf = function () {
+
+      return that.N_live_leaf() / that.C_live_leaf();
+    
+    };
+
+    /* f_N_live_shoot  [kg (N) kg-1 (C)] */
+    this.f_N_live_shoot = function () {
+
+      return that.N_live_shoot() / that.C_live_shoot();
+    
+    };
+
+
+    /* f_N_live  [kg (N) kg-1 (C)] total biomass incl. root */
+    this.f_N_live = function () {
+
+      return (that.N_live_shoot() + that.N_root()) / (that.C_live_shoot() + that.C_root());
+    
+    };
+
+
+    /* optimum N requirement [kg (N) m-2] */
+    this.N_req_opt = function () {
+
+      return max(0, (that.f_N_ref * (that.C_live_shoot() + that.C_root())) - (that.N_live_shoot() + that.N_root()));
+
+    };
+
+
+    /*(3.49) Y_leaf [-] growth respiration new leaf tissue (expressed as growth efficiency) 
+      N_avail_leaf [kg (N) m-2] nitrogen available from uptake and fixation
+      P_avail_leaf [kg (C) m-2] carbon available for growth TODO: wight by d.wt or caron share?*/
+    this.Y_leaf = function (N_avail_leaf, C_avail_leaf) {
+
+      /* initialize with reference composition */
+      var dW_l_fdwt_ref = that.cons.dW_l_fdwt_ref;
+      var dW_l_fdwt = {
+         sc: dW_l_fdwt_ref.sc
+        ,nc: dW_l_fdwt_ref.nc
+        ,pn: dW_l_fdwt_ref.pn
+        ,ah: dW_l_fdwt_ref.ah
+      };
+
+      /* convert d.wt fractions to carbon */
+      var C_sc = dW_l_fdwt.sc * fC_sc
+        , C_nc = dW_l_fdwt.nc * fC_nc
+        , C_pn = dW_l_fdwt.pn * fC_pn
+        , C = C_sc + C_nc + C_pn
+        ;
+
+      /* abs. carbon for protein synthesis with full N availability */
+      var C_pn = C_avail_leaf * (C_pn / C);
+      /* abs. nitrogen for protein sythesis [kg (N) m-2] */
+      var N_demand_leaf = (C_pn / fC_pn) * fN_pn;
+      /* nitrogen availability as share of demand */
+      var fN = (N_avail_leaf / N_demand_leaf > 1) ? 1 : N_avail_leaf / N_demand_leaf;
+
+      /* adjust carbon from protein in new tissue composition */
+      C_pn = fN * dW_l_fdwt.pn * fC_pn;
+      /* add non utilized carbon due to lack of nitrogen for protein synthesis to non-structural pool */
+      C_nc += (1 - fN) * dW_l_fdwt.pn * fC_pn;
+      
+      if (DEBUG && C.toFixed(4) != (C_sc + C_nc + C_pn).toFixed(4)) {
+        logger(MSG.INFO, C);
+        logger(MSG.INFO, C_sc);
+        logger(MSG.INFO, C_nc);
+        logger(MSG.INFO, C_pn);
+        logger(MSG.INFO, C_sc + C_nc + C_pn);
+        throw new Error('leaf (C != C_sc + C_nc + C_pn)');
       }
 
+      var dwt_ah = dW_l_fdwt.ah * ((C_sc / fC_sc + C_nc / fC_nc + C_pn / fC_pn) / (1 - dW_l_fdwt.ah));
+
+      dW_l_fdwt.pn = (C_pn / fC_pn) / (C_sc / fC_sc + C_nc / fC_nc + C_pn / fC_pn + dwt_ah);
+      dW_l_fdwt.nc = (C_nc / fC_nc) / (C_sc / fC_sc + C_nc / fC_nc + C_pn / fC_pn + dwt_ah);
+
+      that.vars.dW_l_fdwt = dW_l_fdwt;
+
+      /* weight Y by tissue composition */
+      var Y_leaf = (
+        Y_sc * dW_l_fdwt.sc / (1 - dW_l_fdwt_ref.ah) +
+        Y_nc * dW_l_fdwt.nc / (1 - dW_l_fdwt_ref.ah) + 
+        Y_pn * dW_l_fdwt.pn / (1 - dW_l_fdwt_ref.ah)
+      );
+
+      // logger(MSG.INFO, 'Y_leaf: '+Y_leaf);
+
+      return Y_leaf; 
+
+    };
+
+
+    /*(3.49) Y_stem [-] growth respiration new leaf tissue (expressed as growth efficiency) 
+      N_avail [kg m-2] nitrogen available from uptake and fixation*/
+    this.Y_stem = function (N_avail_stem, C_avail_stem) {
+
+      /* initialize with reference composition */
+      var dW_s_fdwt_ref = that.cons.dW_s_fdwt_ref;
+      var dW_s_fdwt = {
+         sc: dW_s_fdwt_ref.sc
+        ,nc: dW_s_fdwt_ref.nc
+        ,pn: dW_s_fdwt_ref.pn
+        ,ah: dW_s_fdwt_ref.ah
+      };
+
+      /* convert d.wt fractions to carbon */
+      var C_sc = dW_s_fdwt.sc * fC_sc
+        , C_nc = dW_s_fdwt.nc * fC_nc
+        , C_pn = dW_s_fdwt.pn * fC_pn
+        , C = C_sc + C_nc + C_pn
+        ;
+
+      /* abs. carbon for protein synthesis with full N availability */
+      var C_pn = C_avail_stem * (C_pn / C);
+      /* abs. nitrogen for protein sythesis [kg (N) m-2] */
+      var N_demand_stem = (C_pn / fC_pn) * fN_pn;
+      /* nitrogen availability as share of demand */
+      var fN = (N_avail_stem / N_demand_stem > 1) ? 1 : N_avail_stem / N_demand_stem;
+
+      /* adjust carbon from protein in new tissue composition */
+      C_pn = fN * dW_s_fdwt.pn * fC_pn;
+      /* add non utilized carbon due to lack of nitrogen for protein synthesis to non-structural pool */
+      C_nc += (1 - fN) * dW_s_fdwt.pn * fC_pn;
+      
+      if (C.toFixed(4) != (C_sc + C_nc + C_pn).toFixed(4)) {
+        logger(MSG.INFO, C);
+        logger(MSG.INFO, C_sc);
+        logger(MSG.INFO, C_nc);
+        logger(MSG.INFO, C_pn);
+        logger(MSG.INFO, C_sc + C_nc + C_pn);
+        throw 'stem (C != C_sc + C_nc + C_pn)';
+      }
+
+      var dwt_ah = dW_s_fdwt.ah * ((C_sc / fC_sc + C_nc / fC_nc + C_pn / fC_pn) / (1 - dW_s_fdwt.ah));
+
+      dW_s_fdwt.pn = (C_pn / fC_pn) / (C_sc / fC_sc + C_nc / fC_nc + C_pn / fC_pn + dwt_ah);
+      dW_s_fdwt.nc = (C_nc / fC_nc) / (C_sc / fC_sc + C_nc / fC_nc + C_pn / fC_pn + dwt_ah);
+
+      that.vars.dW_s_fdwt = dW_s_fdwt;
+
+      /* weight Y by tissue composition */
+      var Y_stem = (
+        Y_sc * dW_s_fdwt.sc / (1 - dW_s_fdwt_ref.ah) +
+        Y_nc * dW_s_fdwt.nc / (1 - dW_s_fdwt_ref.ah) + 
+        Y_pn * dW_s_fdwt.pn / (1 - dW_s_fdwt_ref.ah)
+      );
+
+      // logger(MSG.INFO, 'Y_stem: '+Y_stem);
+
+      return Y_stem; 
+
+    };
+
+
+      /*(3.49) Y_root [-] growth respiration new leaf tissue (expressed as growth efficiency) 
+      N_avail [kg m-2] nitrogen available from uptake and fixation*/
+    this.Y_root = function (N_avail_root, C_avail_root) {
+
+      /* initialize with reference composition */
+      var dW_r_fdwt_ref = that.cons.dW_r_fdwt_ref;
+      var dW_r_fdwt = {
+         sc: dW_r_fdwt_ref.sc
+        ,nc: dW_r_fdwt_ref.nc
+        ,pn: dW_r_fdwt_ref.pn
+        ,ah: dW_r_fdwt_ref.ah
+      };
+
+      /* convert d.wt fractions to carbon */
+      var C_sc = dW_r_fdwt.sc * fC_sc
+        , C_nc = dW_r_fdwt.nc * fC_nc
+        , C_pn = dW_r_fdwt.pn * fC_pn
+        , C = C_sc + C_nc + C_pn
+        ;
+
+      /* abs. carbon for protein synthesis with full N availability */
+      var C_pn = C_avail_root * (C_pn / C);
+      /* abs. nitrogen for protein sythesis [kg (N) m-2] */
+      var N_demand_root = (C_pn / fC_pn) * fN_pn;
+      /* nitrogen availability as share of demand */
+      var fN = (N_avail_root / N_demand_root > 1) ? 1 : N_avail_root / N_demand_root;
+
+      /* adjust carbon from protein in new tissue composition */
+      C_pn = fN * dW_r_fdwt.pn * fC_pn;
+      /* add non utilized carbon due to lack of nitrogen for protein synthesis to non-structural pool */
+      C_nc += (1 - fN) * dW_r_fdwt.pn * fC_pn;
+      
+      if (C.toFixed(4) != (C_sc + C_nc + C_pn).toFixed(4)) {
+        logger(MSG.INFO, C);
+        logger(MSG.INFO, C_sc);
+        logger(MSG.INFO, C_nc);
+        logger(MSG.INFO, C_pn);
+        logger(MSG.INFO, C_sc + C_nc + C_pn);
+        throw 'root (C != C_sc + C_nc + C_pn)';
+      }
+
+      var dwt_ah = dW_r_fdwt.ah * ((C_sc / fC_sc + C_nc / fC_nc + C_pn / fC_pn) / (1 - dW_r_fdwt.ah));
+
+      dW_r_fdwt.pn = (C_pn / fC_pn) / (C_sc / fC_sc + C_nc / fC_nc + C_pn / fC_pn + dwt_ah);
+      dW_r_fdwt.nc = (C_nc / fC_nc) / (C_sc / fC_sc + C_nc / fC_nc + C_pn / fC_pn + dwt_ah);
+
+      that.vars.dW_r_fdwt = dW_r_fdwt;
+
+      /* weight Y by tissue composition */
+      var Y_root = (
+        Y_sc * dW_r_fdwt.sc / (1 - dW_r_fdwt_ref.ah) +
+        Y_nc * dW_r_fdwt.nc / (1 - dW_r_fdwt_ref.ah) + 
+        Y_pn * dW_r_fdwt.pn / (1 - dW_r_fdwt_ref.ah)
+      );
+
+      // logger(MSG.INFO, 'Y_root: '+Y_root);
+
+      return Y_root; 
+
+    };
+
+  }; // Species end
+
+
+  /* 
+    Mixture (array of species)
+    Takes a single species config object or an array of species 
+    and returns the array with various functions attached 
+
+    dm array [-] fraction of species dry matter share 
+
+  */
+  var Mixture = function (species, cfg) {
+
+    /* pass array of species or single species */
+    var mixture = Array.isArray(species) ? species : [species];
+
+    /* store root share of each species in each layer in mixture objects in order to calculate N and water uptake */
+    mixture.root_sh = new Array(species.length);
+
+    var noPools = 8
+      , DM_root = 3000 * 1e-4 // kg ha-1 to kg m-2
+      , DM_shoot = 500 * 1e-4 // kg ha-1 to kg m-2
+      , DM = []
+      ;
+  
+    if (cfg && cfg.DM) {
+      DM = cfg.DM;
     } else {
-      vc_DroughtImpactOnFertility = 1.0;
+      for (var s = 0, ps = species.length; s < ps; s++)
+        DM[s] = 1 / ps;
     }
 
-  }
+    /*Vergleich der Biomasseproduktion bei Schnittnutzung und Kurzrasenweide
+      unter biologischen Bedingungen im ostalpinen Raum*/;
+    if (cfg && cfg.DM_shoot) 
+      DM_shoot = cfg.DM_shoot * 1e-4 // kg ha-1 to kg m-2
+    if (cfg && cfg.DM_root) 
+      DM_root = 3000 * 1e-4 // kg ha-1 to kg m-2
 
-  var fc_CropNitrogen = function () {
 
-    var vc_RootNRedux        = 0.0; // old REDWU
-    var vc_RootNReduxHelper  = 0.0; // old WUX
-    //var vc_MinimumNConcentration   = 0.0; // old MININ
-    var vc_CropNReduxHelper  = 0.0; // old AUX
+    // iterate over species and initialize pools
+    for (var s = 0, ps = species.length; s < ps; s++) {
 
-    vc_CriticalNConcentration = pc_NConcentrationPN *
-          (1.0 + (pc_NConcentrationB0 *
-          exp(-0.26 * (vc_AbovegroundBiomass + vc_BelowgroundBiomass) / 1000.0))) / 100.0;
-          // [kg ha-1 -> t ha-1]
+      /* initialize array to store share in each soil layer */
+      mixture.root_sh[s] = [];
 
-    vc_TargetNConcentration = vc_CriticalNConcentration * pc_LuxuryNCoeff;
+      var species = mixture[s] 
+        , SC = species.vars.SC
+        , NC = species.vars.NC
+        , PN = species.vars.PN
+        ;
+        
+      /* initialize carbon pools */
 
-    vc_NConcentrationAbovegroundBiomassOld = vc_NConcentrationAbovegroundBiomass;
-    vc_NConcentrationRootOld = vc_NConcentrationRoot;
+      /* leaf */
+      SC.live_l_1 = (DM_shoot * DM[s] / noPools) * 0.50 * fC_sc;
+      NC.l += (DM_shoot * DM[s] / noPools) * 0.25 * fC_nc;
+      PN.l += (DM_shoot * DM[s] / noPools) * 0.25 * fC_nc;
 
-    if (vc_NConcentrationRoot < 0.01) {
+      SC.live_l_2 = (DM_shoot * DM[s] / noPools) * 0.60 * fC_sc;
+      NC.l += (DM_shoot * DM[s] / noPools) * 0.20 * fC_nc; 
+      PN.l += (DM_shoot * DM[s] / noPools) * 0.20 * fC_pn;
+      
+      SC.live_l_3 = (DM_shoot * DM[s] / noPools) * 0.70 * fC_sc;
+      NC.l += (DM_shoot * DM[s] / noPools) * 0.15 * fC_nc; 
+      PN.l += (DM_shoot * DM[s] / noPools) * 0.15 * fC_pn;
+      
+      SC.dead_l = (DM_shoot * DM[s] / noPools) * 1.00 * fC_sc;
+      NC.l += (DM_shoot * DM[s] / noPools) * 0.00 * fC_sc;
+      PN.l += (DM_shoot * DM[s] / noPools) * 0.00 * fC_sc;
 
-      if (vc_NConcentrationRoot <= 0.005) {
-        vc_RootNRedux = 0.0;
+      /* stem */
+      SC.live_s_1 = (DM_shoot * DM[s] / noPools) * 0.70 * fC_sc;
+      NC.s += (DM_shoot * DM[s] / noPools) * 0.15 * fC_nc;
+      PN.s += (DM_shoot * DM[s] / noPools) * 0.15 * fC_nc;
+
+      SC.live_s_2 = (DM_shoot * DM[s] / noPools) * 0.80 * fC_sc;
+      NC.s += (DM_shoot * DM[s] / noPools) * 0.10 * fC_nc; 
+      PN.s += (DM_shoot * DM[s] / noPools) * 0.10 * fC_pn;
+      
+      SC.live_s_3 = (DM_shoot * DM[s] / noPools) * 0.90 * fC_sc;
+      NC.s += (DM_shoot * DM[s] / noPools) * 0.05 * fC_nc; 
+      PN.s += (DM_shoot * DM[s] / noPools) * 0.05 * fC_pn;
+      
+      SC.dead_s = (DM_shoot * DM[s] / noPools) * 1.00 * fC_sc;
+      NC.s += (DM_shoot * DM[s] / noPools) * 0.00 * fC_sc;
+      PN.s += (DM_shoot * DM[s] / noPools) * 0.00 * fC_sc;
+
+      SC.r = DM_root * DM[s] * 0.80 * fC_sc;
+      NC.r += DM_root * DM[s] * 0.10 * fC_sc;
+      PN.r += DM_root * DM[s] * 0.10 * fC_sc;
+
+      logger(MSG.INFO, { SC: SC, NC: NC, PN: PN });
+    }
+
+
+    mixture.N_req_opt = function () {
+
+      var N_req_opt = 0;
+
+      for (var s = 0, ps = this.length; s < ps; s++)
+        N_req_opt += this[s].N_req_opt();
+
+      return N_req_opt;     
+
+    };
+
+
+    mixture.dwt_dead_shoot = function () {
+
+      var dwt_dead_shoot = 0;
+
+      for (var s = 0, ps = this.length; s < ps; s++)
+        dwt_dead_shoot += this[s].dwt_dead_leaf() + this[s].dwt_dead_stem();
+
+      return dwt_dead_shoot;
+
+    };
+
+
+    mixture.dwt_live_shoot = function () {
+
+      var dwt_live_shoot = 0;
+
+      for (var s = 0, ps = this.length; s < ps; s++)
+        dwt_live_shoot += this[s].dwt_live_leaf() + this[s].dwt_live_stem()
+
+      return dwt_live_shoot;
+
+    };
+    
+
+    mixture.dwt_shoot = function () {
+
+      var dwt_shoot = 0;
+
+      for (var s = 0, ps = this.length; s < ps; s++) {
+        dwt_shoot += (
+          this[s].dwt_live_leaf() + this[s].dwt_dead_leaf() +
+          this[s].dwt_live_stem() + this[s].dwt_dead_stem()
+        );
       }
-      else {
 
-        vc_RootNReduxHelper = (vc_NConcentrationRoot - 0.005) / 0.005;
-        vc_RootNRedux = 1.0 - sqrt(1.0 - vc_RootNReduxHelper * vc_RootNReduxHelper);
+      return dwt_shoot;
+
+    };
+
+
+    /* total leaf d.wt [kg m-2] */
+    mixture.dwt_leaf = function () {
+
+      var dwt_leaf = 0;
+
+      for (var s = 0, ps = this.length; s < ps; s++)
+        dwt_leaf += this[s].dwt_leaf()
+
+      return dwt_leaf;
+
+    };
+
+
+    /* total stem d.wt [kg m-2] */
+    mixture.dwt_stem = function () {
+
+      var dwt_stem = 0;
+
+      for (var s = 0, ps = this.length; s < ps; s++)
+        dwt_stem += this[s].dwt_stem()
+
+      return dwt_stem;
+
+    };
+
+
+    /* total root d.wt [kg m-2] */
+    mixture.dwt_root = function () {
+
+      var dwt_root = 0;
+
+      for (var s = 0, ps = this.length; s < ps; s++)
+        dwt_root += this[s].dwt_root()
+
+      return dwt_root;
+
+    };
+
+
+    /* total leaf daily growth d.wt [kg m-2] */
+    mixture.dW_dwt_leaf = function () {
+
+      var dW_dwt_leaf = 0;
+
+      for (var p = 0, ps = this.length; p < ps; p++)
+        dW_dwt_leaf += this[p].dW_dwt_leaf();
+
+      return dW_dwt_leaf;
+
+    };
+
+
+    /* total stem daily growth d.wt [kg m-2] */
+    mixture.dW_dwt_stem = function () {
+
+      var dW_dwt_stem = 0;
+
+      for (var p = 0, ps = this.length; p < ps; p++)
+        dW_dwt_stem += this[p].dW_dwt_stem();
+
+      return dW_dwt_stem;
+
+    };
+
+
+    /* total root daily growth d.wt [kg m-2] */
+    mixture.dW_dwt_root = function () {
+
+      var dW_dwt_root = 0;
+
+      for (var p = 0, ps = this.length; p < ps; p++)
+        dW_dwt_root += this[p].dW_dwt_root();
+
+      return dW_dwt_root;
+
+    };
+
+
+    /* total root C [kg m-2] */
+    mixture.C_root = function () {
+
+      var C_root = 0;
+
+      for (var s = 0, ps = this.length; s < ps; s++)
+        C_root += this[s].C_root()
+
+      return C_root;
+
+    };
+
+
+    /* total leaf area */
+    mixture.L_tot = function () {
+
+      var L_tot = 0;
+
+      for (var s = 0, ps = this.length; s < ps; s++)
+        L_tot += this[s].L();
+
+      return L_tot;
+
+    };
+
+
+    /* height of tallest species in mixture */
+    mixture.h_mx = function () {
+
+      var h_mx = 0 
+        , h = 0
+        , L_tot = this.L_tot()
+        ;
+
+      for (var s = 0, ps = this.length; s < ps; s++) {
+        h = this[s].h(L_tot);
+        h_mx = (h > h_mx) ? h : h_mx;
       }
-    }
-    else {
-      vc_RootNRedux = 1.0;
-    }
 
-    if (pc_FixingN == 0){
-      if (vc_NConcentrationAbovegroundBiomass < vc_CriticalNConcentration) {
+      return h_mx;
 
-        if (vc_NConcentrationAbovegroundBiomass <= pc_MinimumNConcentration) {
-          vc_CropNRedux = 0.0;
-        } else {
+    };
 
-          vc_CropNReduxHelper = (vc_NConcentrationAbovegroundBiomass - pc_MinimumNConcentration)
-        / (vc_CriticalNConcentration - pc_MinimumNConcentration);
+    
+    /* depth of deepest rooting species in mixture */
+    mixture.d_r_mx = function () {
 
-    //       // New Monica appraoch
-         vc_CropNRedux = 1.0 - exp(pc_MinimumNConcentration - (5.0 * vc_CropNReduxHelper));
+      var d_r_mx = 0;
 
-    //        // Original HERMES approach
-    //        vc_CropNRedux = (1.0 - exp(1.0 + 1.0 / (vc_CropNReduxHelper - 1.0))) *
-    //                    (1.0 - exp(1.0 + 1.0 / (vc_CropNReduxHelper - 1.0)));
+      for (var s = 0, ps = this.length; s < ps; s++) {
+        if (this[s].vars.d_r > d_r_mx)
+          d_r_mx = this[s].vars.d_r;
+      }
+
+      return d_r_mx;
+
+    };
+
+
+    /* (3.105) LAI increment used in photosynthesis calculation */
+    mixture.δL = 0.1;
+
+
+    /* (3.106) number of LAI layers */
+    mixture.n_L = function () {
+
+      return floor(this.L_tot() / this.δL);
+
+    };
+
+
+    /* (3.107) starting layer for each species */
+    mixture.n_start_p = function (n_L) {
+      
+      var n_start_p = []
+        , L_tot = this.L_tot()
+        ;
+      
+      for (var s = 0, ps = this.length; s < ps; s++) {
+        n_start_p[s] = 1 + round((1 - this[s].h(L_tot) / this.h_mx()) * n_L); 
+      }
+      
+      return n_start_p;
+
+    };
+
+
+    /* (3.108) LAI increment for each species */
+    mixture.δL_p = function (n_start_p, n_L) {
+      
+      var δL_p = [];
+
+      for (var s = 0, ps = this.length; s < ps; s++)
+        δL_p[s] = this[s].L() / (n_L - (n_start_p[s] - 1));
+
+      return δL_p;
+
+    };
+
+    /* (3.113) total LAI in layer i */
+    mixture.δL_i = function (n_start_p, n_L, δL_p) {
+      
+      var δL_i = []
+        , ΣδL = 0
+        ;
+
+      for (var i = 0; i < n_L; i++) {
+        ΣδL = 0;
+        for (var s = 0, ps = this.length; s < ps; s++) {
+          /* (3.110) 'i <=' error in SGS documentation? */
+          if ((i + 1) >= n_start_p[s]) // first layer is i = 1
+            ΣδL += δL_p[s];
         }
-      } else {
-        vc_CropNRedux = 1.0;
+        δL_i[i] = ΣδL;
       }
-    } else if (pc_FixingN == 1){
-      if (vc_NConcentrationAbovegroundBiomass < vc_CriticalNConcentration) {
-        vc_FixedN = vc_CriticalNConcentration - vc_NConcentrationAbovegroundBiomass;
-        vc_NConcentrationAbovegroundBiomass = vc_CriticalNConcentration;
-        vc_CropNRedux = 1.0;
-      }
-    } else {
-      vc_CropNRedux = 1.0;
-    }
 
-    if (pc_NitrogenResponseOn == false){
-      vc_CropNRedux = 1.0;
-    }
+      return δL_i;
+
+    };
+
+
+    /* (3.109) 'effective' light extinction coefficient for each LAI layer i*/
+    mixture.k_e_i = function () {
+      
+      var k_e_i = []
+        , n_L = this.n_L()
+        , n_start_p = this.n_start_p(n_L)
+        , δL_p = this.δL_p(n_start_p, n_L)
+        , ΣkδL = 0
+        , ΣδL = 0
+        ;
+      
+      for (var i = 0; i < n_L; i++) {
+        ΣkδL = ΣδL = 0;
+        for (var s = 0, ps = this.length; s < ps; s++) {
+          /* (3.110) 'i <=' error in SGS documentation? */
+          if ((i + 1) >= n_start_p[s]) { // first layer is i = 1
+            ΣkδL += this[s].cons.photo.k * δL_p[s];
+            ΣδL += δL_p[s];
+          }
+        }
+        k_e_i[i] = ΣkδL / ΣδL;
+      }
+      
+      return k_e_i;
+    
+    };
+
+    return mixture;
+
+  }; // Mixture end 
+
+
+  /*
+    Daily canopy gross photosynthesis in response to irradiance
+    
+    P_g_day       [kg (C) m-2 d-1]  gross photosynthesis
+
+    T             [C°]              mean daily temperature
+    T_mn          [C°]              minimum daily temperature
+    T_mx          [C°]              maximum daily temperature
+    PPF           [μmol m-2 d-1]    photosynthetic photon flux
+    τ             [s]               daylength
+    CO2           [μmol mol-1]      CO2 concentration (not C_amb!)
+    f_s           [-]               fraction direct solar radiation
+
+    TODO: 
+      - influence of temp. extremes on photosynthesis (3.58 ff)
+  */  
+  function grossPhotosynthesis(T, T_mn, T_mx, PPF, τ, CO2, f_s) {
+
+    logger(MSG.INFO, 'grossPhotosynthesis');
+
+    /*
+      (4.8b) Diurnal variation (distribution) in irradiance (I) and temperature (T) 
+      This is a simplified calculation from Johnson 2005 (2008). Could be any distribution.
+
+      R_s = PPF
+
+      maximum irradiance within a day for 1/2 τ
+      I_mx = 4/3 * R_s/τ
+      irradiance during in- and decreasing irradiance within a day = 1/2 I_mx
+      I_mn = 1/2 I_mx = 2/3 * R_s/τ
+
+      R_s = (1/2 * τ * I_mx) + (x * τ * 1/2 * I_mx)
+      R_s = (2/3 * R_s) + (x * 2/3 * R_s) <=> x = 1/2
+      R_s = (1/2 * τ * I_mx) + (1/4 * τ * I_mx) <=> τ/2 * (I_mx + I_mx/2) <=> τ/2 * (I_mx + I_mn)
+
+      temperature during max. irradiance within a day  
+      T_I_mx = (T_mx + T_mean) / 2
+      temperature during 1/2 max. irradiance within a day
+      T_I_mn = T_mean
+
+      (τ / 2) * P_g(I_mx, T_I_mx, N) [mg CO2 m-2 day-1] daily gross photosynthesis during max irradiance
+      (τ / 2) * P_g(I_mn, T_I_mn, N) [mg CO2 m-2 day-1] daily gross photosynthesis during min irradiance
+    */
+
+    var I_mx = (4 / 3) * (PPF / τ)
+      , I_mn = (1 / 2) * I_mx
+      , T_I_mx = (T_mx + T) / 2
+      , T_I_mn = T
+      ;
+
+    var P_g_mx = P_g(I_mx, T_I_mx, f_s); // array
+    var P_g_mn = P_g(I_mn, T_I_mn, f_s); // array
+
+    /* iterate over mixture array */
+    for (var s = 0, ps = mixture.length; s < ps; s++) {
+
+      var vars = mixture[s].vars
+        , Ω_water = vars.Ω_water
+        ;
+
+      /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) Ω_water missing in Johnson (2013) */
+      vars.P_g_day = 0.012 * 1e-6 * (τ / 2) * (P_g_mx[s] + P_g_mn[s]) * Ω_water;
+
+    } 
+
+
+    /*
+      (2.21) Direct solar radiation
+
+      I_s_l [μmol (photons) m-2 s-1]  :direct (including diffuse) solar radiation within the canopy
+      I_0   [μmol (photons) m-2 s-1]  :incident solar radiation on the canopy
+      k_e_i [-]                       :effective leaf extinction coefficient at leaf area layer i 
+      k     [-]                       :leaf extinction coefficient 
+      fs    [-]                       :fraction direct solar radiation
+    */
+    
+    function I_s_l(l, I_0, k_e_i, k) {
+      
+      var I_s_l = 0
+        , fs = fs || 0.7
+        ; 
+        
+      I_s_l =  k * I_0 * (f_s + (1 - f_s) * exp(-k_e_i * l));
+
+      return I_s_l;
+
+    };
+    
+
+    /*
+      (2.21) Diffuse solar radiation
+
+      I_d_l [μmol (photons) m-2 s-1]  :diffuse solar radiation within the canopy
+      I_0   [μmol (photons) m-2 s-1]  :incident solar radiation on the canopy
+      k_e_i [-]                       :effective leaf extinction coefficient at leaf area layer i 
+      k     [-]                       :leaf extinction coefficient 
+      f_s   [-]                       :fraction direct solar radiation 
+    */
+
+    function I_d_l(l, I_0, k_e_i, k, f_s) {
+      
+      var I_d_l = 0;
+
+      I_d_l =  k * I_0 * (1 - f_s) * exp(-k_e_i * l);
+
+      return I_d_l;
+
+    };
+
+
+    /*
+      (1.16) CO2 response function
+
+      CO2 [μmol mol-1]  ambient CO2 concentration
+    */
+
+    function f_C(CO2, λ, f_C_m) {
+
+      var f_C = 0
+        , Φ = 0.8
+        , β = 0.0032
+        ;
+
+      f_C = 1 / (2 * Φ) * (β * CO2 + f_C_m - sqrt(pow(β * CO2 + f_C_m, 2) - 4 * Φ * β * f_C_m * CO2));
+
+      return f_C;
+
+    };
+
+
+    /*
+      (3.14) N response function
+
+      f_N [kg (N) kg-1 (C)] nitrogen fraction
+    */
+
+    function f_Pm_N(f_N, isC4, F_C) {
+
+      var f_Pm_N = 0
+        , f_N_ref = (isC4) ? (0.03 / F_C) : (0.04 / F_C)
+        , f_N_mx = f_N_ref
+        ;
+
+      f_Pm_N = (f_N < f_N_ref) ? (f_N / f_N_ref) : (f_N_mx / f_N_ref);
+
+      return f_Pm_N; 
+
+    };
+
+
+    /*
+      (3.16 ff) Combiend T & CO2 response function
+
+      T   [°C]
+      CO2 [μmol mol-1]  ambient CO2 concentration
+    */
+
+    function f_Pm_TC(T, CO2, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) {
+
+      // logger(MSG.INFO, arguments);
+
+      var f_Pm_TC = 0
+        , q = 2 // TODO: value? (vgl. S. 12, Johnson 2013)
+        , T_opt_Pm = T_opt_Pm_amb + γ_Pm * (f_C(CO2, λ, f_C_m) - 1)
+        , T_mx = ((1 + q) * T_opt_Pm - T_mn) / q
+        ;
+
+      /* (1.40) constrain */
+      if (T_ref > T_opt_Pm)
+        T_ref = T_opt_Pm;
+
+      /* C4 species constraint ..  "so that the temperature response does not fall when temperatures exceed the optimum." S. 45 */
+      T  = (isC4 && T > T_opt_Pm) ? T_opt_Pm : T; 
+
+      if (T <= T_mn || T >= T_mx)
+        f_Pm_TC = 0;
+      else
+        f_Pm_TC = pow((T - T_mn) / (T_ref - T_mn), q) * (((1 + q) * T_opt_Pm - T_mn - q * T) / ((1 + q) * T_opt_Pm - T_mn - q * T_ref));
+
+      return f_Pm_TC; 
+
+    };
+
+
+    /*
+      (3.25 ff) Combiend T & CO2 response function
+
+      T   [°C]
+      CO2 [μmol mol-1]  ambient CO2 concentration
+    */
+
+    function f_α_TC(T, CO2, λ_α, γ_α, λ, f_C_m) {
+
+      var f_α_TC = 0
+        , T_opt_α = 15 + γ_α * (f_C(C, λ, f_C_m) - 1)
+        ;
+
+      f_α_TC = (T < T_opt_α) ? 1 : (1 - λ_α * (C_amb / CO2) * (T - T_opt_α));  
+
+      return f_α_TC; 
+
+    };
+
+
+    /*
+      (3.29) N response function
+
+      f_N [kg (N) kg-1 (C)] nitrogen fraction
+    */
+
+    function f_α_N(f_N, isC4, F_C) {
+
+      var f_α_N = 0
+        , f_N_ref = (isC4) ? (0.03 / F_C) : (0.04 / F_C)
+        ;
+
+      f_α_N = (f_N > f_N_ref) ? 1 : (0.5 + 0.5 * (f_N / f_N_ref));
+
+      return f_α_N; 
+
+    };
+
+    
+    /*
+      P_l [μmol (CO2) m-2 (leaf) s-1] rate of single leaf gross photosynthesis in response to incident PPF
+      I   [μmol (photons) m-2 s-1]    incident solar radiation
+      T   [°C]                        temperature  
+      N
+      C   []  ambient CO2
+      α   []
+      P_m []
+    */
+    
+    function P_l(I_l, α, P_m, ξ) {
+      
+      var P_l = 0; 
+
+      P_l = 1 / (2 * ξ) * (α * I_l + P_m - sqrt(pow(α * I_l  + P_m, 2) - 4 * ξ * α * I_l * P_m));
+
+      return P_l;
+
+    };
+
+    
+    /*
+      (3.33, 3.101 ff) Canopy gross photosynthesis in mixed swards including photorespiration
+
+      P_g [μmol (CO2) m-2 s-1]      instantaneous canopy gross photosynthesis
+      
+      I_0 [μmol (photons) m-2 s-1]  incident solar radiation on the canopy
+      T   [°C]                      temperature
+      f_s [-]                       fraction direct solar radiation
+    */
+    
+    function P_g(I_0, T, f_s) {
+
+      var P_g = [] // return values 
+        , δL = mixture.δL
+        , n_L = mixture.n_L()
+        , n_start_p = mixture.n_start_p(n_L) // array
+        , k_e_i = mixture.k_e_i() // array index starts with 0!
+        // , k_e = mixture.k_e() // weighted k over all species by total leaf area share 
+        , δL_p = mixture.δL_p(n_start_p, n_L)
+        , δL_i = mixture.δL_i(n_start_p, n_L, δL_p) // array index starts with 0!
+        ;
+
+      /* iterate over species */
+      for (var s = 0, ps = mixture.length; s < ps; s++) {
+
+        P_g[s] = 0.0;
+
+        var species = mixture[s] 
+          , cons = species.cons
+          , l = 0
+          , α_amb_15 = cons.photo.α_amb_15
+          , P_m_ref = cons.photo.P_m_ref
+          , k = cons.photo.k
+          , f_N = species.f_N_live_leaf() // TODO: leaf or shoot?
+          , isC4 = species.isC4
+          , α = 0
+          , P_m = 0
+          , ξ = cons.photo.ξ
+          , λ_α = cons.photo.λ_α
+          , γ_α = cons.photo.γ_α
+          , γ_Pm = cons.photo.γ_Pm // TODO: value?
+          , T_mn = cons.photo.T_mn
+          , T_ref = cons.photo.T_ref
+          , T_opt_Pm_amb = cons.photo.T_opt_Pm_amb
+          , λ = cons.photo.λ
+          , f_C_m = cons.photo.f_C_m
+          , F_C = species.F_C()
+          ;
+
+        /* (3.23) Photosynthetic efficiency, α */
+        if (isC4)
+          α = α_amb_15 * f_C(CO2, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
+        else
+          α = α_amb_15 * f_C(CO2, λ, f_C_m) * f_α_TC(T, CO2, λ_α, γ_α, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
+
+        /* (3.8) Light saturated photosynthesis, P_m. TODO: why not related to light extiction (exp(-kl)) any more? */
+        P_m = P_m_ref * f_C(CO2, λ, f_C_m) * f_Pm_TC(T, CO2, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, isC4, F_C);
+
+        /*  
+            numerical integration:
+          - iterate through the depth of the canopy of species.
+          - if a new species appears in layer i (i >= n_start_p[s]) LAI increment 
+            increases by δL_p and k_e_i (weighted k) changes
+          - the fraction of leafs in direct light declines through the depth of 
+            the canopy: exp(-k * l). The fraction in diffuse light increases: 1 - exp(-k * l)
+          - the fraction in direct light is always also in diffuse light (2.21) 
+        */
+
+        /* iterate over leaf area layers */
+        for (var i = 1; i < n_L + 1; i++) {
+
+          /* cummulative leaf area at layer i */
+          l += δL_i[i - 1] - (δL_i[i - 1] / 2); // l = (2 * i - 1) * (δL_p[s] / 2);
+          
+          /* direct radiation within the canopy at leaf area l with weighted k_e in layer i */
+          var I_s_l_i = I_s_l(l, I_0, k_e_i[i - 1], k);
+          
+          /* diffuse radiation  within the canopy at leaf area l with weighted k_e in layer i */
+          var I_d_l_i = I_d_l(l, I_0, k_e_i[i - 1], k, f_s);
+  
+          /* include species s in integeration if s has occured in layer i. 
+             Error in SGS documentation?: i <= n_start_p[s] */
+          if (i >= n_start_p[s]) {
+
+            /* gross assmilates from direct radiation */
+            P_g[s] += P_l(I_s_l_i, α, P_m, ξ) * exp(-k_e_i[i - 1] * l) * δL_p[s];
+            
+            /* gross assmilates from diffuse radiation */
+            P_g[s] += P_l(I_d_l_i, α, P_m, ξ) * (1 - exp(-k_e_i[i - 1] * l)) * δL_p[s];
+
+          } // if s in i
+
+        } // for i
+
+      } // for s
+      
+      return P_g;
+      
+    };
 
   };
 
-  var fc_CropDryMatter = function (
-    vs_NumberOfLayers,
-    vs_LayerThickness,
-    vc_DevelopmentalStage,
-    vc_Assimilates,
-    /*vc_NetMaintenanceRespiration,*/   // hermes o. agrosim
-    /*pc_CropSpecificMaxRootingDepth,*/ // JS! unused
-    /*vs_SoilSpecificMaxRootingDepth,*/ // JS! unused
-    vw_MeanAirTemperature
-  ) {
 
-    if (DEBUG) debug(arguments);
+  /* Daily carbon fixation */
+  function netPhotosynthesis(T, N_up, N_fix) {
 
-    // var vc_MaxRootNConcentration                         = 0.0; // old WGM
-    // var vc_NConcentrationOptimum                         = 0.0; // old DTOPTN
-    // var vc_RootNIncrement                                = 0.0; // old WUMM
-    // var vc_AssimilatePartitioningCoeffOld                = 0.0;
-    // var vc_AssimilatePartitioningCoeff                   = 0.0;
+    logger(MSG.INFO, 'netPhotosynthesis');
 
-    // var user_crops = centralParameterProvider.userCropParameters;
-    // var pc_MaxCropNDemand = user_crops.pc_MaxCropNDemand;
+    /* iterate over mixture array */
+    for (var s = 0, ps = mixture.length; s < ps; s++) {
 
-    // // var pc_GrowthRespirationRedux = user_crops.pc_GrowthRespirationRedux;
-    // // throw pc_GrowthRespirationRedux;
+      var species = mixture[s]
+        , f_N = species.f_N_live_shoot()
+        , P_g_day = species.vars.P_g_day
+        , C_total = species.C_live_shoot() + species.C_root()
+        , N_avail = species.vars.N_avail
+        , isC4 = species.isC4
+        , F_C = species.F_C()
+        ;
 
-    // // Assuming that growth respiration takes 30% of total assimilation --> 0.7 [kg ha-1]
-    // // vc_NetPhotosynthesis = (vc_GrossPhotosynthesis - vc_NetMaintenanceRespiration + vc_ReserveAssimilatePool) * pc_GrowthRespirationRedux; // from HERMES algorithms
+      /*(3.57) Gross assimilation P_g_day adjusted for maintenance respiration, 
+      respiratory costs of nitrogen uptake and fixation.*/
+      var P_growth = P_g_day - R_m(T, f_N, C_total, isC4, F_C) - R_N(N_up[s], N_fix[s]);
+      logger(MSG.INFO, 'P_growth: '+P_growth);
 
-    // vc_NetPhotosynthesis = vc_Assimilates; // from AGROSIM algorithms
-    // vc_ReserveAssimilatePool = 0.0;
+      if (P_growth > 0) { // net assmilates for growth of new tissue
 
-    // vc_AbovegroundBiomassOld = vc_AbovegroundBiomass;
-    // vc_AbovegroundBiomass = 0.0;
-    // vc_BelowgroundBiomassOld = vc_BelowgroundBiomass;
-    // vc_BelowgroundBiomass = 0.0;
-    // vc_TotalBiomass = 0.0;
+        var vars = species.vars
+          , cons = species.cons
+          , dW_l_fdwt_ref = cons.dW_l_fdwt_ref
+          , dW_s_fdwt_ref = cons.dW_s_fdwt_ref
+          , dW_r_fdwt_ref = cons.dW_r_fdwt_ref
+          , Ω_water = vars.Ω_water
+          , Ω_N = vars.Ω_N
+          , ρ_shoot_ref = cons.part.ρ_shoot_ref
+          , ρ_l = cons.part.ρ_l
+          , ρ_s = 1 - ρ_l
+          , ρ_shoot = ρ_shoot_ref * sqrt(Ω_water * Ω_N)
+          , ρ_root = 1 - ρ_shoot
+          ; 
 
-    // //old PESUM [kg m-2 --> kg ha-1]
-    // vc_TotalBiomassNContent += soilColumn.vq_CropNUptake * 10000.0;
-    // // debug('soilColumn.vq_CropNUptake', soilColumn.vq_CropNUptake);
+        /* N allocation to organ by partitioning and ref protein content of new tissue */  
+        var N_avail_l = N_avail * ρ_shoot * ρ_l * (dW_l_fdwt_ref.pn / (dW_l_fdwt_ref.pn + dW_s_fdwt_ref.pn + dW_r_fdwt_ref.pn))  
+          , N_avail_s = N_avail * ρ_shoot * ρ_s * (dW_s_fdwt_ref.pn / (dW_l_fdwt_ref.pn + dW_s_fdwt_ref.pn + dW_r_fdwt_ref.pn))  
+          , N_avail_r = N_avail * ρ_root * (dW_r_fdwt_ref.pn / (dW_l_fdwt_ref.pn + dW_s_fdwt_ref.pn + dW_r_fdwt_ref.pn))
+          ;
 
-    // // Dry matter production
-    // // old NRKOM
-    // // double assimilate_partition_shoot = 0.7;
-    // var assimilate_partition_leaf = 0.3;
+        var Y_leaf = species.Y_leaf(N_avail_l, P_growth * ρ_shoot * ρ_l)
+          , Y_stem = species.Y_stem(N_avail_s, P_growth * ρ_shoot * ρ_s)
+          , Y_root = species.Y_root(N_avail_r, P_growth * ρ_root)
+            /* weight by organ partitioning */
+          , Y = (Y_leaf * ρ_shoot * ρ_l) + (Y_stem * ρ_shoot * ρ_s) + (Y_root * ρ_root)
+          ;
 
-    // for (var i_Organ = 0; i_Organ < pc_NumberOfOrgans; i_Organ++) {
+        /*(3.57, 3.49) P available for growth adjusted for growth respiration Y */
+        vars.G = Y * P_growth;
+        vars.Y = Y;
+        vars.Y_leaf = Y_leaf;
+        vars.Y_stem = Y_stem;
+        vars.Y_root = Y_root;
 
-    //     vc_AssimilatePartitioningCoeffOld = pc_AssimilatePartitioningCoeff[vc_DevelopmentalStage - 1][i_Organ];
-    //     vc_AssimilatePartitioningCoeff = pc_AssimilatePartitioningCoeff[vc_DevelopmentalStage][i_Organ];
+      } else { // no growth: assimilates are not sufficent for respiratory costs 
 
-    //     //Identify storage organ and reduce assimilate flux in case of heat stress
-    //     if (pc_StorageOrgan[i_Organ] == 1){
-    //         vc_AssimilatePartitioningCoeffOld = vc_AssimilatePartitioningCoeffOld * vc_CropHeatRedux * vc_DroughtImpactOnFertility;
-    //         vc_AssimilatePartitioningCoeff = vc_AssimilatePartitioningCoeff * vc_CropHeatRedux * vc_DroughtImpactOnFertility;
-    //     }
+        // TODO: e.g. (P_growth * NC.l / NC_p) > NC.l ? accelerate flux to dead?
 
+        var NC = species.vars.NC
+          , NC_p = NC.l + NC.s + NC.r
+          ;
 
-    //     if ((vc_CurrentTemperatureSum[vc_DevelopmentalStage] / pc_StageTemperatureSum[vc_DevelopmentalStage]) > 1) {
+        /* reduce nc pools by share as long as non-structural pool > 0 */
+        if (NC.l > 0)
+          NC.l = max(0, NC.l + (P_growth * NC.l / NC_p));
+        if (NC.s > 0)
+          NC.s = max(0, NC.s + (P_growth * NC.s / NC_p));
+        if (NC.r > 0)
+          NC.r = max(0, NC.r + (P_growth * NC.r / NC_p));
 
-    //         // Pflanze ist ausgewachsen
-    //         vc_OrganGrowthIncrement[i_Organ] = 0.0;
-    //         vc_OrganSenescenceIncrement[i_Organ] = 0.0;
-    //     } else {
+        species.vars.G = 0;
 
-    //         // test if there is a positive bilance of produced assimilates
-    //         // if vc_NetPhotosynthesis is negativ, the crop needs more for
-    //         // maintenance than for building new biomass
-    //         if (vc_NetPhotosynthesis < 0.0) {
+      }
 
-    //             // reduce biomass from leaf and shoot because of negative assimilate
-    //             //! TODO: hard coded organ ids; must be more generalized because in database organ_ids can be mixed
-    //             vc_OrganBiomass[i_Organ];
-
-    //             if (i_Organ == LEAF) { // leaf
-
-    //                 var incr = assimilate_partition_leaf * vc_NetPhotosynthesis;
-    //                 if (abs(incr) <= vc_OrganBiomass[i_Organ]){
-    //                     console.log("LEAF - Reducing organ biomass - default case (" + (vc_OrganBiomass[i_Organ] + vc_OrganGrowthIncrement[i_Organ]) + ")");
-    //                     vc_OrganGrowthIncrement[i_Organ] = incr;
-    //                 } else {
-    //                     // temporary hack because complex algorithm produces questionable results
-    //                     console.log("LEAF - Not enough biomass for reduction - Reducing only what is available ");
-    //                     vc_OrganGrowthIncrement[i_Organ] = (-1) * vc_OrganBiomass[i_Organ];
+    }
 
 
-    // //                      debug() << "LEAF - Not enough biomass for reduction; Need to calculate new partition coefficient" << endl;
-    // //                      // calculate new partition coefficient to detect, how much of organ biomass
-    // //                      // can be reduced
-    // //                      assimilate_partition_leaf = abs(vc_OrganBiomass[i_Organ] / vc_NetPhotosynthesis);
-    // //                      assimilate_partition_shoot = 1.0 - assimilate_partition_leaf;
-    // //                      debug() << "LEAF - New Partition: " << assimilate_partition_leaf << endl;
-    // //
-    // //                      // reduce biomass for leaf
-    // //                      incr = assimilate_partition_leaf * vc_NetPhotosynthesis; // should be negative, therefor the addition
-    // //                      vc_OrganGrowthIncrement[i_Organ] = incr;
-    // //                      debug() << "LEAF - Reducing organ by " << incr << " (" << vc_OrganBiomass[i_Organ] + vc_OrganGrowthIncrement[i_Organ] << ")"<< endl;
-    //                 }
+    /*
+      (3.41 ff) Maintenance respiration
 
-    //             } else if (i_Organ == SHOOT) { // shoot
-    //                 // JV! Why not (1 - assimilate_partition_leaf)?
-    //                 var incr = assimilate_partition_leaf * vc_NetPhotosynthesis; // should be negative
+      R_m [kg (C) m-2 d-1]
 
-    //                 if (abs(incr) <= vc_OrganBiomass[i_Organ]){
-    //                     vc_OrganGrowthIncrement[i_Organ] = incr;
-    //                     console.log("SHOOT - Reducing organ biomass - default case (" + (vc_OrganBiomass[i_Organ] + vc_OrganGrowthIncrement[i_Organ]) + ")");
-    //                 } else {
-    //                     // temporary hack because complex algorithm produces questionable results
-    //                     console.log("SHOOT - Not enough biomass for reduction - Reducing only what is available ");
-    //                     vc_OrganGrowthIncrement[i_Organ] = (-1) * vc_OrganBiomass[i_Organ];
+      m_ref   [d-1] maintenance coefficient at reference temperature and N content
+      T_ref   [°C]   
 
-
-    // //                      debug() << "SHOOT - Not enough biomass for reduction; Need to calculate new partition coefficient" << endl;
-    // //
-    // //                      assimilate_partition_shoot = abs(vc_OrganBiomass[i_Organ] / vc_NetPhotosynthesis);
-    // //                      assimilate_partition_leaf = 1.0 - assimilate_partition_shoot;
-    // //                      debug() << "SHOOT - New Partition: " << assimilate_partition_shoot << endl;
-    // //
-    // //                      incr = assimilate_partition_shoot * vc_NetPhotosynthesis;
-    // //                      vc_OrganGrowthIncrement[i_Organ] = incr;
-    // //                      debug() << "SHOOT - Reducing organ (" << vc_OrganBiomass[i_Organ] + vc_OrganGrowthIncrement[i_Organ] << ")"<< endl;
-    // //
-    // //                      // test if there is the possibility to reduce biomass of leaf
-    // //                      // for remaining assimilates
-    // //                      incr = assimilate_partition_leaf * vc_NetPhotosynthesis;
-    // //                      double available_leaf_biomass = vc_OrganBiomass[LEAF] + vc_OrganGrowthIncrement[LEAF];
-    // //                      if (incr<available_leaf_biomass) {
-    // //                          // leaf biomass is big enough, so reduce biomass furthermore
-    // //                          vc_OrganGrowthIncrement[LEAF] += incr; // should be negative, therefor the addition
-    // //                          debug() << "LEAF - Reducing leaf biomasse further (" << vc_OrganBiomass[LEAF] + vc_OrganGrowthIncrement[LEAF] << ")"<< endl;
-    // //                      } else {
-    // //                          // worst case - there is not enough biomass available to reduce
-    // //                          // maintenaince respiration requires more assimilates that can be
-    // //                          // provided by plant itselft
-    // //                          // now the plant is dying - sorry
-    // //                          dyingOut = true;
-    // //                          cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " << endl;
-    // //                          cout << "Oh noo - I am dying - There has not been enough biomass required by " <<
-    // //                              "maintenance respiration etc.\n Not long now and I am death ... " << endl;
-    // //                          cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
-    // //                      }
-
-    //                 }
-
-    //             } else {
-    //                 // root or storage organ - do nothing in case of negative photosynthesis
-    //                 vc_OrganGrowthIncrement[i_Organ] = 0.0;
-    //             }
-
-    //         } else { // if (vc_NetPhotosynthesis < 0.0) {
-
-    //             vc_OrganGrowthIncrement[i_Organ] = vc_NetPhotosynthesis *
-    //                  (vc_AssimilatePartitioningCoeffOld
-    //                  + ((vc_AssimilatePartitioningCoeff - vc_AssimilatePartitioningCoeffOld)
-    //                  * (vc_CurrentTemperatureSum[vc_DevelopmentalStage]
-    //                  / pc_StageTemperatureSum[vc_DevelopmentalStage]))) * vc_CropNRedux; // [kg CH2O ha-1]
+    */
     
-    //         }
-    //         vc_OrganSenescenceIncrement[i_Organ] = (vc_OrganBiomass[i_Organ] - vc_OrganDeadBiomass[i_Organ]) *
-    //              (pc_OrganSenescenceRate[vc_DevelopmentalStage - 1][i_Organ]
-    //              + ((pc_OrganSenescenceRate[vc_DevelopmentalStage][i_Organ]
-    //              - pc_OrganSenescenceRate[vc_DevelopmentalStage - 1][i_Organ])
-    //              * (vc_CurrentTemperatureSum[vc_DevelopmentalStage] / pc_StageTemperatureSum[vc_DevelopmentalStage]))); // [kg CH2O ha-1]
+    function R_m(T, f_N, W, isC4, F_C) {
+      
+      var R_m = 0
+        , m_ref = 0.025
+        , f_N_ref = (isC4) ? (0.03 / F_C) : (0.04 / F_C)
+        ;
+      
+      R_m = m_ref * f_m(T, isC4) * (f_N / f_N_ref) * W;
 
-    //     }
-
-    //     if (i_Organ != vc_StorageOrgan) {
-    //       // Wurzel, Sprossachse, Blatt
-    //       vc_OrganBiomass[i_Organ] += (vc_OrganGrowthIncrement[i_Organ] * vc_TimeStep)
-    //       - (vc_OrganSenescenceIncrement[i_Organ] * vc_TimeStep); // [kg CH2O ha-1]
-    //       vc_OrganBiomass[vc_StorageOrgan] += 0.35 * vc_OrganSenescenceIncrement[i_Organ]; // [kg CH2O ha-1]
-    //     } else {
-    //         if (vc_DevelopmentalStage < pc_NumberOfDevelopmentalStages) {
-    //             // Reallocation of asimilates to storage organ in final developmental stage
-
-    //             vc_OrganBiomass[i_Organ] += (vc_OrganGrowthIncrement[i_Organ] * vc_TimeStep)
-    //                     - (vc_OrganSenescenceIncrement[i_Organ] * vc_TimeStep)
-    //                     + 0.3 * ((vc_OrganSenescenceIncrement[i_Organ - 1] * vc_TimeStep)
-    //                         + (vc_OrganSenescenceIncrement[i_Organ - 2] * vc_TimeStep)
-    //                         + vc_OrganSenescenceIncrement[i_Organ  - 3] * vc_TimeStep); // [kg CH2O ha-1]
-    //         } else {
-    //             vc_OrganBiomass[i_Organ] += (vc_OrganGrowthIncrement[i_Organ] * vc_TimeStep)
-    //                     - (vc_OrganSenescenceIncrement[i_Organ] * vc_TimeStep); // [kg CH2O ha-1]
-    //         }
-    //     }
-
-    //     vc_OrganDeadBiomass[i_Organ] += vc_OrganSenescenceIncrement[i_Organ] * vc_TimeStep; // [kg CH2O ha-1]
-    //     vc_OrganGreenBiomass[i_Organ] = vc_OrganBiomass[i_Organ] - vc_OrganDeadBiomass[i_Organ]; // [kg CH2O ha-1]
-
-    //     if ((vc_OrganGreenBiomass[i_Organ]) < 0.0) {
-
-    //         vc_OrganDeadBiomass[i_Organ] = vc_OrganBiomass[i_Organ];
-    //         vc_OrganGreenBiomass[i_Organ] = 0.0;
-    //     }
-
-    //     if (pc_AbovegroundOrgan[i_Organ] == 1) {
-
-    //         vc_AbovegroundBiomass += vc_OrganBiomass[i_Organ]; // [kg CH2O ha-1]
-
-    //     } else if ((pc_AbovegroundOrgan[i_Organ] == 0) && (i_Organ > 0)){
-
-    //         vc_BelowgroundBiomass += vc_OrganBiomass[i_Organ]; // [kg CH2O ha-1]
-
-    //     }
-
-    //     vc_TotalBiomass += vc_OrganBiomass[i_Organ]; // [kg CH2O ha-1]
-
-    // }
-
-    // TEST only update biomass pools
-    var sqmInha = 10000;
-    vc_OrganBiomass[ROOT] = gGrowth.mixture.dwt_root() * sqmInha; // [kg DM ha-1]
-    vc_OrganBiomass[LEAF] = gGrowth.mixture.dwt_leaf() * sqmInha; // [kg DM ha-1]
-    vc_OrganBiomass[SHOOT] = gGrowth.mixture.dwt_stem() * sqmInha; // [kg DM ha-1]
-    vc_OrganBiomass[STORAGE_ORGAN] = 0;
-    vc_AbovegroundBiomass = vc_OrganBiomass[LEAF] + vc_OrganBiomass[SHOOT] + vc_OrganBiomass[STORAGE_ORGAN];
-    vc_TotalBiomass = vc_AbovegroundBiomass  + vc_OrganBiomass[ROOT];
-
-    vc_OrganDeadBiomass = gGrowth.mixture.dwt_dead() * sqmInha; // [kg DM ha-1]
-    vc_RootBiomass = vc_OrganBiomass[ROOT]; // [kg ha-1]
+      return R_m;
+      
+    };
 
 
-    /** @todo N redux noch ausgeschaltet */
-    vc_ReserveAssimilatePool = 0.0; //+= vc_NetPhotosynthesis * (1.0 - vc_CropNRedux);
-    vc_RootBiomassOld = vc_RootBiomass;
-    vc_RootBiomass = vc_OrganBiomass[0];
+    /*
+      (3.44) Maintenance temperature response
+    */
 
-    // if (vc_DevelopmentalStage > 0) {
+    function f_m(T, isC4) {
 
-    //   vc_MaxRootNConcentration = pc_StageMaxRootNConcentration[vc_DevelopmentalStage - 1]
-    //      - (pc_StageMaxRootNConcentration[vc_DevelopmentalStage - 1] - pc_StageMaxRootNConcentration[vc_DevelopmentalStage])
-    //      * vc_CurrentTemperatureSum[vc_DevelopmentalStage] / pc_StageTemperatureSum[vc_DevelopmentalStage]; //[kg kg-1]
-    // } else {
-    //   vc_MaxRootNConcentration = pc_StageMaxRootNConcentration[vc_DevelopmentalStage];
-    // }
+      var f_m = 0
+        , T_m_mn = (isC4) ? 12 : 3
+        , T_ref = (isC4) ? 25 : 20
 
-    // vc_CropNDemand = ((vc_TargetNConcentration * vc_AbovegroundBiomass)
-    //   + (vc_RootBiomass * vc_MaxRootNConcentration)
-    //   + (vc_TargetNConcentration * vc_BelowgroundBiomass / pc_ResidueNRatio)
-    //   - vc_TotalBiomassNContent) * vc_TimeStep; // [kg ha-1]
+      f_m = (T - T_m_mn) / (T_ref - T_m_mn);
 
-    // vc_NConcentrationOptimum = ((vc_TargetNConcentration
-    //      - (vc_TargetNConcentration - vc_CriticalNConcentration) * 0.15) * vc_AbovegroundBiomass
-    //     + (vc_TargetNConcentration
-    //        - (vc_TargetNConcentration - vc_CriticalNConcentration) * 0.15) * vc_BelowgroundBiomass / pc_ResidueNRatio
-    //     + (vc_RootBiomass * vc_MaxRootNConcentration) - vc_TotalBiomassNContent) * vc_TimeStep; // [kg ha-1]
+      return f_m;
+
+    };
 
 
-    // if (vc_CropNDemand > (pc_MaxCropNDemand * vc_TimeStep)) {
-    //   // Not more than 6kg N per day to be taken up.
-    //   vc_CropNDemand = pc_MaxCropNDemand * vc_TimeStep;
-    // }
+    /*
+      (3.51 ff) Respiratory costs of N uptake and fixation
+    
+      R_N     [kg (C) m-2 d-1]
+      N_up    [kg (N) m-2]      daily N uptake
+      N_fix   [kg (N) m-2]      daily N fixation
+      
+      λ_N_up  [kg (C) kg-1 (N)] N uptake respiration coefficent
+      λ_N_fix [kg (C) kg-1 (N)] N fixation respiration coefficent
 
-    // if (vc_CropNDemand < 0) {
-    //   vc_CropNDemand = 0.0;
-    // }
+    */
 
-    // TEST
-    vc_CropNDemand = gGrowth.mixture.N_req_opt(); // kg m-2 ?
+    function R_N(N_up, N_fix) {
 
-    // if (vc_RootBiomass < vc_RootBiomassOld) {
-    //   * @todo: Claas: Macht die Bedingung hier Sinn? Hat sich die Wurzel wirklich zurückgebildet? 
-    //   vc_RootNIncrement = (vc_RootBiomassOld - vc_RootBiomass) * vc_NConcentrationRoot;
-    // } else {
-    //   vc_RootNIncrement = 0;
-    // }
+      var R_N = 0
+        , λ_N_up = 0.6
+        , λ_N_fix = 6
+        ;
 
-    // In case of drought stress the root will grow deeper
-    // if ((vc_TranspirationDeficit < (0.95 * pc_DroughtStressThreshold[vc_DevelopmentalStage])) &&
-    //     (vc_RootingDepth_m > 0.95 * vc_MaxRootingDepth) &&
-    //     (vc_DevelopmentalStage < (pc_NumberOfDevelopmentalStages - 1))){
-    //   vc_MaxRootingDepth += 0.005;
-    // }
+      R_N = λ_N_up * N_up + λ_N_fix * N_fix;
 
-    if (vc_MaxRootingDepth > (vs_NumberOfLayers * vs_LayerThickness)) {
-      vc_MaxRootingDepth = vs_NumberOfLayers * vs_LayerThickness;
+      return R_N;
+
+    };
+
+  };
+    
+
+  /*
+    Partitioning of net assimilates and tissue turnover
+
+    G [kg (C) m-2 day-1]  net growth rate     
+    
+    TODO: 
+      - include influence of defoliation (4.21c) 
+      - trampling by animals (4.16m)
+  */
+  function partitioning(T) {
+
+    logger(MSG.INFO, 'partitioning');
+
+    /* iterate over mixture array */
+    for (var s = 0, ps = mixture.length; s < ps; s++) {
+  
+      var vars = mixture[s].vars 
+        , cons = mixture[s].cons 
+        , ρ_shoot_ref = cons.part.ρ_shoot_ref
+        , ρ_l = cons.part.ρ_l 
+        , ρ_s = 1 - ρ_l 
+          /* (3.80) growth partitioned to the shoot */
+        , G_shoot = ρ_shoot_ref * sqrt(vars.Ω_water * vars.Ω_N) * vars.G
+          /* (3.81) growth partitiond to the root */
+        , G_r = vars.G - G_shoot
+          /* (3.82) growth partitioned to leaf and stem (and sheath) */
+        , G_l = G_shoot * ρ_l 
+        , G_s = G_shoot * ρ_s
+        ;
+
+      /* growth dynamics */
+      var dSC = vars.dSC
+        , SC = vars.SC
+        , NC = vars.NC
+        , dNC = vars.dNC
+        , PN = vars.PN
+        , dPN = vars.dPN
+        , Λ_r = vars.Λ_r
+        , Λ_litter = vars.Λ_litter
+          /* dwt fractions of new tissue already adjusted for nitrogen availability */
+        , f_dwt_l = vars.dW_l_fdwt
+        , f_dwt_s = vars.dW_s_fdwt
+        , f_dwt_r = vars.dW_r_fdwt
+          /* C fractions */
+        , f_C_l = f_dwt_l.sc * fC_sc + f_dwt_l.nc * fC_nc + f_dwt_l.pn * fC_pn
+        , dwt_s = f_dwt_s.sc /** fC_sc*/ + f_dwt_s.nc /** fC_nc*/ + f_dwt_s.pn /** fC_pn*/
+        , dwt_r = f_dwt_r.sc /** fC_sc*/ + f_dwt_r.nc /** fC_nc*/ + f_dwt_r.pn /** fC_pn*/
+          /* leaf appearance rate */
+        , Φ_l = 1 / 8
+          /* leaf flux parameter */
+        , γ_l = f_γ(T) * Φ_l * 3 / 10
+          /* stem flux parameter TODO: how to better relate γ_s, γ_r to γ_l */
+        , γ_s = 0.5 * γ_l
+        , γ_r = 0.5 * γ_l
+          /* dead to litter flux parameter (value from AgPasture) */
+        , γ_dead = 0.11
+        ;
+
+      /* assimilated carbon to leaf, stem and root converted to protein carbon */
+      dPN.l = G_l * (f_dwt_l.pn * fC_pn) / (f_dwt_l.sc * fC_sc + f_dwt_l.nc * fC_nc + f_dwt_l.pn * fC_pn); 
+      dPN.s = G_s * (f_dwt_s.pn * fC_pn) / (f_dwt_s.sc * fC_sc + f_dwt_s.nc * fC_nc + f_dwt_s.pn * fC_pn); 
+      dPN.r = G_r * (f_dwt_r.pn * fC_pn) / (f_dwt_r.sc * fC_sc + f_dwt_r.nc * fC_nc + f_dwt_r.pn * fC_pn);
+
+      /* assimilated carbon to leaf, stem and root converted to non-structural carbon */
+      dNC.l = G_l * (f_dwt_l.nc * fC_nc) / (f_dwt_l.sc * fC_sc + f_dwt_l.nc * fC_nc + f_dwt_l.pn * fC_pn); 
+      dNC.s = G_s * (f_dwt_s.nc * fC_nc) / (f_dwt_s.sc * fC_sc + f_dwt_s.nc * fC_nc + f_dwt_s.pn * fC_pn); 
+      dNC.r = G_r * (f_dwt_r.nc * fC_nc) / (f_dwt_r.sc * fC_sc + f_dwt_r.nc * fC_nc + f_dwt_r.pn * fC_pn);
+
+      /* remobilizaton of non-structural carbon, lipids and protein in flux to dead material */
+      var γ_remob = 0.1; // TODO: ?? lower fluxes to dead material instead of remobilization?
+
+      /* (3.89 ff) leaf */
+      /* assimilated carbon to leaf converted to structural carbon minus flux of structure to age box 2 */
+      dSC.live_l_1 = (
+        G_l * (f_dwt_l.sc * fC_sc) / (f_dwt_l.sc * fC_sc + f_dwt_l.nc * fC_nc + f_dwt_l.pn * fC_pn) - 
+        (2 * γ_l * SC.live_l_1)
+      );
+      dSC.live_l_2 = (2 * γ_l * SC.live_l_1) - (γ_l * SC.live_l_2);
+      dSC.live_l_3 = (γ_l * SC.live_l_2) - (γ_l * SC.live_l_3);
+      dSC.dead_l = (γ_l * SC.live_l_3) - (γ_dead * SC.dead_l);
+
+      /* (3.93 ff) sheath and stem */
+      dSC.live_s_1 = (G_s * (f_dwt_s.sc / dwt_s)) - (2 * γ_s * SC.live_s_1);
+      dSC.live_s_2 = (2 * γ_s * SC.live_s_1) - (γ_s * SC.live_s_2);
+      dSC.live_s_3 = (γ_s * SC.live_s_2) - (γ_s * SC.live_s_3);
+      dSC.dead_s = (γ_s * SC.live_s_3) - (γ_dead * SC.dead_s);
+
+      /* (3.97) root */
+      dSC.r = (G_r * (f_dwt_r.sc / dwt_r)) - (γ_r * SC.r);
+      
+      /* senescenced root */
+      Λ_r.sc += γ_r * SC.r;
+
+      /* (4.18m) input to litter. Johnson (2005/2008) */
+      Λ_litter.sc += γ_dead * (SC.dead_l + SC.dead_s);
+
+      // logger(MSG.INFO, { dSC: dSC, dNC: dNC, dPN: dPN });
+
+      /* update C pools with dSC, dPN, dNC */
+
+      /* leaf */
+      SC.live_l_1 += dSC.live_l_1;
+      SC.live_l_2 += dSC.live_l_2;
+      SC.live_l_3 += dSC.live_l_3;
+      SC.dead_l += dSC.dead_l;
+      NC.l += dNC.l;
+      PN.l += dPN.l;
+
+      /* sheath and stem */
+      SC.live_s_1 += dSC.live_s_1;
+      SC.live_s_2 += dSC.live_s_2;
+      SC.live_s_3 += dSC.live_s_3;
+      SC.dead_s += dSC.dead_s;
+      NC.s += dNC.s;
+      PN.s += dPN.s;
+
+      /* root */
+      SC.r += dSC.r;
+      NC.r += dNC.r;
+      PN.r += dPN.r;
+
+      /* cost of tissue aging e.g. lignin synthesis TODO: calculate cost of ndf synthesis, increase ndf share? */
+      NC.l = max(0, NC.l - 0.05 * (2 * γ_l * SC.live_l_1));
+      NC.s = max(0, NC.s - 0.05 * (2 * γ_s * SC.live_s_1));
+      NC.r = max(0, NC.r - 0.05 * (γ_r * SC.r));
+
+      // logger(MSG.INFO, { SC: SC, NC: NC, PN: PN });
+    
     }
 
-    // ***************************************************************************
-    // *** Taken from Pedersen et al. 2010: Modelling diverse root density     ***
-    // *** dynamics and deep nitrogen uptake - a simple approach.              ***
-    // *** Plant & Soil 326, 493 - 510                                         ***
-    // ***************************************************************************
+    /*
+      (3.99) Influence of temperature on growth dynamics
 
-    // Determining temperature sum for root growth
-    var pc_MaximumTemperatureRootGrowth = pc_MinimumTemperatureRootGrowth + 20.0;
-    var vc_DailyTemperatureRoot = 0.0;
-    if (vw_MeanAirTemperature >= pc_MaximumTemperatureRootGrowth){
-      vc_DailyTemperatureRoot = pc_MaximumTemperatureRootGrowth - pc_MinimumTemperatureRootGrowth;
-    } else {
-      vc_DailyTemperatureRoot= vw_MeanAirTemperature - pc_MinimumTemperatureRootGrowth;
-    }
-    if (vc_DailyTemperatureRoot < 0.0){
-      vc_DailyTemperatureRoot = 0.0;
-    }
-    vc_CurrentTotalTemperatureSumRoot += vc_DailyTemperatureRoot ;
+      f_γ [0-1]
+      T   [°C]
+      
+      TODO: parameters? Default for rye grass (3.100)
+    */
 
-    // Determining root penetration rate according to soil clay content [m °C-1 d-1]
-    var vc_RootPenetrationRate = 0.0; // [m °C-1 d-1]
-    if (soilColumn[vc_RootingDepth].vs_SoilClayContent <= 0.02 ){
-      vc_RootPenetrationRate = 0.5 * pc_RootPenetrationRate;
-    } else if (soilColumn[vc_RootingDepth].vs_SoilClayContent <= 0.08 ){
-      vc_RootPenetrationRate = ((1.0 / 3.0) + (0.5 / 0.06 * soilColumn[vc_RootingDepth].vs_SoilClayContent))
-               * pc_RootPenetrationRate; // [m °C-1 d-1]
-    } else {
-      vc_RootPenetrationRate = pc_RootPenetrationRate; // [m °C-1 d-1]
-    }
+    function f_γ(T) {
 
-    // Calculating rooting depth [m]
-    if (vc_CurrentTotalTemperatureSumRoot <= pc_RootGrowthLag) {
-      vc_RootingDepth_m = pc_InitialRootingDepth; // [m]
-    } else {
-      // corrected because oscillating rooting depth at layer boundaries with texture change
-     /* vc_RootingDepth_m = pc_InitialRootingDepth
-          + ((vc_CurrentTotalTemperatureSumRoot - pc_RootGrowthLag)
-          * vc_RootPenetrationRate); // [m] */
-          
-      vc_RootingDepth_m += (vc_DailyTemperatureRoot * vc_RootPenetrationRate); // [m]
+      var f_γ = 0
+        , T_mn = 3
+        , T_opt = 20
+        , T_ref = 20
+        , q = 2
+        ;
+
+      /* (1.40) constrain */
+      if (T_ref > T_opt)
+        T_ref = T_opt;
+
+      if (T <= T_mn)
+        f_γ = 0;
+      else if (T_mn < T < T_opt)
+        f_γ = pow((T - T_mn) / (T_ref - T_mn), q) * (((1 + q) * T_opt - T_mn - q * T) / ((1 + q) * T_opt - T_mn - q * T_ref));
+      else if (T >= T_opt)
+        f_γ = pow((T_opt - T_mn) / (T_ref - T_mn), q) * ((T_opt - T_mn) / ((1 + q) * T_opt - T_mn - q * T_ref));
+
+      return f_γ;
 
     }
+    
+  };
 
-    if (vc_RootingDepth_m <= pc_InitialRootingDepth){
-      vc_RootingDepth_m = pc_InitialRootingDepth;
+
+  /* initialization of Species & Mixture */
+  mixture = new Mixture(grassland.species, { DM: grassland.DM });
+
+  /*
+    T           [C°]            mean daily temperature
+    T_mx        [C°]            maximum daily temperature
+    T_mn        [C°]            minimum daily temperature
+    R_s         [MJ m-2]        global radiation
+    sunhours    [h]             unused
+    julday      [#]             unused
+    rh          [-]             relative humidity
+    u           [m-s]           wind speed
+    u_h         [m]             wind speed height
+    CO2         [μmol mol-1]    CO2 concentration (not C_amb!)
+    rr          [mm]            rainfall
+    f_s         [-]             fraction direct solar radiation
+    τ           [s]             daylength
+    PPF         [μmol m-2 d-1]  photosynthetic photon flux
+  */
+
+  var step = function (T, T_mx, T_mn, R_s, sunhours, julday, rh, u, u_h, CO2, rr, f_s, τ, PPF) {
+
+    /* set root distribution variables */
+    rootDistribution();
+    /* set max. potential nitrogen uptake */
+    nitrogenUptake();
+
+    // groundwater
+    // var vc_RootingZone = int(floor(0.5 + ((1.3 * mixture.d_r_mx()) / vs_LayerThickness)));
+    // var vm_GroundwaterTable = int(soilColumn.vm_GroundwaterTable);
+
+    /* TODO: set for each species */ 
+    var E_T_pot = fc_ReferenceEvapotranspiration(T_mean, M_mx, T_mn, rh, u, u_h, R_s, CO2);
+
+    /* set actual transipration and water limiting factor */
+    transpiration(E_T_pot);
+
+    for (var s = 0, ps = mixture.length; s < ps; s++) {
+
+      var species = mixture[s];
+
+      /* N fixation Johnson 2013 eq. 3.70 TODO: where to set N_remob? */
+      species.vars.N_req_opt = species.N_req_opt();
+      species.vars.N_up = sum(N_up[s]); /* sum over layers */
+      species.vars.N_fix = species.isLegume ? max(0, N_req_opt - (species.vars.N_remob + species.vars.N_up)) : 0;
+      species.vars.N_avail = species.vars.N_up + species.vars.N_fix + species.vars.N_remob;
+      /* N growth limiting factor */
+      species.vars.Ω_N = min(1, species.vars.N_avail / species.vars.N_req_opt);
+      /* update actual N uptake */
+      if (species.vars.N_avail > species.vars.N_req_opt) {
+        for (var l = 0; l < vs_NumberOfLayers; l ++)
+          N_up[s][l] -= (species.vars.N_avail - species.vars.N_req_opt) * N_up[s][l] / species.vars.N_up;
+        species.vars.N_up = species.vars.N_req_opt - (species.vars.N_remob + species.vars.N_fix);
+        species.vars.N_avail = species.vars.N_up + species.vars.N_remob + species.vars.N_fix;
+      }
+
     }
 
-    if (vc_RootingDepth_m > vc_MaxRootingDepth) {
-      vc_RootingDepth_m = vc_MaxRootingDepth; // [m]
-    }
+    grossPhotosynthesis(T, T_mn, T_mx, PPF, τ, CO2, f_s);
+    
+    netPhotosynthesis(T);
+    
+    partitioning(T);
 
-    if (vc_RootingDepth_m > vs_MaxEffectiveRootingDepth) {
-        vc_RootingDepth_m = vs_MaxEffectiveRootingDepth;
-    }
-
-    // Calculating rooting depth layer []
-    vc_RootingDepth = int(floor(0.5 + (vc_RootingDepth_m / vs_LayerThickness))); // []
-
-    vc_RootingZone = int(floor(0.5 + ((1.3 * vc_RootingDepth_m) / vs_LayerThickness))); // []
-
-    if (vc_RootingZone > vs_NumberOfLayers){
-      vc_RootingZone = vs_NumberOfLayers;
-    }
-
-    vc_TotalRootLength = vc_RootBiomass * pc_SpecificRootLength; //[m m-2]
-
-    // grassland: let monica only calculate root length and rooting depth and apply root distribution calculation from Johnson (2008) 
-    // // Calculating a root density distribution factor []
-    // var vc_RootDensityFactor = new Array(vs_NumberOfLayers);
-    // for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
-    //   if (i_Layer < vc_RootingDepth){
-    //     vc_RootDensityFactor[i_Layer] = exp(-pc_RootFormFactor * (i_Layer * vs_LayerThickness)); // []
-    //   } else if (i_Layer < vc_RootingZone){
-    //     vc_RootDensityFactor[i_Layer] = exp(-pc_RootFormFactor * (i_Layer * vs_LayerThickness))
-    //       * (1.0 - int((i_Layer - vc_RootingDepth) / (vc_RootingZone - vc_RootingDepth))); // JS! int division
-    //   } else {
-    //     vc_RootDensityFactor[i_Layer] = 0.0; // []
-    //   }
-    // }
-
-    // // Summing up all factors to scale to a relative factor between [0;1]
-    // var vc_RootDensityFactorSum = 0.0;
-    // for (var i_Layer = 0; i_Layer < vc_RootingZone; i_Layer++) {
-    //   vc_RootDensityFactorSum += vc_RootDensityFactor[i_Layer]; // []
-    // }
-
-    // // Calculating root density per layer from total root length and
-    // // a relative root density distribution factor
-    // for (var i_Layer = 0; i_Layer < vc_RootingZone; i_Layer++) {
-    //   vc_RootDensity[i_Layer] = (vc_RootDensityFactor[i_Layer] / vc_RootDensityFactorSum)
-    //     * vc_TotalRootLength; // [m m-3]
-    // }
-
-    // for (var i_Layer = 0; i_Layer < vc_RootingZone; i_Layer++) {
-    //   // Root diameter [m]
-    //   if (pc_AbovegroundOrgan[3] == 0) {
-    //     vc_RootDiameter[i_Layer] = 0.0001; //[m]
-    //   } else {
-    //     vc_RootDiameter[i_Layer] = 0.0002 - ((i_Layer + 1) * 0.00001); // [m]
-    //   }
-
-    //   // Default root decay - 10 %
-    //   vo_FreshSoilOrganicMatter[i_Layer] += vc_RootNIncrement * vc_RootDensity[i_Layer]
-    //         * 10.0 / vc_TotalRootLength;
-
-    // }
-
-    // // Limiting the maximum N-uptake to 26-13*10^-14 mol/cm W./sec
-    // vc_MaxNUptake = pc_MaxNUptakeParam - (vc_CurrentTotalTemperatureSum / vc_TotalTemperatureSum); // [kg m Wurzel-1]
-
-    // if ((vc_CropNDemand / 10000.0) > (vc_TotalRootLength * vc_MaxNUptake * vc_TimeStep)) {
-    //   vc_CropNDemand = vc_TotalRootLength * vc_MaxNUptake * vc_TimeStep; //[kg m-2]
-    // } else {
-    //   vc_CropNDemand = vc_CropNDemand / 10000.0; // [kg ha-1 --> kg m-2]
-    // }
+  }; // step end
 
 
-    // TODO: add dead root to vo_FreshSoilOrganicMatter
-    /* grassland:
-      distribute vc_TotalRootLength, assume all species root growth is the same till their individual max. depth in reached:
-      -> untill it is reached rooting depth is the same for all species.
-     TODO: set vc_MaxRootingDepth to max of d_r_mx of species */
-    var root_dwt = 0;
-    var root_dwt_tot = 0;
-    var d_r_mx = 0;
-    var d_r_h = 0;
-    var d_r = 0;
-    var species = null;
-    var species_dwt_distribution = [];
-    var dwt_tot = new Float64Array(vc_RootingZone); // each array element initalized as 0.0
-    for (var p = 0, ps = gGrowth.mixture.length; p < ps; p++) {
+  /* 
+    set and update variables:
+    f_r root  fration per species and soil layer
+    f_r_sum   root fraction sum per species
+    W_r       root kg C m-2 per species and soil layer
+    W_r_sum   root kg C m-2 sum per soil layer
+  */
+  function rootDistribution() {
 
-      species = gGrowth.mixture[p];
-      root_dwt = species.dwt_root();
-      root_dwt_tot += root_dwt;
-      d_r_mx = species.cons.d_r_mx;
-      d_r_h = species.cons.d_r_h;
-      d_r = (vc_RootingDepth_m > d_r_mx) ? d_r_mx : vc_RootingDepth_m;
-      species.vars.d_r = d_r;
-      species_dwt_distribution[p] = []; // store root dry matter per layer of species p
+    /* root distribution scaling factor */
+    var q_r = 3;
 
-      for (var i_Layer = 0; i_Layer < vc_RootingZone; i_Layer++) {
+    for (var s = 0; s < numberOfSpecies; s++) {
+
+      var species = mixture[s];
+      /* TODO: move k_sum calc. somewhere else */
+      species.vars.τ++;
+      species.vars.k_sum = min(1, species.vars.τ / species.cons.τ_veg);
+      var C_root = species.C_root();
+      /* Johnson 2008, eq. 4.19b */ 
+      species.vars.d_r = 0.05 + (species.cons.d_r_mx - 0.05) * species.vars.k_sum;
+
+      f_r_sum[s] = 0;
+
+      for (var l = 0; l < vs_NumberOfLayers; l++) {
+        /* z [m] upper boundary of layer l */
+        var z = vs_LayerThickness * l;
+        if (z > species.vars.d_r) {
+          /* since f_r only approaches zero (asymptote, f_r_sum < 1) we stop at root depth d_r and later relate f_r_l to f_r_sum */
+          f_r[s][l] = 0;
+          continue;
+        }
+        /* (4.19c) Johnson (2008) relative root distribution share in layer l. upper minus lower layer boundary */
+        f_r[s][l] = (
+          (1 / (1 + pow((z / species.cons.d_r_h) * (species.cons.d_r_mx / species.vars.d_r), q_r))) - 
+          (1 / (1 + pow(((z + vs_LayerThickness) / species.cons.d_r_h) * (species.cons.d_r_mx / species.vars.d_r), q_r)))
+        );
+        f_r_sum[s] += f_r[s][l];
+      }
+
+      /* distribute root C to each soil layer */
+      for (var l = 0; l < vs_NumberOfLayers; l++)
+        W_r[s][l] = C_root * f_r[s][l] / f_r_sum[s];
         
-        /* lower boundary of layer i */
-        var z = vs_LayerThickness + (vs_LayerThickness * i_Layer);
-        /* (4.19c) Johnson (2008) relative root distribution */
-        var f_r = 1 / (1 + (z / d_r_h) * (d_r_mx / d_r));
-        /* root dry matter in layer i */
-        var dwt = root_dwt * f_r;
-        /* root dry matter per layer of species p */
-        species_dwt_distribution[p][i_Layer] = dwt;
-        /* total dry matter in layer i */
-        dwt_tot[i_Layer] += dwt;
+    } // for each species
 
+    for (var l = 0; l < vs_NumberOfLayers; l++) {
+      W_r_sum[l] = 0; 
+      for (var s = 0; s < numberOfSpecies; s++) {
+        W_r_sum[l] += W_r[s][l]; /* total root mass per layer */
       }
     }
 
-    for (var i_Layer = 0; i_Layer < vc_RootingZone; i_Layer++) {
-      
-      /* vc_TotalRootLength in layer i */
-      vc_RootDensity[i_Layer]  = vc_TotalRootLength * dwt_tot[i_Layer] / root_dwt_tot;
+    var dwt_root = mixture.dwt_root() /* [kg (d.wt) m-2] */
+      , C_root = mixture.C_root()     /* [kg (C) m-2] */
+      , pc_SpecificRootLength = 300   /* [m kg-1 (d.wt)] is identical for all crops in MONICA db */
+      ;
 
-      /* store root share of each species in each layer in mixture objects in order to calculate N and water uptake */
-      for (var p = 0, ps = gGrowth.mixture.length; p < ps; p++)
-        gGrowth.mixture.root_sh[p][i_Layer] = species_dwt_distribution[p][i_Layer] / dwt_tot[i_Layer]
+    /* set root density: workaround to use MONICAS water uptake routines */
+    for (var l = 0; l < vs_NumberOfLayers; l++)
+      vc_RootDensity[l] = (1 / vs_LayerThickness) * pc_SpecificRootLength * W_r_sum[l] * dwt_root / C_root;
 
+  };
+
+
+  /* 
+    set and update variables:
+    N_up      potential N uptake kg N m-2 per species and soil layer
+    N_up_sum  potential N uptake kg N m-2 per soil layer
+  */
+  function nitrogenUptake() {
+
+    for (var l = 0; l < vs_NumberOfLayers; l++) {
+      /* kg (N) m-3 / kg (soil) m-3 = kg (N) kg-1 (soil) */
+      var N = soilColumn[l].get_SoilNO3() / soilColumn[l].vs_SoilBulkDensity(); // TODO: NH4?
+      /* Johnson 2013, eq. 3.69 [kg (soil) kg-1 (root C)] TODO: error in doc. ? suppose it is per kg (root C) instead per kg (root d.wt) */
+      var ξ_N = 2000;
+      /* total uptake from layer must not exceed layer N */
+      N_up_sum[l] = min(soilColumn[l].get_SoilNO3() * vs_LayerThickness, ξ_N * N * W_r_sum[l]);
     }
 
-    /* grassland: check sums */
+    for (var l = 0; l < vs_NumberOfLayers; l++) {
+      for (var s = 0; s < numberOfSpecies; s++)
+        N_up[s][l] = (W_r_sum[l] === 0) ? 0 : N_up_sum[l] * W_r[s][l] / W_r_sum[l];
+    }
+
     if (DEBUG) {
 
-      var debug_sum1 = 0;
-      var debug_sum2 = 0;
-      for (var i_Layer = 0; i_Layer < vc_RootingZone; i_Layer++) {
-        
-        /* vc_TotalRootLength in layer i */
-        debug_sum1 += dwt_tot[i_Layer] / root_dwt_tot;
-        debug_sum2 = 0;
+      logger(MSG.DEBUG, (sum(N_up_sum) * SQM_PER_HA) + ' N uptake pot. [kg (N) ha-1]');
+      logger(MSG.DEBUG, (sum(W_r_sum) * SQM_PER_HA) + ' C root [kg (C) ha-1]');
 
-        /* store root share of each species in each layer in mixture objects in order to calculate N and water uptake */
-        for (var p = 0, ps = gGrowth.mixture.length; p < ps; p++)
-          debug_sum2 += gGrowth.mixture.root_sh[p][i_Layer]
+      /* total soil N [kg m-2] */
+      var N_soil = 0;
+      for (var l = 0; l < vs_NumberOfLayers; l++)
+        N_soil += soilColumn[l].get_SoilNO3() * vs_LayerThickness;
 
-        if (round(debug_sum2 * 100) != 100) {
-          console.log(gGrowth.mixture.root_sh);
-          throw 'mixture.root_sh != 100% for layer ' + debug_sum2;
-        }
-
-      }
-
-      if (round(debug_sum1 * 100) != 100)
-        throw 'total root dwt distribution sum != 100%:' +  debug_sum1;
+      logger(MSG.DEBUG, (N_soil * SQM_PER_HA) + ' soil N [kg (n) ha-1]');
+      if (sum(N_up_sum) > N_soil)
+        throw new Error('sum(N_up_sum) > N_soil');
 
     }
 
-  };
+  }; // nitrogenUptake
 
-  // double 
-  var fc_ReferenceEvapotranspiration = function (
-    vs_HeightNN,
-    vw_MaxAirTemperature,
-    vw_MinAirTemperature,
-    vw_RelativeHumidity,
-    vw_MeanAirTemperature,
-    vw_WindSpeed,
-    vw_WindSpeedHeight,
-    vc_GlobalRadiation,
-    vw_AtmosphericCO2Concentration,
-    vc_GrossPhotosynthesisReference_mol
-  ) {
+  
+  function fc_ReferenceEvapotranspiration(vw_MeanAirTemperature, vw_MaxAirTemperature, vw_MinAirTemperature, vw_RelativeHumidity, vw_WindSpeed, vw_WindSpeedHeight, vc_GlobalRadiation, vw_AtmosphericCO2Concentration) {
 
     if (DEBUG) debug(arguments);
 
@@ -2239,7 +2485,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, grassland) { // takes a
     //           / (pc_StomataConductanceAlpha * vc_GrossPhotosynthesisReference_mol);
     // }
 
-    // TEST make independent of photosynthesis: johnson default canopy conductance g_c = 0.015 [m s-1] inverse of stomata resistance
+    // johnson default canopy conductance g_c = 0.015 [m s-1] inverse of stomata resistance
     vc_StomataResistance = 1 / 0.015;  
 
     vc_SurfaceResistance = vc_StomataResistance / 1.44;
@@ -2268,831 +2514,482 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, grassland) { // takes a
 
   };
 
-  var fc_CropWaterUptake = function (
-    vs_NumberOfLayers,
-    vs_LayerThickness,
-    vc_SoilCoverage,
-    vc_RootingZone,
-    vc_GroundwaterTable,
-    vc_ReferenceEvapotranspiration,
-    vw_GrossPrecipitation,
-    vc_CurrentTotalTemperatureSum ,
-    vc_TotalTemperatureSum
-  ) {
 
-    if (DEBUG) debug(arguments);
+  /* 
+    set 
+      - E_T per species and layer
+      - Ω_water per species
+      - f_g
 
-    // JS! make sure it is an "int"
-    vc_RootingZone = int(vc_RootingZone);
-    vc_GroundwaterTable = int(vc_GroundwaterTable);
+    TODO: groundwater?
+  */
+  function transpiration(E_T_pot) {
 
+    var E_T_demand = []
+      , E_T_demand_remaining = []
+      , L_tot = mixture.L_tot()
+      , θ_w = []
+      , θ_fc = []
+      , θ_r = []
+      , θ_sat = []
+      , θ = []
+      , g_water = 1
+      ;
 
-    var vc_PotentialTranspirationDeficit = 0.0; // [mm]
-    vc_PotentialTranspiration = 0.0; // old TRAMAX [mm]
-    var vc_PotentialEvapotranspiration = 0.0; // [mm]
-    var vc_TranspirationReduced = 0.0; // old TDRED [mm]
-    vc_ActualTranspiration = 0.0; // [mm]
-    var vc_RemainingTotalRootEffectivity = 0.0; //old WEFFREST [m]
-    var vc_CropWaterUptakeFromGroundwater  = 0.0; // old GAUF [mm]
-    var vc_TotalRootEffectivity = 0.0; // old WEFF [m]
-    var vc_ActualTranspirationDeficit = 0.0; // old TREST [mm]
-    var vc_Interception = 0.0;
-    vc_RemainingEvapotranspiration = 0.0;
+    /* fractional ground cover. Johnson 2013, eq. 2.23, TODO: weighted k (0.5)? */
+    f_g = 1 - exp(-0.5 * L_tot);
 
-    for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
-      vc_Transpiration[i_Layer] = 0.0; // old TP [mm]
-      vc_TranspirationRedux[i_Layer] = 0.0; // old TRRED []
-      vc_RootEffectivity[i_Layer] = 0.0; // old WUEFF [?]
+    /* distribute E_T_pot to each species */
+    for (var s = 0; s < numberOfSpecies; s++) {
+      E_T_demand[s] = f_g * E_T_pot * mixture[s].L() / L_tot;
+      E_T_demand_remaining[s] = E_T_demand[s];
+
+      /* reset actual transpiration */
+      for (var l = 0; l < vs_NumberOfLayers; l++)
+        E_T[s][l] = 0;
+    }
+ 
+    for (var l = 0; l < vs_NumberOfLayers; l++) {
+      /* [m3 m-3] to [mm m-2] */
+      θ_w[l] = soilColumn[l].get_PermanentWiltingPoint() * 1e3 * vs_LayerThickness;
+      θ_fc[l] = soilColumn[l].get_FieldCapacity() * 1e3 * vs_LayerThickness;
+      θ_r[l] = θ_fc[l] * 0.8;
+      θ_sat[l] = soilColumn[l].get_Saturation() * 1e3 * vs_LayerThickness;
+      θ[l] = soilColumn[l].get_Vs_SoilMoisture_m3() * 1e3 * vs_LayerThickness;
     }
 
-    // ################
-    // # Interception #
-    // ################
+    for (var i = 0; i < 3; i++) { // run 3 times to compensate for dry layers
+      for (var l = 0; l < vs_NumberOfLayers; l++) {
+        for (var s = 0; s < numberOfSpecies; s++) {
 
-    var vc_InterceptionStorageOld = vc_InterceptionStorage;
+          if (E_T_demand_remaining[s] <= 0)
+            continue;
 
-    // Interception in [mm d-1];
-    vc_Interception = (2.5 * vc_CropHeight * vc_SoilCoverage) - vc_InterceptionStorage;
+          if (θ[l] < θ_w[l])
+            g_water = 0;
+          else if (θ[l] < θ_r[l])
+            g_water = (θ[l] - θ_w[l]) / (θ_r[l] - θ_w[l]);
+          else if (θ[l] < θ_fc[l])
+            g_water = 1;
+          else /* water logging */
+            g_water = 1 - 0.5 * (θ[l] - θ_fc[l]) / (θ_sat[l] - θ_fc[l]);
 
-    if (vc_Interception < 0) {
-      vc_Interception = 0.0;
-    }
+          /* Johnson 2013/2008, eq. 3.2. */
+          E_T[s][l] += min(max(0, θ[l] - θ_w[l]), f_r[s][l] * g_water * E_T_demand_remaining[s]);
+          θ[l] -= E_T[s][l]; /* update soil water */
+          E_T_demand_remaining[s] -= E_T[s][l]; /* keep track of remaining E_T demand */
 
-    // If no precipitation occurs, vm_Interception = 0
-    if (vw_GrossPrecipitation <= 0) {
-      vc_Interception = 0.0;
-    }
-
-    // Calculating net precipitation and adding to surface water
-    if (vw_GrossPrecipitation <= vc_Interception) {
-      vc_Interception = vw_GrossPrecipitation;
-      vc_NetPrecipitation = 0.0;
-    } else {
-      vc_NetPrecipitation = vw_GrossPrecipitation - vc_Interception;
-    }
-
-    // add intercepted precipitation to the virtual interception water storage
-    vc_InterceptionStorage = vc_InterceptionStorageOld + vc_Interception;
-
-
-    // #################
-    // # Transpiration #
-    // #################
-
-    vc_PotentialEvapotranspiration = vc_ReferenceEvapotranspiration * vc_KcFactor; // [mm]
-
-    // from HERMES:
-    if (vc_PotentialEvapotranspiration > 6.5) vc_PotentialEvapotranspiration = 6.5;
-
-    vc_RemainingEvapotranspiration = vc_PotentialEvapotranspiration; // [mm]
-
-    // If crop holds intercepted water, first evaporation from crop surface
-    if (vc_InterceptionStorage > 0.0) {
-      if (vc_RemainingEvapotranspiration >= vc_InterceptionStorage) {
-        vc_RemainingEvapotranspiration -= vc_InterceptionStorage;
-        vc_EvaporatedFromIntercept = vc_InterceptionStorage;
-        vc_InterceptionStorage = 0.0;
-      } else {
-        vc_InterceptionStorage -= vc_RemainingEvapotranspiration;
-        vc_EvaporatedFromIntercept = vc_RemainingEvapotranspiration;
-        vc_RemainingEvapotranspiration = 0.0;
-      }
-    } else {
-      vc_EvaporatedFromIntercept = 0.0;
-    }
-
-    // if the plant has matured, no transpiration occurs!
-    if (vc_DevelopmentalStage < vc_FinalDevelopmentalStage){
-    //if ((vc_CurrentTotalTemperatureSum / vc_TotalTemperatureSum) < 1.0){
-
-      vc_PotentialTranspiration = vc_RemainingEvapotranspiration * vc_SoilCoverage; // [mm]
-
-      for (var i_Layer = 0; i_Layer < vc_RootingZone; i_Layer++) {
-        
-        var vc_AvailableWater = soilColumn[i_Layer].get_FieldCapacity() - soilColumn[i_Layer].get_PermanentWiltingPoint();
-        var vc_AvailableWaterPercentage = (soilColumn[i_Layer].get_Vs_SoilMoisture_m3() 
-          - soilColumn[i_Layer].get_PermanentWiltingPoint()) / vc_AvailableWater;
-        
-        if (vc_AvailableWaterPercentage < 0.0) vc_AvailableWaterPercentage = 0.0;
-
-        if (vc_AvailableWaterPercentage < 0.15) {
-          vc_TranspirationRedux[i_Layer] = vc_AvailableWaterPercentage * 3.0; // []
-          vc_RootEffectivity[i_Layer] = 0.15 + 0.45 * vc_AvailableWaterPercentage / 0.15; // []
-        } else if (vc_AvailableWaterPercentage < 0.3) {
-          vc_TranspirationRedux[i_Layer] = 0.45 + (0.25 * (vc_AvailableWaterPercentage - 0.15) / 0.15);
-          vc_RootEffectivity[i_Layer] = 0.6 + (0.2 * (vc_AvailableWaterPercentage - 0.15) / 0.15);
-        } else if (vc_AvailableWaterPercentage < 0.5) {
-          vc_TranspirationRedux[i_Layer] = 0.7 + (0.275 * (vc_AvailableWaterPercentage - 0.3) / 0.2);
-          vc_RootEffectivity[i_Layer] = 0.8 + (0.2 * (vc_AvailableWaterPercentage - 0.3) / 0.2);
-        } else if (vc_AvailableWaterPercentage < 0.75) {
-          vc_TranspirationRedux[i_Layer] = 0.975 + (0.025 * (vc_AvailableWaterPercentage - 0.5) / 0.25);
-          vc_RootEffectivity[i_Layer] = 1.0;
-        } else {
-          vc_TranspirationRedux[i_Layer] = 1.0;
-          vc_RootEffectivity[i_Layer] = 1.0;
-        }
-
-        if (vc_TranspirationRedux[i_Layer] < 0)
-          vc_TranspirationRedux[i_Layer] = 0.0;
-        
-        if (vc_RootEffectivity[i_Layer] < 0)
-          vc_RootEffectivity[i_Layer] = 0.0;
-        
-        if (i_Layer == vc_GroundwaterTable) { // old GRW
-          vc_RootEffectivity[i_Layer] = 0.5;
-        }
-        
-        if (i_Layer > vc_GroundwaterTable) { // old GRW
-          vc_RootEffectivity[i_Layer] = 0.0;
-        }
-
-        if (((i_Layer + 1) * vs_LayerThickness) >= vs_MaxEffectiveRootingDepth) {
-          vc_RootEffectivity[i_Layer] = 0.0;
-        }      
-        
-        vc_TotalRootEffectivity += vc_RootEffectivity[i_Layer] * vc_RootDensity[i_Layer]; //[m m-3]
-        vc_RemainingTotalRootEffectivity = vc_TotalRootEffectivity;
-      }
-
-      for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
-        
-        if (i_Layer > min(vc_RootingZone, vc_GroundwaterTable + 1)) {
-          vc_Transpiration[i_Layer] = 0.0; //[mm]
-        } else {
-          vc_Transpiration[i_Layer] = vc_PotentialTranspiration * ((vc_RootEffectivity[i_Layer] * vc_RootDensity[i_Layer])
-                   / vc_TotalRootEffectivity) * vc_OxygenDeficit;
-
-          // [mm]
-        }
-
-      }
-
-      for (var i_Layer = 0; i_Layer < min(vc_RootingZone, vc_GroundwaterTable + 1); i_Layer++) {
-
-        vc_RemainingTotalRootEffectivity -= vc_RootEffectivity[i_Layer] * vc_RootDensity[i_Layer]; // [m m-3]
-
-        if (vc_RemainingTotalRootEffectivity <= 0.0)
-          vc_RemainingTotalRootEffectivity = 0.00001;
-        if (((vc_Transpiration[i_Layer] / 1000.0) / vs_LayerThickness) > ((soilColumn[i_Layer].get_Vs_SoilMoisture_m3()
-            - soilColumn[i_Layer].get_PermanentWiltingPoint()))) {
-            vc_PotentialTranspirationDeficit = (((vc_Transpiration[i_Layer] / 1000.0) / vs_LayerThickness)
-                - (soilColumn[i_Layer].get_Vs_SoilMoisture_m3() - soilColumn[i_Layer].get_PermanentWiltingPoint()))
-                * vs_LayerThickness * 1000.0; // [mm]
-            if (vc_PotentialTranspirationDeficit < 0.0) {
-                vc_PotentialTranspirationDeficit = 0.0;
-            }
-            if (vc_PotentialTranspirationDeficit > vc_Transpiration[i_Layer]) {
-                vc_PotentialTranspirationDeficit = vc_Transpiration[i_Layer]; //[mm]
-            }
-        } else {
-            vc_PotentialTranspirationDeficit = 0.0;
-        }
-
-       vc_TranspirationReduced = vc_Transpiration[i_Layer] * (1.0 - vc_TranspirationRedux[i_Layer]);
-
-        //! @todo Claas: How can we lower the groundwater table if crop water uptake is restricted in that layer?
-        vc_ActualTranspirationDeficit = max(vc_TranspirationReduced, vc_PotentialTranspirationDeficit); //[mm]
-        if (vc_ActualTranspirationDeficit > 0.0) {
-          if (i_Layer < min(vc_RootingZone, vc_GroundwaterTable + 1)) {
-            for (var i_Layer2 = i_Layer + 1; i_Layer2 < min(vc_RootingZone, vc_GroundwaterTable + 1); i_Layer2++) {
-                vc_Transpiration[i_Layer2] += vc_ActualTranspirationDeficit * (vc_RootEffectivity[i_Layer2]
-                   * vc_RootDensity[i_Layer2] / vc_RemainingTotalRootEffectivity);
-            }
-          }
-        }
-
-        vc_Transpiration[i_Layer] = vc_Transpiration[i_Layer] - vc_ActualTranspirationDeficit;
-        
-        if (vc_Transpiration[i_Layer] < 0.0)
-          vc_Transpiration[i_Layer] = 0.0;
-        
-        vc_ActualTranspiration += vc_Transpiration[i_Layer];
-        
-        if (i_Layer == vc_GroundwaterTable) {
-          vc_CropWaterUptakeFromGroundwater = (vc_Transpiration[i_Layer] / 1000.0) / vs_LayerThickness; //[m3 m-3]
-        }
-
-      }      
-
-      if (vc_PotentialTranspiration > 0) {
-        vc_TranspirationDeficit = vc_ActualTranspiration / vc_PotentialTranspiration;
-      } else {
-        vc_TranspirationDeficit = 1.0; //[]
-      }
-
-      var vm_GroundwaterDistance = int(vc_GroundwaterTable - vc_RootingDepth); // JS! just in case ... added int()
-      if (vm_GroundwaterDistance <= 1) {
-        vc_TranspirationDeficit = 1.0;
-      }
-
-      if (pc_WaterDeficitResponseOn == false){
-        vc_TranspirationDeficit = 1.0;
-      }
-
-    } //if
-  };
-
-  var fc_CropNUptake = function (
-    vs_NumberOfLayers,
-    vs_LayerThickness,
-    vc_RootingZone,
-    vc_GroundwaterTable,
-    vc_CurrentTotalTemperatureSum ,
-    vc_TotalTemperatureSum
-  ) {
-
-    if (DEBUG) debug(arguments);
-
-    // JS! make sure it is an "int"
-    vc_RootingZone = int(vc_RootingZone);
-    vc_GroundwaterTable = int(vc_GroundwaterTable);
-
-
-    var vc_ConvectiveNUptake = 0.0; // old TRNSUM
-    var vc_DiffusiveNUptake = 0.0; // old SUMDIFF
-    var vc_ConvectiveNUptakeFromLayer = []; // old MASS
-    var vc_DiffusionCoeff = []; // old D
-    var vc_DiffusiveNUptakeFromLayer = []; // old DIFF
-
-    for (var i = 0; i < vs_NumberOfLayers; i++) {
-      vc_ConvectiveNUptakeFromLayer[i] = 0.0;
-      vc_DiffusionCoeff[i] = 0.0;
-      vc_DiffusiveNUptakeFromLayer[i] = 0.0;
-    }
-
-    var vc_ConvectiveNUptake_1 = 0.0; // old MASSUM
-    var vc_DiffusiveNUptake_1 = 0.0; // old DIFFSUM
-    var user_crops = centralParameterProvider.userCropParameters;
-    var pc_MinimumAvailableN = user_crops.pc_MinimumAvailableN; // kg m-3
-    var pc_MinimumNConcentrationRoot = user_crops.pc_MinimumNConcentrationRoot;  // kg kg-1
-    var pc_MaxCropNDemand = user_crops.pc_MaxCropNDemand;
-
-    vc_TotalNUptake = 0.0;
-    for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++){
-      vc_NUptakeFromLayer[i_Layer] = 0.0;
-    }
-
-    // if the plant has matured, no N uptake occurs!
-    if (vc_DevelopmentalStage < vc_FinalDevelopmentalStage){
-    //if ((vc_CurrentTotalTemperatureSum / vc_TotalTemperatureSum) < 1.0){
-
-      for (var i_Layer = 0; i_Layer < (min(vc_RootingZone, vc_GroundwaterTable)); i_Layer++) {
-
-        vs_SoilMineralNContent[i_Layer] = soilColumn[i_Layer].vs_SoilNO3; // [kg m-3]
-
-        // Convective N uptake per layer
-        vc_ConvectiveNUptakeFromLayer[i_Layer] = (vc_Transpiration[i_Layer] / 1000.0) * //[mm --> m]
-                 (vs_SoilMineralNContent[i_Layer] / // [kg m-3]
-                  (soilColumn[i_Layer].get_Vs_SoilMoisture_m3())) * // old WG [m3 m-3]
-                 vc_TimeStep; // -->[kg m-2]
-
-        vc_ConvectiveNUptake += vc_ConvectiveNUptakeFromLayer[i_Layer]; // [kg m-2]
-
-        /** @todo Claas: Woher kommt der Wert für vs_Tortuosity? */
-        /** @todo Claas: Prüfen ob Umstellung auf [m] die folgenden Gleichungen beeinflusst */
-        vc_DiffusionCoeff[i_Layer] = 0.000214 * (vs_Tortuosity * exp(soilColumn[i_Layer].get_Vs_SoilMoisture_m3() * 10))
-             / soilColumn[i_Layer].get_Vs_SoilMoisture_m3(); //[m2 d-1]
-
-
-        vc_DiffusiveNUptakeFromLayer[i_Layer] = (vc_DiffusionCoeff[i_Layer] * // [m2 d-1]
-                 soilColumn[i_Layer].get_Vs_SoilMoisture_m3() * // [m3 m-3]
-                 2.0 * PI * vc_RootDiameter[i_Layer] * // [m]
-                 (vs_SoilMineralNContent[i_Layer] / 1000.0 / // [kg m-3]
-                  soilColumn[i_Layer].get_Vs_SoilMoisture_m3() - 0.000014) * // [m3 m-3]
-                 sqrt(PI * vc_RootDensity[i_Layer])) * // [m m-3]
-                       vc_RootDensity[i_Layer] * 1000.0 * vc_TimeStep; // -->[kg m-2]
-             
-      if(vc_DiffusiveNUptakeFromLayer[i_Layer] < 0.0){
-        vc_DiffusiveNUptakeFromLayer[i_Layer] = 0;
-      }
-
-        vc_DiffusiveNUptake += vc_DiffusiveNUptakeFromLayer[i_Layer]; // [kg m-2]
-
-      }
-
-      for (var i_Layer = 0; i_Layer < (min(vc_RootingZone, vc_GroundwaterTable)); i_Layer++) {
-
-        if (vc_CropNDemand > 0.0) {
-
-          if (vc_ConvectiveNUptake >= vc_CropNDemand) { // convective N uptake is sufficient
-            vc_NUptakeFromLayer[i_Layer] = vc_CropNDemand * vc_ConvectiveNUptakeFromLayer[i_Layer] / vc_ConvectiveNUptake;
-          
-          } else { // N demand is not covered
-            
-            if ((vc_CropNDemand - vc_ConvectiveNUptake) < vc_DiffusiveNUptake) {
-              vc_NUptakeFromLayer[i_Layer] = (
-                vc_ConvectiveNUptakeFromLayer[i_Layer] + 
-                (
-                  (vc_CropNDemand - vc_ConvectiveNUptake) * 
-                  vc_DiffusiveNUptakeFromLayer[i_Layer] / 
-                  vc_DiffusiveNUptake
-                )
-              );
-            } else {
-              vc_NUptakeFromLayer[i_Layer] = vc_ConvectiveNUptakeFromLayer[i_Layer] + vc_DiffusiveNUptakeFromLayer[i_Layer];
-            }
-
+          if (DEBUG) {
+            logger(MSG.DEBUG, 'water content [mm m-2] in layer ' + l + ' = ' + θ[l]);
+            if (θ[l] < 0 || θ[l] > θ_sat[l])
+              throw new Error('θ < 0 || θ > θ_sat');
+            debug('E_T_demand_remaining', E_T_demand_remaining);
           }
 
-          vc_ConvectiveNUptake_1 += vc_ConvectiveNUptakeFromLayer[i_Layer];
-          vc_DiffusiveNUptake_1 += vc_DiffusiveNUptakeFromLayer[i_Layer];
-
-          if (vc_NUptakeFromLayer[i_Layer] > ((vs_SoilMineralNContent[i_Layer] * vs_LayerThickness) - pc_MinimumAvailableN))
-            vc_NUptakeFromLayer[i_Layer] = (vs_SoilMineralNContent[i_Layer] * vs_LayerThickness )- pc_MinimumAvailableN;
-
-          if (vc_NUptakeFromLayer[i_Layer] > (pc_MaxCropNDemand / 10000.0 * 0.75))
-            vc_NUptakeFromLayer[i_Layer] = (pc_MaxCropNDemand / 10000.0 * 0.75);
-
-          if (vc_NUptakeFromLayer[i_Layer] < 0.0)
-            vc_NUptakeFromLayer[i_Layer] = 0.0;
-
-        } else {
-          vc_NUptakeFromLayer[i_Layer] = 0.0;
         }
-
-        vc_TotalNUptake += vc_NUptakeFromLayer[i_Layer] * 10000.0; //[kg m-2] --> [kg ha-1]
-
-      } // for
-    } // if
-
-    vc_SumTotalNUptake += vc_TotalNUptake;
-
-    // if (vc_RootBiomass > vc_RootBiomassOld) {
-
-    //   // wurzel ist gewachsen
-    //   vc_NConcentrationRoot = ((vc_RootBiomassOld * vc_NConcentrationRoot)
-    //       + ((vc_RootBiomass - vc_RootBiomassOld) / (vc_AbovegroundBiomass
-    //       - vc_AbovegroundBiomassOld + vc_BelowgroundBiomass - vc_BelowgroundBiomassOld
-    //       + vc_RootBiomass - vc_RootBiomassOld) * vc_TotalNUptake)) / vc_RootBiomass;
-
-    //   vc_NConcentrationRoot = min(vc_NConcentrationRoot, pc_StageMaxRootNConcentration[vc_DevelopmentalStage]);
-
-
-    //   if (vc_NConcentrationRoot < pc_MinimumNConcentrationRoot) {
-    //     vc_NConcentrationRoot = pc_MinimumNConcentrationRoot;
-    //   }
-    // }
-
-    // vc_NConcentrationAbovegroundBiomass = (vc_TotalBiomassNContent + vc_TotalNUptake
-    //        - (vc_RootBiomass * vc_NConcentrationRoot))
-    //        / (vc_AbovegroundBiomass + (vc_BelowgroundBiomass / pc_ResidueNRatio));
-
-    // if ((vc_NConcentrationAbovegroundBiomass * vc_AbovegroundBiomass) < (vc_AbovegroundBiomassOld
-    //              * vc_NConcentrationAbovegroundBiomassOld)) {
-
-    //   vc_NConcentrationAbovegroundBiomass = vc_AbovegroundBiomassOld * vc_NConcentrationAbovegroundBiomassOld
-    //         / vc_AbovegroundBiomass;
-
-    //   vc_NConcentrationRoot = (vc_TotalBiomassNContent + vc_TotalNUptake
-    //            - (vc_AbovegroundBiomass * vc_NConcentrationAbovegroundBiomass)
-    //            - (vc_NConcentrationAbovegroundBiomass / pc_ResidueNRatio * vc_BelowgroundBiomass)) / vc_RootBiomass;
-    // }
-  };
-
-  var fc_GrossPrimaryProduction = function (vc_Assimilates) {
-
-    var vc_GPP = 0.0;
-    // Converting photosynthesis rate from [kg CH2O ha-1 d-1] back to
-    // [kg C ha-1 d-1]
-    vc_GPP = vc_Assimilates / 30.0 * 12.0;
-    return vc_GPP;
-    };
-
-    var fc_NetPrimaryProduction = function (vc_GrossPrimaryProduction, vc_TotalRespired) {
-    var vc_NPP = 0.0;
-    // Convert [kg CH2O ha-1 d-1] to [kg C ha-1 d-1]
-    vc_Respiration = vc_TotalRespired / 30.0 * 12.0;
-
-    vc_NPP = vc_GrossPrimaryProduction - vc_Respiration;
-    return vc_NPP;
-    };
-
-    var pc_NumberOfAbovegroundOrgans = function () {
-    var count = 0;
-    for (var i = 0, size = pc_AbovegroundOrgan.length; i < size; i++) {
-      if (pc_AbovegroundOrgan[i]) {
-        count++;
       }
     }
-    return count;
 
+    /* set water growth limiting factor */
+    for (var s = 0; s < numberOfSpecies; s++) {
+      /* update sum */
+      E_T_sum[s] = sum(E_T[s]);
+      mixture[s].vars.Ω_water = min(1, E_T_sum[s] / E_T_demand[s]);
+      if (DEBUG) {
+        debug('Ω_water', mixture[s].vars.Ω_water);
+        debug('E_T[s]', E_T[s]);
+      }
+    }
+
+  }; // transpiration
+
+
+  function cropYield(v, bmv) {
+    return null; /* TODO: implement */
   };
+
+
+  function cropFreshMatterYield(v, bmv) {
+    return null; /* TODO: implement */
+  };
+
 
   var get_OrganGrowthIncrement = function (i_Organ) {
-    return vc_OrganGrowthIncrement[i_Organ];
+    
+    if (i_Organ === ROOT)
+      return mixture.dW_dwt_root();
+
+    if (i_Organ === SHOOT)
+      return mixture.dW_dwt_shoot();
+
+    if (i_Organ === LEAF)
+      return mixture.dW_dwt_leaf();
+    
+    return 0;
+
   };
+
 
   var get_Transpiration = function (i_Layer) {
-    return vc_Transpiration[i_Layer];
+
+    return E_T.reduce(function (a, b) { return a[i_Layer] + b[i_Layer]; });
   };
+
 
   var get_OrganBiomass = function (i_Organ) {
-    return vc_OrganBiomass[i_Organ];
+
+    if (i_Organ === ROOT)
+      return mixture.dwt_root();
+
+    if (i_Organ === SHOOT)
+      return mixture.dwt_shoot();
+
+    if (i_Organ === LEAF)
+      return mixture.dwt_leaf();
+    
+    return 0;
+
   };
+
 
   var get_NUptakeFromLayer = function (i_Layer) {
-    return vc_NUptakeFromLayer[i_Layer];
+    return N_up_sum[i_Layer];
   };
+
 
   var get_AbovegroundBiomassNContent = function () {
-    return vc_AbovegroundBiomass * vc_NConcentrationAbovegroundBiomass;
+    return null; /* TODO: implement */
   };
 
-  var pc_NumberOfAbovegroundOrgans = function () {
-    var count = 0;
-    for (var i = 0, size = pc_AbovegroundOrgan.length; i < size; i++) {
-      if (pc_AbovegroundOrgan[i]) {
-        count++;
-      }
-    }
-    return count;
-  };
-
-  var _cropYield = function (v, bmv) {
-
-    if (DEBUG && v.length === 0)
-      debug('organIdsForPrimaryYield', v);
-
-    var yield = 0;
-    for (var i = 0, is = v.length; i < is; i++)
-      yield += bmv[v[i].organId - 1] * (v[i].yieldPercentage);
-    return yield;
-  };
-
-  var _cropFreshMatterYield = function (v, bmv) {
-    
-    if (DEBUG && v.length === 0)
-      debug('organIdsForPrimaryYield', v);
-
-    var freshMatterYield = 0;
-    for (var i = 0, is = v.length; i < is; i++)
-      freshMatterYield += bmv[v[i].organId - 1] * (v[i].yieldPercentage) / (v[i].yieldDryMatter);
-    return freshMatterYield;
-  };
 
   var get_PrimaryCropYield = function () {
-    // JS: yield auch nach cutting
-    if (cropParams.organIdsForPrimaryYield.length === 0)
-      return _cropYield(cropParams.organIdsForCutting, vc_OrganBiomass);
-
-    return _cropYield(cropParams.organIdsForPrimaryYield, vc_OrganBiomass);
+    return null; /* TODO: implement */
   };
+
 
   var get_SecondaryCropYield = function () {
-    return _cropYield(cropParams.organIdsForSecondaryYield, vc_OrganBiomass);
+    return null; /* TODO: implement */
   };
+
 
   var get_FreshPrimaryCropYield = function () {
-    // JS: yield auch nach cutting
-    if (cropParams.organIdsForPrimaryYield.length === 0)
-      return _cropFreshMatterYield(cropParams.organIdsForCutting, vc_OrganBiomass);
-
-    return _cropFreshMatterYield(cropParams.organIdsForPrimaryYield, vc_OrganBiomass);
+    return null; /* TODO: implement */
   };
+
 
   var get_FreshSecondaryCropYield = function () {
-    return _cropFreshMatterYield(cropParams.organIdsForSecondaryYield, vc_OrganBiomass);
+    return null; /* TODO: implement */
   };
+
 
   var get_ResidueBiomass = function (useSecondaryCropYields) {
-    return vc_TotalBiomass - get_OrganBiomass(0) - get_PrimaryCropYield()
-      - (useSecondaryCropYields ? get_SecondaryCropYield() : 0);
+    return null; /* TODO: implement */
   };
+
 
   var get_ResiduesNConcentration = function () {
-    return (vc_TotalBiomassNContent -
-         (get_OrganBiomass(0) * get_RootNConcentration())) /
-         ((get_PrimaryCropYield() / pc_ResidueNRatio) +
-         (vc_TotalBiomass - get_OrganBiomass(0) - get_PrimaryCropYield()));
-  }
+    return null; /* TODO: implement */
+  };
+
 
   var get_PrimaryYieldNConcentration = function () {
-    return (vc_TotalBiomassNContent -
-         (get_OrganBiomass(0) * get_RootNConcentration())) /
-         (get_PrimaryCropYield() + (pc_ResidueNRatio *
-         (vc_TotalBiomass - get_OrganBiomass(0) - get_PrimaryCropYield())));
-  }
+    return null; /* TODO: implement */
+  };
+
 
   var get_ResiduesNContent = function (useSecondaryCropYields)  {
-    return (get_ResidueBiomass(useSecondaryCropYields) * get_ResiduesNConcentration());
+    return null; /* TODO: implement */
   };
+
 
   var get_PrimaryYieldNContent = function () {
-    return (get_PrimaryCropYield() * get_PrimaryYieldNConcentration());
+    return null; /* TODO: implement */
   };
+
 
   var get_RawProteinConcentration = function () {
-    // Assuming an average N concentration of raw protein of 16%
-    return (get_PrimaryYieldNConcentration() * 6.25);
+    return null; /* TODO: implement */
   };
+
 
   var get_SecondaryYieldNContent = function () {
-    return (get_SecondaryCropYield() * get_ResiduesNConcentration());
+    return null; /* TODO: implement */
   };
+
 
   var get_PotNUptake = function () {
-    return vc_CropNDemand * 10000.0;
+    return null; /* TODO: implement */
   };
+
 
   var get_AutotrophicRespiration = function () {
-    return vc_TotalRespired / 30.0 * 12.0;;  // Convert [kg CH2O ha-1 d-1] to [kg C ha-1 d-1]
+    return null; /* TODO: implement */
   };
+
 
   var get_OrganSpecificTotalRespired = function (organ) {
-    // get total amount of actual biomass
-    var total_biomass = totalBiomass();
-
-    // get biomass of specific organ and calculates ratio
-    var organ_percentage = get_OrganBiomass(organ) / total_biomass;
-    return (get_AutotrophicRespiration() * organ_percentage);
+    return null; /* TODO: implement */
   };
+
 
   var get_OrganSpecificNPP = function (organ) {
-    // get total amount of actual biomass
-    var total_biomass = totalBiomass();
-
-    // get biomass of specific organ and calculates ratio
-    var organ_percentage = get_OrganBiomass(organ) / total_biomass;
-
-    return (get_NetPrimaryProduction() * organ_percentage);
+    return null; /* TODO: implement */
   };
+
 
   var applyCutting = function () {
-
-    var old_above_biomass = vc_AbovegroundBiomass;
-    var removing_biomass = 0.0;
-
-    console.log("CropGrowth::applyCutting()");;
-    var new_OrganBiomass = [];      //! old WORG
-    for (var organ=1; organ<pc_NumberOfOrgans+1; organ++) {
-
-        var cut_organ_count = cropParams.organIdsForCutting.length;
-        var biomasse = vc_OrganBiomass[organ - 1];
-        console.log("Alte Biomasse: " + biomasse  + "\tOrgan: " + organ);
-        for (var cut_organ=0; cut_organ<cut_organ_count; cut_organ++) {
-
-            var yc = new YieldComponent(cropParams.organIdsForCutting[cut_organ]);
-
-            if (organ == yc.organId) {
-                console.log("YC yc.yieldPercentage: " + yc.yieldPercentage);
-                biomasse = vc_OrganBiomass[organ - 1] * ((1-yc.yieldPercentage));
-                vc_AbovegroundBiomass -= biomasse;
-
-                removing_biomass +=biomasse;
-            }
-        }
-        new_OrganBiomass.push(biomasse);
-        console.log("Neue Biomasse: " + biomasse);
-    }
-
-    vc_TotalBiomassNContent = (removing_biomass / old_above_biomass) * vc_TotalBiomassNContent;
-
-
-    vc_OrganBiomass = new Float64Array(new_OrganBiomass);
-
-    // reset stage and temperature some after cutting
-    var stage_after_cutting = cropParams.pc_StageAfterCut-1;
-    for (var stage=stage_after_cutting; stage<pc_NumberOfDevelopmentalStages; stage++) {
-      vc_CurrentTemperatureSum[stage] = 0.0;
-    }
-    vc_CurrentTotalTemperatureSum = 0.0;
-    vc_DevelopmentalStage = stage_after_cutting;
-    cutting_delay_days = cropParams.pc_CuttingDelayDays;
-    pc_MaxAssimilationRate  = pc_MaxAssimilationRate * 0.9;
-
-    // JS: Fehler in MONICA C++? LAI bleibt nach Schnitt unverändert
-    // Reset leaf area index
-    vc_LeafAreaIndex = vc_OrganBiomass[1] * pc_SpecificLeafArea[vc_DevelopmentalStage]; // [ha ha-1]  
-
+    return null; /* TODO: implement */ 
   };
+
 
   var accumulateEvapotranspiration = function (ETa) { 
     vc_accumulatedETa += ETa;
   };
 
+
   var get_RootNConcentration = function () {
-    return vc_NConcentrationRoot;
+    return null; /* TODO: implement */ 
   };
 
-  /**
-  * Returns the depth of the maximum active and effective root.
-  * [m]
-  */
+
   var getEffectiveRootingDepth = function () {
-    for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
-      if (vc_RootEffectivity[i_Layer] == 0.0) {
-          return (i_Layer+1) / 10.0;
-      } // if
-    } // for
-    return (vs_NumberOfLayers + 1) / 10.0;
+    return mixture.d_mx();
   };
+
 
   var get_CropName = function () {
-    return pc_CropName;
+    return 'grassland';
   };
+
 
   var get_GrossPhotosynthesisRate = function () {
-    return vc_GrossPhotosynthesis_mol;
+    return null; /* TODO: implement */ 
   };
+
 
   var get_GrossPhotosynthesisHaRate = function () {
-    return vc_GrossPhotosynthesis;
+    return null; /* TODO: implement */ 
   };
+
 
   var get_AssimilationRate = function () {
-    return vc_AssimilationRate;
+    return null; /* TODO: implement */ 
   };
+
 
   var get_Assimilates = function () {
-    return vc_Assimilates;
+    return null; /* TODO: implement */ 
   };
+
 
   var get_NetMaintenanceRespiration = function () {
-    return vc_NetMaintenanceRespiration;
+    return null; /* TODO: implement */ 
   };
+
 
   var get_MaintenanceRespirationAS = function () {
-    return vc_MaintenanceRespirationAS;
+    return null; /* TODO: implement */ 
   };
+
 
   var get_GrowthRespirationAS = function () {
-    return vc_GrowthRespirationAS;
+    return null; /* TODO: implement */ 
   };
+
 
   var get_VernalisationFactor = function () {
-    return vc_VernalisationFactor;
+    return 1;
   };
+
 
   var get_DaylengthFactor = function () {
-    return vc_DaylengthFactor;
+    return 1;
   };
+
 
   var get_NetPhotosynthesis = function () {
-    return vc_NetPhotosynthesis;
+    return null; /* TODO: implement */ 
   };
+
 
   var get_ReferenceEvapotranspiration = function () {
-    return vc_ReferenceEvapotranspiration;
+    return null; /* TODO: implement */ 
   };
+
 
   var get_RemainingEvapotranspiration = function () {
-    return vc_RemainingEvapotranspiration;
+    return null; /* TODO: implement */ 
   };
+
 
   var get_EvaporatedFromIntercept = function () {
-    return vc_EvaporatedFromIntercept;
+    return null; /* TODO: implement */ 
   };
+
 
   var get_NetPrecipitation = function () {
-    return vc_NetPrecipitation;
+    return null; /* TODO: implement */ 
   };
+
 
   var get_LeafAreaIndex = function () {
-    return vc_LeafAreaIndex;
+    return mixture.L_tot();
   };
+
 
   var get_CropHeight = function () {
-    return vc_CropHeight;
+    return mixture.h_mx();
   };
+
 
   var get_RootingDepth = function () {
-    return vc_RootingDepth;
+    return mixture.d_mx();
   };
+
 
   var get_SoilCoverage = function () {
-    return vc_SoilCoverage;
+    return f_g;
   };
+
 
   var get_KcFactor = function () {
-    return vc_KcFactor;
+    return 0;
   };
+
 
   var get_StomataResistance = function () {
-    return vc_StomataResistance;
+    return null; /* TODO: implement */
   };
+
 
   var get_PotentialTranspiration = function () {
-    return vc_PotentialTranspiration;
+    return null; /* TODO: implement */
   };
+
 
   var get_ActualTranspiration = function () {
-    return vc_ActualTranspiration;
+    return null; /* TODO: implement */
   };
+
 
   var get_TranspirationDeficit = function () {
-    return vc_TranspirationDeficit;
+    return null; /* TODO: implement */
   };
+
 
   var get_OxygenDeficit = function () {
-    return vc_OxygenDeficit;
+    return null; /* TODO: implement */
   };
+
 
   var get_CropNRedux = function () {
-    return vc_CropNRedux;
+    return null; /* TODO: implement */
   };
+
 
   var get_HeatStressRedux = function () {
-    return vc_CropHeatRedux;
+    return null; /* TODO: implement */
   };
+
 
   var get_CurrentTemperatureSum = function () {
-    return vc_CurrentTotalTemperatureSum;
+    return null; /* TODO: implement */
   };
+
 
   var get_DevelopmentalStage = function () {
-    return vc_DevelopmentalStage;
+    return null; /* TODO: implement */
   };
+
 
   var get_RelativeTotalDevelopment = function () {
-    return vc_RelativeTotalDevelopment;
+    return null; /* TODO: implement */
   };
+
 
   var get_AbovegroundBiomass = function () {
-    return vc_AbovegroundBiomass;
+    return mixture.dwt_shoot();
   };
+
 
   var get_TotalBiomassNContent = function () {
-    return vc_TotalBiomassNContent;
+    return null; /* TODO: implement */
   };
+
 
   var get_TargetNConcentration = function () {
-    return vc_TargetNConcentration;
+    return null; /* TODO: implement */
   };
+
 
   var get_CriticalNConcentration = function () {
-    return vc_CriticalNConcentration;
+    return null; /* TODO: implement */
   };
+
 
   var get_AbovegroundBiomassNConcentration = function () {
-    return vc_NConcentrationAbovegroundBiomass;
+    return null; /* TODO: implement */
   };
+
 
   var get_HeatSumIrrigationStart = function () {
-    return cropParams.pc_HeatSumIrrigationStart;
+    return null; /* TODO: implement */
   };
+
 
   var get_HeatSumIrrigationEnd = function () {
-    return cropParams.pc_HeatSumIrrigationEnd
+    return null; /* TODO: implement */
   };
+
 
   var get_SumTotalNUptake = function () {
-    return vc_SumTotalNUptake;
+    return null; /* TODO: implement */
   };
+
 
   var get_ActNUptake = function () {
-    return vc_TotalNUptake;
+    return sum(N_up_sum);
   };
+
 
   var get_GrossPrimaryProduction = function () {
-    return vc_GrossPrimaryProduction;
+    return null; /* TODO: implement */
   };
+
 
   var get_NetPrimaryProduction = function () {
-    return vc_NetPrimaryProduction;
+    return null; /* TODO: implement */
   };
+
 
   var get_AccumulatedETa = function () {
-    return vc_accumulatedETa;
+    return null; /* TODO: implement */
   };
 
-  var isDying = function () {
-    return dyingOut;
+
+  var get_isDying = function () {
+    return false;
   };
+
 
   var get_NumberOfOrgans = function () { 
-    return pc_NumberOfOrgans; 
+    return 3; 
   };
 
-  var totalBiomass = function () { 
-    return vc_TotalBiomass; 
+
+  var get_totalBiomass = function () { 
+    return mixture.dwt_shoot() + mixture.dwt_root(); 
   };
+
 
   return {
-      accumulateEvapotranspiration: accumulateEvapotranspiration
-    , applyCutting: applyCutting
-    , fc_CropDevelopmentalStage: fc_CropDevelopmentalStage
-    , fc_CropDryMatter: fc_CropDryMatter
-    , fc_CropGreenArea: fc_CropGreenArea
-    , fc_CropNUptake: fc_CropNUptake
-    , fc_CropNitrogen: fc_CropNitrogen
-    , fc_CropPhotosynthesis: fc_CropPhotosynthesis
-    , fc_CropSize: fc_CropSize
-    , fc_CropWaterUptake: fc_CropWaterUptake
-    , fc_DaylengthFactor: fc_DaylengthFactor
-    , fc_DroughtImpactOnFertility: fc_DroughtImpactOnFertility
-    , fc_GrossPrimaryProduction: fc_GrossPrimaryProduction
-    , fc_HeatStressImpact: fc_HeatStressImpact
-    , fc_KcFactor: fc_KcFactor
-    , fc_NetPrimaryProduction: fc_NetPrimaryProduction
-    , fc_OxygenDeficiency: fc_OxygenDeficiency
-    , fc_Radiation: fc_Radiation
-    , fc_ReferenceEvapotranspiration: fc_ReferenceEvapotranspiration
-    , fc_SoilCoverage: fc_SoilCoverage
-    , fc_VernalisationFactor: fc_VernalisationFactor
+      step: step
+    , accumulateEvapotranspiration: accumulateEvapotranspiration
+    , isDying: get_isDying
+    , totalBiomass: get_totalBiomass
     , getEffectiveRootingDepth: getEffectiveRootingDepth
     , get_AbovegroundBiomass: get_AbovegroundBiomass
     , get_AbovegroundBiomassNConcentration: get_AbovegroundBiomassNConcentration
-    , get_AbovegroundBiomassNContent: get_AbovegroundBiomassNContent
     , get_AbovegroundBiomassNContent: get_AbovegroundBiomassNContent
     , get_AccumulatedETa: get_AccumulatedETa
     , get_ActNUptake: get_ActNUptake
@@ -3121,15 +3018,12 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, grassland) { // takes a
     , get_LeafAreaIndex: get_LeafAreaIndex
     , get_MaintenanceRespirationAS: get_MaintenanceRespirationAS
     , get_NUptakeFromLayer: get_NUptakeFromLayer
-    , get_NUptakeFromLayer: get_NUptakeFromLayer
     , get_NetMaintenanceRespiration: get_NetMaintenanceRespiration
     , get_NetPhotosynthesis: get_NetPhotosynthesis
     , get_NetPrecipitation: get_NetPrecipitation
     , get_NetPrimaryProduction: get_NetPrimaryProduction
     , get_NumberOfOrgans: get_NumberOfOrgans
     , get_OrganBiomass: get_OrganBiomass
-    , get_OrganBiomass: get_OrganBiomass
-    , get_OrganGrowthIncrement: get_OrganGrowthIncrement
     , get_OrganGrowthIncrement: get_OrganGrowthIncrement
     , get_OrganSpecificNPP: get_OrganSpecificNPP
     , get_OrganSpecificTotalRespired: get_OrganSpecificTotalRespired
@@ -3147,7 +3041,6 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, grassland) { // takes a
     , get_ResiduesNConcentration: get_ResiduesNConcentration
     , get_ResiduesNContent: get_ResiduesNContent
     , get_RootNConcentration: get_RootNConcentration
-    , get_RootNConcentration: get_RootNConcentration
     , get_RootingDepth: get_RootingDepth
     , get_SecondaryCropYield: get_SecondaryCropYield
     , get_SecondaryYieldNContent: get_SecondaryYieldNContent
@@ -3157,14 +3050,8 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, grassland) { // takes a
     , get_TargetNConcentration: get_TargetNConcentration
     , get_TotalBiomassNContent: get_TotalBiomassNContent
     , get_Transpiration: get_Transpiration
-    , get_Transpiration: get_Transpiration
     , get_TranspirationDeficit: get_TranspirationDeficit
     , get_VernalisationFactor: get_VernalisationFactor
-    , isDying: isDying
-    , pc_NumberOfAbovegroundOrgans: pc_NumberOfAbovegroundOrgans
-    , step: calculateCropGrowthStep
-    , totalBiomass: totalBiomass
-  }
+  };
 
 };
-

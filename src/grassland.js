@@ -47,8 +47,8 @@ var pow = Math.pow
   , floor = Math.floor
   ;
 
-/* C_amb [μmol (CO2) mol-1]  ambient CO2 concentration */
-var C_amb = C = 380 // TODO: move somewhere else
+/* C_amb [μmol (CO2) mol-1]  reference ambient CO2 concentration */
+var C_amb = 380;
 
 /* Y growth efficiencies. Thornley JHM & Johnson IR (2000), p. 351f */
 var Y_cellulose =      0.95  // 1 - (30 / 44) * (0.018 / 0.226)
@@ -776,6 +776,18 @@ grassland.Species = function (cfg) {
 
   };
 
+  this.dW_dwt_root = function () {
+
+    var dSC = that.vars.dSC
+      , dNC = that.vars.dNC
+      , dPN = that.vars.dPN
+      ;
+
+      /* convert stem kg C to kg d.wt incl. ashes TODO: ashes */
+    return dSC.r / fC_sc + dNC.r / fC_nc + dPN.r / fC_pn; 
+
+  };
+
 
   this.dW_dwt_shoot = function () {
 
@@ -900,7 +912,7 @@ grassland.Species = function (cfg) {
   };
 
 
-  /* (3.83) L [m2 (leaf) m-2 (ground) leaf area (C02 dependence not included (3.84)) */
+  /* (3.83) L [m2 (leaf) m-2 (ground) leaf area (CO2 dependence not included (3.84)) */
   this.L = function () {
 
     return that.cons.σ * that.dwt_live_leaf();
@@ -1287,7 +1299,7 @@ grassland.Growth = (function () {
       var dwt_live_shoot = 0;
 
       for (var p = 0, ps = this.length; p < ps; p++)
-        dwt_live_shoot += this[p].dwt_live_leaf() + this[p].dwt_live_stem()
+        dwt_live_shoot += this[p].dwt_live_leaf() + this[p].dwt_live_stem();
 
       return dwt_live_shoot;
 
@@ -1316,7 +1328,7 @@ grassland.Growth = (function () {
       var dwt_leaf = 0;
 
       for (var p = 0, ps = this.length; p < ps; p++)
-        dwt_leaf += this[p].dwt_leaf()
+        dwt_leaf += this[p].dwt_leaf();
 
       return dwt_leaf;
 
@@ -1329,22 +1341,48 @@ grassland.Growth = (function () {
       var dwt_stem = 0;
 
       for (var p = 0, ps = this.length; p < ps; p++)
-        dwt_stem += this[p].dwt_stem()
+        dwt_stem += this[p].dwt_stem();
 
       return dwt_stem;
 
     };
 
 
-    /* total root d.wt [kg m-2] */
-    mixture.dwt_root = function () {
+    /* total leaf daily growth d.wt [kg m-2] */
+    mixture.dW_dwt_leaf = function () {
 
-      var dwt_root = 0;
+      var dW_dwt_leaf = 0;
 
       for (var p = 0, ps = this.length; p < ps; p++)
-        dwt_root += this[p].dwt_root()
+        dW_dwt_leaf += this[p].dW_dwt_leaf();
 
-      return dwt_root;
+      return dW_dwt_leaf;
+
+    };
+
+
+    /* total stem daily growth d.wt [kg m-2] */
+    mixture.dW_dwt_stem = function () {
+
+      var dW_dwt_stem = 0;
+
+      for (var p = 0, ps = this.length; p < ps; p++)
+        dW_dwt_stem += this[p].dW_dwt_stem();
+
+      return dW_dwt_stem;
+
+    };
+
+
+    /* total root daily growth d.wt [kg m-2] */
+    mixture.dW_dwt_root = function () {
+
+      var dW_dwt_root = 0;
+
+      for (var p = 0, ps = this.length; p < ps; p++)
+        dW_dwt_root += this[p].dW_dwt_root();
+
+      return dW_dwt_root;
 
     };
 
@@ -1502,11 +1540,12 @@ grassland.Growth = (function () {
     N_up        [kg m-2]        array, available N for uptake in each soil layer
     E_T         [mm]            array; actual transpiration in each soil layer 
     E_T_demand  [mm]            potential transpiration for mixture
+    CO2         [μmol mol-1]    CO2 concentration (not C_amb!)
   */
 
-  var step = function (T, T_mn, T_mx, PPF, τ, f_s, N_up, ET, E_T_demand) {
+  var step = function (T, T_mn, T_mx, PPF, τ, f_s, N_up, ET, E_T_demand, CO2) {
 
-    grossPhotosynthesis(T, T_mn, T_mx, PPF, τ, C /* ambient CO2 */, f_s);
+    grossPhotosynthesis(T, T_mn, T_mx, PPF, τ, CO2, f_s);
 
     /* calculate N and water availability and N and water stress for each species */
     var N_up_p = [];
@@ -1560,14 +1599,14 @@ grassland.Growth = (function () {
     T_mx          [C°]              maximum daily temperature
     PPF           [μmol m-2 d-1]    photosynthetic photon flux
     τ             [s]               daylength
-    C             [μmol mol-1]      CO2 concentration (not C_amb!)
+    CO2           [μmol mol-1]      CO2 concentration (not C_amb!)
     f_s           [-]               fraction direct solar radiation
 
     TODO: 
       - influence of temp. extremes on photosynthesis (3.58 ff)
   */  
 
-  var grossPhotosynthesis = function (T, T_mn, T_mx, PPF, τ, C, f_s) {
+  var grossPhotosynthesis = function (T, T_mn, T_mx, PPF, τ, CO2, f_s) {
 
     console.log('grossPhotosynthesis');
 
@@ -1611,7 +1650,7 @@ grassland.Growth = (function () {
         , Ω_water = vars.Ω_water
         ;
 
-      /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol C02 to kg C (0.012) Ω_water missing in Johnson (2013) */
+      /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) Ω_water missing in Johnson (2013) */
       vars.P_g_day = 0.012 * 1e-6 * (τ / 2) * (P_g_mx[p] + P_g_mn[p]) * Ω_water;
 
     } 
@@ -1664,17 +1703,17 @@ grassland.Growth = (function () {
     /*
       (1.16) CO2 response function
 
-      C [μmol mol-1]  ambient CO2 concentration
+      CO2 [μmol mol-1]  ambient CO2 concentration
     */
 
-    function f_C(C, λ, f_C_m) {
+    function f_C(CO2, λ, f_C_m) {
 
       var f_C = 0
         , Φ = 0.8
         , β = 0.0032
         ;
 
-      f_C = 1 / (2 * Φ) * (β * C + f_C_m - sqrt(pow(β * C + f_C_m, 2) - 4 * Φ * β * f_C_m * C));
+      f_C = 1 / (2 * Φ) * (β * CO2 + f_C_m - sqrt(pow(β * CO2 + f_C_m, 2) - 4 * Φ * β * f_C_m * CO2));
 
       return f_C;
 
@@ -1704,17 +1743,17 @@ grassland.Growth = (function () {
     /*
       (3.16 ff) Combiend T & CO2 response function
 
-      T [°C]
-      C [μmol mol-1]  ambient CO2 concentration
+      T   [°C]
+      CO2 [μmol mol-1]  ambient CO2 concentration
     */
 
-    function f_Pm_TC(T, C, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) {
+    function f_Pm_TC(T, CO2, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) {
 
       // console.log(arguments);
 
       var f_Pm_TC = 0
         , q = 2 // TODO: value? (vgl. S. 12, Johnson 2013)
-        , T_opt_Pm = T_opt_Pm_amb + γ_Pm * (f_C(C, λ, f_C_m) - 1)
+        , T_opt_Pm = T_opt_Pm_amb + γ_Pm * (f_C(CO2, λ, f_C_m) - 1)
         , T_mx = ((1 + q) * T_opt_Pm - T_mn) / q
         ;
 
@@ -1738,17 +1777,17 @@ grassland.Growth = (function () {
     /*
       (3.25 ff) Combiend T & CO2 response function
 
-      T [°C]
-      C [μmol mol-1]  ambient CO2 concentration
+      T   [°C]
+      CO2 [μmol mol-1]  ambient CO2 concentration
     */
 
-    function f_α_TC(T, C, λ_α, γ_α, λ, f_C_m) {
+    function f_α_TC(T, CO2, λ_α, γ_α, λ, f_C_m) {
 
       var f_α_TC = 0
         , T_opt_α = 15 + γ_α * (f_C(C, λ, f_C_m) - 1)
         ;
 
-      f_α_TC = (T < T_opt_α) ? 1 : (1 - λ_α * (C_amb / C) * (T - T_opt_α));  
+      f_α_TC = (T < T_opt_α) ? 1 : (1 - λ_α * (C_amb / CO2) * (T - T_opt_α));  
 
       return f_α_TC; 
 
@@ -1846,12 +1885,12 @@ grassland.Growth = (function () {
 
         /* (3.23) Photosynthetic efficiency, α */
         if (isC4)
-          α = α_amb_15 * f_C(C, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
+          α = α_amb_15 * f_C(CO2, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
         else
-          α = α_amb_15 * f_C(C, λ, f_C_m) * f_α_TC(T, C, λ_α, γ_α, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
+          α = α_amb_15 * f_C(CO2, λ, f_C_m) * f_α_TC(T, CO2, λ_α, γ_α, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
 
         /* (3.8) Light saturated photosynthesis, P_m. TODO: why not related to light extiction (exp(-kl)) any more? */
-        P_m = P_m_ref * f_C(C, λ, f_C_m) * f_Pm_TC(T, C, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, isC4, F_C);
+        P_m = P_m_ref * f_C(CO2, λ, f_C_m) * f_Pm_TC(T, CO2, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, isC4, F_C);
 
         /*  
             numerical integration:

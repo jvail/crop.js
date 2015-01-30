@@ -456,6 +456,9 @@ var Model = function (env) {
       , wind =  _dataAccessor.dataForTimestep(WEATHER.WIND, stepNo)
       , precip =  _dataAccessor.dataForTimestep(WEATHER.PRECIP, stepNo)
       , vw_WindSpeedHeight = centralParameterProvider.userEnvironmentParameters.p_WindSpeedHeight
+      , f_s = _dataAccessor.dataForTimestep(WEATHER.F_DIRECTRAD, stepNo)
+      , daylength = _dataAccessor.dataForTimestep(WEATHER.DAYLENGTH, stepNo)
+      , PPF = _dataAccessor.dataForTimestep(WEATHER.PPF, stepNo)
       ;
 
     p_daysWithCrop++;
@@ -473,7 +476,10 @@ var Model = function (env) {
       wind,
       vw_WindSpeedHeight,
       that.vw_AtmosphericCO2Concentration,
-      precip
+      precip,
+      f_s,
+      daylength,
+      PPF
     );
 
     if (_env.useAutomaticIrrigation) {

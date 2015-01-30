@@ -18,7 +18,7 @@ var MSG = {
 
 var ROOT = 0
   , LEAF = 1
-  , SHOOT = 2
+  , SHOOT = 2 /* seems not correct: means stem */
   , STORAGE_ORGAN = 3
   ;
 
@@ -49,9 +49,13 @@ var abs    = Math.abs
     }
   , sin    = Math.sin
   , sqrt   = Math.sqrt
+  , sum    = function (array) {
+      return array.reduce(0, function (a, b) { return a + b; }; );
+    }
   , tan    = Math.tan
   , PI     = Math.PI
   , MS_PER_DAY = 1000 * 60 * 60 * 24
+  , SQM_PER_HA = 10000
   ;
 
 var ORGANIC_CONSTANTS = {
@@ -95,9 +99,13 @@ Date.prototype.isLeapYear = function () {
 /* log function */
 var logger = function (type, msg) {
 
+
   if (ENVIRONMENT_IS_WORKER) {
 
     if (!(type === MSG.INFO && !VERBOSE)) {
+
+      if (typeof msg === 'object')
+        msg = JSON.stringify(msg, null, 2);
 
       switch(type) {
         case MSG.INFO:
@@ -121,6 +129,9 @@ var logger = function (type, msg) {
   } else {
 
     if (!(type === MSG.INFO && !VERBOSE)) {
+
+      if (typeof msg === 'object')
+        msg = JSON.stringify(msg, null, 2);
 
       switch(type) {
         case MSG.INFO:

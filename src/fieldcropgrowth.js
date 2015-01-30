@@ -2464,18 +2464,22 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     // [kg C ha-1 d-1]
     vc_GPP = vc_Assimilates / 30.0 * 12.0;
     return vc_GPP;
-    };
+    
+  };
 
-    var fc_NetPrimaryProduction = function (vc_GrossPrimaryProduction, vc_TotalRespired) {
+  var fc_NetPrimaryProduction = function (vc_GrossPrimaryProduction, vc_TotalRespired) {
+  
     var vc_NPP = 0.0;
     // Convert [kg CH2O ha-1 d-1] to [kg C ha-1 d-1]
     vc_Respiration = vc_TotalRespired / 30.0 * 12.0;
 
     vc_NPP = vc_GrossPrimaryProduction - vc_Respiration;
     return vc_NPP;
-    };
+  
+  };
 
-    var pc_NumberOfAbovegroundOrgans = function () {
+  var pc_NumberOfAbovegroundOrgans = function () {
+  
     var count = 0;
     for (var i = 0, size = pc_AbovegroundOrgan.length; i < size; i++) {
       if (pc_AbovegroundOrgan[i]) {
@@ -2504,16 +2508,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
 
   var get_AbovegroundBiomassNContent = function () {
     return vc_AbovegroundBiomass * vc_NConcentrationAbovegroundBiomass;
-  };
-
-  var pc_NumberOfAbovegroundOrgans = function () {
-    var count = 0;
-    for (var i = 0, size = pc_AbovegroundOrgan.length; i < size; i++) {
-      if (pc_AbovegroundOrgan[i]) {
-        count++;
-      }
-    }
-    return count;
   };
 
   var _cropYield = function (v, bmv) {
