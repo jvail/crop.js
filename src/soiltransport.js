@@ -50,6 +50,13 @@ var SoilTransport = function (sc, sps, cpp) {
 
       vq_LayerThickness[i_Layer] = soilColumn[0].vs_LayerThickness;
       vc_NUptakeFromLayer[i_Layer] = crop ? crop.get_NUptakeFromLayer(i_Layer) : 0;
+
+      if (DEBUG) {
+        debug('vc_NUptakeFromLayer[i_Layer]', vc_NUptakeFromLayer[i_Layer]);
+        debug('vq_SoilNO3[i_Layer]', vq_SoilNO3[i_Layer]);
+      }
+
+
       if (i_Layer == (vs_NumberOfLayers - 1)){
         vq_PercolationRate[i_Layer] = soilColumn.vs_FluxAtLowerBoundary ; //[mm]
       } else {

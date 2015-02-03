@@ -95,7 +95,7 @@ var Model = function (env) {
         /* if application date was not valid, we're (probably) at the end
           of the application list of this production process
           -> go to the next one in the crop rotation */
-        if (!nextProductionProcessApplicationDate.isValid()) {
+        if (!nextProductionProcessApplicationDate.isValid() && _currentCrop.name() != 'grassland') { // TODO: _currentCrop.name() != 'grassland' just a work around
 
           /* to count the applied fertiliser for the next production process */
           resetFertiliserCounter();
@@ -116,7 +116,8 @@ var Model = function (env) {
           }
 
         } else {
-          logger(MSG.INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+          if (nextProductionProcessApplicationDate.isValid())
+            logger(MSG.INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
         }
 
       }
@@ -169,7 +170,7 @@ var Model = function (env) {
     p_accuHeatStress = 0.0;
     p_accuOxygenStress = 0.0;
 
-    if(_currentCrop.isValid()) {
+    if(_currentCrop.isValid() && _currentCrop.name() != 'grassland') {
 
       cps = _currentCrop.cropParameters();
       that._currentCropGrowth = new FieldCropGrowth(_soilColumn, _env.general, cps, _env.site, _env.centralParameterProvider);
@@ -197,6 +198,18 @@ var Model = function (env) {
         addDailySumFertiliser(fert_amount);
       
       }
+
+    } else if (_currentCrop.isValid() && _currentCrop.name() === 'grassland') {
+
+      cps = {};
+      that._currentCropGrowth = new GrasslandGrowth(_soilColumn, _env.general, cps, _env.site, _env.centralParameterProvider, _currentCrop.species) ;
+
+      _soilTransport.put_Crop(that._currentCropGrowth);
+      _soilColumn.put_Crop(that._currentCropGrowth);
+      _soilMoisture.put_Crop(that._currentCropGrowth);
+      _soilOrganic.put_Crop(that._currentCropGrowth);
+
+      logger(MSG.INFO, 'seeding crop: ' + crop.name());
 
     }
 
@@ -435,6 +448,8 @@ var Model = function (env) {
     _soilOrganic.step(tavg, precip, wind);
     _soilTransport.step();
 
+    debug('End general step: ' + stepNo + ' / ' + julday);
+
   };
 
   /* Simulating crop growth for one time step. */
@@ -457,8 +472,9 @@ var Model = function (env) {
       , precip =  _dataAccessor.dataForTimestep(WEATHER.PRECIP, stepNo)
       , vw_WindSpeedHeight = centralParameterProvider.userEnvironmentParameters.p_WindSpeedHeight
       , f_s = _dataAccessor.dataForTimestep(WEATHER.F_DIRECTRAD, stepNo)
-      , daylength = _dataAccessor.dataForTimestep(WEATHER.DAYLENGTH, stepNo)
+      , daylength = _dataAccessor.dataForTimestep(WEATHER.DAYLENGTH, stepNo) * 60 * 60 /* to seconds */
       , PPF = _dataAccessor.dataForTimestep(WEATHER.PPF, stepNo)
+      , R_a = _dataAccessor.dataForTimestep(WEATHER.EXRAD, stepNo)
       ;
 
     p_daysWithCrop++;
@@ -479,7 +495,8 @@ var Model = function (env) {
       precip,
       f_s,
       daylength,
-      PPF
+      PPF,
+      R_a
     );
 
     if (_env.useAutomaticIrrigation) {

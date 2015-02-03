@@ -105,10 +105,9 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     ) 
   {
 
-    var vc_NetPrimaryProduction = 0.0;
-    vc_NetPrimaryProduction = crop ? crop.get_NetPrimaryProduction() : 0;
+    var vc_NetPrimaryProduction = crop ? crop.get_NetPrimaryProduction() : 0;
 
-    debug("vc_NetPrimaryProduction: " + vc_NetPrimaryProduction);
+    debug('vc_NetPrimaryProduction', vc_NetPrimaryProduction);
 
     //fo_OM_Input(vo_AOM_Addition);
     fo_Urea(vw_Precipitation + irrigationAmount);
@@ -283,7 +282,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     soilColumn[0].vs_SOM_Fast += SOM_FastInput;
 
     // JS!
-    if (soilColumn[0].vs_SoilNO3 < 0 || soilColumn[0].vs_SoilNH4 < 0) {
+    if (DEBUG && (soilColumn[0].vs_SoilNO3 < 0 || soilColumn[0].vs_SoilNH4 < 0)) {
       debug('vo_AddedOrganicCarbonAmount', vo_AddedOrganicCarbonAmount);
       debug('vo_AOM_NO3Content', vo_AOM_NO3Content);
       debug('vo_PartAOM_to_AOM_Slow', vo_PartAOM_to_AOM_Slow);
@@ -1343,7 +1342,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
   var fo_MoistOnHydrolysis = function (d_SoilMoisture_pF) {
 
-    if (DEBUG) debug(arguments);
+    if (DEBUG) debug('fo_MoistOnHydrolysis', arguments);
 
     var fo_MoistOnHydrolysis=0.0;
 

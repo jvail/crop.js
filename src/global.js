@@ -41,7 +41,8 @@ var abs    = Math.abs
   , min    = Math.min
   , pow    = Math.pow
   , round  = Math.round
-  , fixed  = function (n, x) { 
+  , fixed  = function (n, x) {
+      if (x === null) return x; 
       return x.toFixed(n);
     }
   , roundN = function (n, x) { 
@@ -50,7 +51,7 @@ var abs    = Math.abs
   , sin    = Math.sin
   , sqrt   = Math.sqrt
   , sum    = function (array) {
-      return array.reduce(0, function (a, b) { return a + b; }; );
+      return array.reduce(function (a, b) { return a + b; } );
     }
   , tan    = Math.tan
   , PI     = Math.PI
@@ -82,8 +83,9 @@ var WEATHER = {
   , PPF: 8            /* [μmol m-2 d-1] photosynthetic photon flux. required by grassland model */
   , DAYLENGTH: 9      /* [seconds]      daylength. required by grassland model */
   , F_DIRECTRAD: 10   /* [h h-1]        fraction direct solar radiation. required by grassland model */
-  , ISODATESTRING: 11          /* ISO date string */
+  , ISODATESTRING: 11 /* ISO date string */
   , DOY: 12           /* day of year */
+  , EXRAD: 13         /* [MJ m-2] extraterrestrial radiation */
 };
 
 // TODO: do not change JS types. Instead create own type.

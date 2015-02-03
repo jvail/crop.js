@@ -10,12 +10,13 @@
     , tmax        [°C]            array, daily maximum temperature
     , tavg        [°C]            array, daily average temperature
     , globrad     [MJ m-2]        array, global radiation
+    , exrad       [MJ m-2]        array, extraterrestrial radiation
     , wind        [m s-1]         array, wind speed
     , precip      [mm]            array, rainfall
     , sunhours    [h]             array, sunshine hours, optional (use empty array if not available)
     , relhumid    [%]             array, relative humidity, optional (use empty array if not available)
     , ppf         [μmol m-2 d-1]  array, photosynthetic photon flux. required by grassland model
-    , daylength   [seconds]       array, daylength. required by grassland model
+    , daylength   [h]             array, daylength. required by grassland model
     , f_directrad [h h-1]         array, fraction direct solar radiation. required by grassland model
     , date        [date]          array, ISO date strings
     , doy         [#]             array, no. of day
@@ -41,8 +42,8 @@ var Configuration = function (weather, doDebug, isVerbose) {
     var generalParameters = new GeneralParameters();
 
     /* sim */
-    var startDate = new Date(Date.parse(simInput.time.startDate));
-    var endDate = new Date(Date.parse(simInput.time.endDate));
+    var startDate = new Date(simInput.time.startDate);
+    var endDate = new Date(simInput.time.endDate);
     var startYear = startDate.getFullYear();
     var endYear = endDate.getFullYear();
 
@@ -100,7 +101,7 @@ var Configuration = function (weather, doDebug, isVerbose) {
 
     /* crops */
     var cropRotation = [];
-    if (!createProcesses(cropRotation, prodInput.crops)) {
+    if (!createProcesses(cropRotation, prodInput.crops, startDate)) {
       logger(MSG.ERROR, 'Error fetching crop data.');
       return;
     }
@@ -237,7 +238,7 @@ var Configuration = function (weather, doDebug, isVerbose) {
   }
 
 
-  function createProcesses(cropRotation, crops) {
+  function createProcesses(cropRotation, crops, startDate) {
     
     var ok = true;
     var cs = crops.length;
@@ -251,7 +252,10 @@ var Configuration = function (weather, doDebug, isVerbose) {
       var isPermanentGrassland = (isGrassland && cs === 1);
 
       if (isGrassland) {
-        var sds = getValue(crop, 'sowingDates', []);
+        /* we can not start at day 0 and therefor start at day 0 + 2 since model's general step is executed *after* cropStep */
+        var sd_ = new Date(startDate.toISOString());
+        sd_.setDate(sd_.getDate() + 2);
+        var sd = getValue(crop, 'sowingDate', sd_);
         var hds = getValue(crop, 'harvestDates', []);
       } else {
         var sd = new Date(Date.parse(crop.sowingDate));
@@ -268,21 +272,8 @@ var Configuration = function (weather, doDebug, isVerbose) {
 
       if (isGrassland) {
 
-        var grass = new Grass(sds, hds);
-
-        for (var s = 0, ss = crop.species.length; s < ss; s++) {
-
-          grass.species.push(
-            new grassland.Species({
-              type: crop.species[s].type,
-              constants: crop.species[s].constants
-            })
-          );
-          grass.DM.push(crop.species[s].dryMatter); 
-        
-        }
-
-        cropRotation[c] = new ProductionProcess((isPermanentGrassland ? 'perm. grassland' : 'grassland'), grass);
+        var grass = new Grass(sd, hds, crop.species);
+        cropRotation[c] = new ProductionProcess('grassland', grass);
 
       } else {
 
@@ -554,12 +545,13 @@ var Configuration = function (weather, doDebug, isVerbose) {
     data[WEATHER.TMAX] = new Float64Array(weatherInput.tmax);                  /* [°C] */
     data[WEATHER.TAVG] = new Float64Array(weatherInput.tavg);                  /* [°C] */
     data[WEATHER.GLOBRAD] = new Float64Array(weatherInput.globrad);            /* [MJ m-2] */
+    data[WEATHER.EXRAD] = new Float64Array(weatherInput.exrad);                /* [MJ m-2] */
     data[WEATHER.WIND] = new Float64Array(weatherInput.wind);                  /* [m s-1] */
     data[WEATHER.PRECIP] = new Float64Array(weatherInput.precip);              /* [mm] */
 
     /* required for grassland model */
     data[WEATHER.PPF] = new Float64Array(weatherInput.ppf);                    /* [μmol m-2 d-1] photosynthetic photon flux */
-    data[WEATHER.DAYLENGTH] = new Float64Array(weatherInput.daylength);        /* [seconds] */
+    data[WEATHER.DAYLENGTH] = new Float64Array(weatherInput.daylength);        /* [h] */
     data[WEATHER.F_DIRECTRAD] = new Float64Array(weatherInput.f_directrad);    /* [h h-1] fraction direct solar radiation */
 
     data[WEATHER.SUNHOURS] = new Float64Array(weatherInput.sunhours);          /* [h] */
@@ -586,104 +578,104 @@ var Configuration = function (weather, doDebug, isVerbose) {
       progress = null;
     } else {
 
-      var isCropPlanted = model.isCropPlanted()
-        , mcg = model.cropGrowth()
-        , mst = model.soilTemperature()
-        , msm = model.soilMoisture()
-        , mso = model.soilOrganic()
-        , msc = model.soilColumn()
-        /* TODO: (from cpp) work-around. Hier muss was eleganteres hin! */
-        , msa = model.soilColumnNC()
-        , msq = model.soilTransport()
-        ;
+      // var isCropPlanted = model.isCropPlanted()
+      //   , mcg = model.cropGrowth()
+      //   , mst = model.soilTemperature()
+      //   , msm = model.soilMoisture()
+      //   , mso = model.soilOrganic()
+      //   , msc = model.soilColumn()
+      //   /* TODO: (from cpp) work-around. Hier muss was eleganteres hin! */
+      //   , msa = model.soilColumnNC()
+      //   , msq = model.soilTransport()
+      //   ;
 
-      progress = {
-          date: { value: date.toISOString(), unit: '[date]' }
-        , CropName: { value: isCropPlanted ? mcg.get_CropName() : '', unit: '-' }
-        , TranspirationDeficit: { value: isCropPlanted ? mcg.get_TranspirationDeficit() : 0, unit: '[0;1]' }
-        , ActualTranspiration: { value: isCropPlanted ? mcg.get_ActualTranspiration() : 0, unit: '[mm]' } 
-        , CropNRedux: { value: isCropPlanted ? mcg.get_CropNRedux() : 0, unit: '[0;1]' }
-        , HeatStressRedux: { value: isCropPlanted ? mcg.get_HeatStressRedux() : 0, unit: '[0;1]' }
-        , OxygenDeficit: { value: isCropPlanted ? mcg.get_OxygenDeficit() : 0, unit: '[0;1]' }
-        , DevelopmentalStage: { value: isCropPlanted ? mcg.get_DevelopmentalStage() + 1 : 0, unit: '[#]' }
-        , CurrentTemperatureSum: { value: isCropPlanted ? mcg.get_CurrentTemperatureSum() : 0, unit: '°C' }
-        , VernalisationFactor: { value: isCropPlanted ? mcg.get_VernalisationFactor() : 0, unit: '[0;1]' }
-        , DaylengthFactor: { value: isCropPlanted ? mcg.get_DaylengthFactor() : 0, unit: '[0;1]' }
-        , OrganGrowthIncrementRoot: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(0) : 0, unit: '[kg (DM) ha-1]' }
-        , OrganGrowthIncrementLeaf: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(1) : 0, unit: '[kg (DM) ha-1]' }
-        , OrganGrowthIncrementShoot: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(2) : 0, unit: '[kg (DM) ha-1]' }
-        , OrganGrowthIncrementFruit: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(3) : 0, unit: '[kg (DM) ha-1]' }
-        , RelativeTotalDevelopment: { value: isCropPlanted ? mcg.get_RelativeTotalDevelopment() : 0, unit: '[0;1]' }
-        , OrganBiomassRoot: { value: isCropPlanted ? mcg.get_OrganBiomass(0) : 0, unit: '[kg (DM) ha-1]' }
-        , OrganBiomassLeaf: { value: isCropPlanted ? mcg.get_OrganBiomass(1) : 0, unit: '[kg (DM) ha-1]' }
-        , OrganBiomassShoot: { value: isCropPlanted ? mcg.get_OrganBiomass(2) : 0, unit: '[kg (DM) ha-1]' }
-        , OrganBiomassFruit: { value: isCropPlanted ? mcg.get_OrganBiomass(3) : 0, unit: '[kg (DM) ha-1]' }
-        , PrimaryCropYield: { value: isCropPlanted ? mcg.get_PrimaryCropYield() : 0, unit: '[kg (DM) ha-1]' }
-        , LeafAreaIndex: { value:  isCropPlanted ? mcg.get_LeafAreaIndex() : 0, unit: '[m-2 m-2]' }
-        , GrossPhotosynthesisHaRate: { value: isCropPlanted ? mcg.get_GrossPhotosynthesisHaRate() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
-        , NetPhotosynthesis: { value: isCropPlanted ? mcg.get_NetPhotosynthesis() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
-        , MaintenanceRespirationAS: { value: isCropPlanted ? mcg.get_MaintenanceRespirationAS() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
-        , GrowthRespirationAS: { value: isCropPlanted ? mcg.get_GrowthRespirationAS() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
-        , StomataResistance: { value: isCropPlanted ? mcg.get_StomataResistance() : 0, unit: '[s m-1]' }
-        , CropHeight: { value: isCropPlanted ? mcg.get_CropHeight() : 0, unit: '[m]' }
-        , LeafAreaIndex: { value: isCropPlanted ? mcg.get_LeafAreaIndex() : 0, unit: '[m2 m-2]' }
-        , RootingDepth: { value: isCropPlanted ? mcg.get_RootingDepth() : 0, unit: '[layer #]' }
-        , AbovegroundBiomass: { value: isCropPlanted ? mcg.get_AbovegroundBiomass() : 0, unit: '[kg ha-1]' }
-        , TotalBiomassNContent: { value: isCropPlanted ? mcg.get_TotalBiomassNContent() : 0, unit: '[?]' }
-        , SumTotalNUptake: { value: isCropPlanted ? mcg.get_SumTotalNUptake() : 0, unit: '[kg (N) ha-1]' }
-        , ActNUptake: { value: isCropPlanted ? mcg.get_ActNUptake() : 0, unit: '[kg (N) ha-1]' }
-        , PotNUptake: { value: isCropPlanted ? mcg.get_PotNUptake() : 0, unit: '[kg (N) ha-1]' }
-        , TargetNConcentration: { value: isCropPlanted ? mcg.get_TargetNConcentration() : 0, unit: '[kg (N) ha-1]' }
-        , CriticalNConcentration: { value: isCropPlanted ? mcg.get_CriticalNConcentration() : 0, unit: '[kg (N) ha-1]' }
-        , AbovegroundBiomassNConcentration: { value: isCropPlanted ? mcg.get_AbovegroundBiomassNConcentration() : 0, unit: '[kg (N) ha-1]' }
-        , NetPrimaryProduction: { value: isCropPlanted ? mcg.get_NetPrimaryProduction() : 0, unit: '[kg (N) ha-1]' }
-        , GrossPrimaryProduction: { value: isCropPlanted ? mcg.get_GrossPrimaryProduction() : 0, unit: '[kg (N) ha-1]' }
-        , AutotrophicRespiration: { value: isCropPlanted ? mcg.get_AutotrophicRespiration() : 0, unit: '[kg (C) ha-1]' }
-      };
+      // progress = {
+      //     date: { value: date.toISOString(), unit: '[date]' }
+      //   , CropName: { value: isCropPlanted ? mcg.get_CropName() : '', unit: '-' }
+      //   , TranspirationDeficit: { value: isCropPlanted ? mcg.get_TranspirationDeficit() : 0, unit: '[0;1]' }
+      //   , ActualTranspiration: { value: isCropPlanted ? mcg.get_ActualTranspiration() : 0, unit: '[mm]' } 
+      //   , CropNRedux: { value: isCropPlanted ? mcg.get_CropNRedux() : 0, unit: '[0;1]' }
+      //   , HeatStressRedux: { value: isCropPlanted ? mcg.get_HeatStressRedux() : 0, unit: '[0;1]' }
+      //   , OxygenDeficit: { value: isCropPlanted ? mcg.get_OxygenDeficit() : 0, unit: '[0;1]' }
+      //   , DevelopmentalStage: { value: isCropPlanted ? mcg.get_DevelopmentalStage() + 1 : 0, unit: '[#]' }
+      //   , CurrentTemperatureSum: { value: isCropPlanted ? mcg.get_CurrentTemperatureSum() : 0, unit: '°C' }
+      //   , VernalisationFactor: { value: isCropPlanted ? mcg.get_VernalisationFactor() : 0, unit: '[0;1]' }
+      //   , DaylengthFactor: { value: isCropPlanted ? mcg.get_DaylengthFactor() : 0, unit: '[0;1]' }
+      //   , OrganGrowthIncrementRoot: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(0) : 0, unit: '[kg (DM) ha-1]' }
+      //   , OrganGrowthIncrementLeaf: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(1) : 0, unit: '[kg (DM) ha-1]' }
+      //   , OrganGrowthIncrementShoot: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(2) : 0, unit: '[kg (DM) ha-1]' }
+      //   , OrganGrowthIncrementFruit: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(3) : 0, unit: '[kg (DM) ha-1]' }
+      //   , RelativeTotalDevelopment: { value: isCropPlanted ? mcg.get_RelativeTotalDevelopment() : 0, unit: '[0;1]' }
+      //   , OrganBiomassRoot: { value: isCropPlanted ? mcg.get_OrganBiomass(0) : 0, unit: '[kg (DM) ha-1]' }
+      //   , OrganBiomassLeaf: { value: isCropPlanted ? mcg.get_OrganBiomass(1) : 0, unit: '[kg (DM) ha-1]' }
+      //   , OrganBiomassShoot: { value: isCropPlanted ? mcg.get_OrganBiomass(2) : 0, unit: '[kg (DM) ha-1]' }
+      //   , OrganBiomassFruit: { value: isCropPlanted ? mcg.get_OrganBiomass(3) : 0, unit: '[kg (DM) ha-1]' }
+      //   , PrimaryCropYield: { value: isCropPlanted ? mcg.get_PrimaryCropYield() : 0, unit: '[kg (DM) ha-1]' }
+      //   , LeafAreaIndex: { value:  isCropPlanted ? mcg.get_LeafAreaIndex() : 0, unit: '[m-2 m-2]' }
+      //   , GrossPhotosynthesisHaRate: { value: isCropPlanted ? mcg.get_GrossPhotosynthesisHaRate() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
+      //   , NetPhotosynthesis: { value: isCropPlanted ? mcg.get_NetPhotosynthesis() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
+      //   , MaintenanceRespirationAS: { value: isCropPlanted ? mcg.get_MaintenanceRespirationAS() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
+      //   , GrowthRespirationAS: { value: isCropPlanted ? mcg.get_GrowthRespirationAS() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
+      //   , StomataResistance: { value: isCropPlanted ? mcg.get_StomataResistance() : 0, unit: '[s m-1]' }
+      //   , CropHeight: { value: isCropPlanted ? mcg.get_CropHeight() : 0, unit: '[m]' }
+      //   , LeafAreaIndex: { value: isCropPlanted ? mcg.get_LeafAreaIndex() : 0, unit: '[m2 m-2]' }
+      //   , RootingDepth: { value: isCropPlanted ? mcg.get_RootingDepth() : 0, unit: '[layer #]' }
+      //   , AbovegroundBiomass: { value: isCropPlanted ? mcg.get_AbovegroundBiomass() : 0, unit: '[kg ha-1]' }
+      //   , TotalBiomassNContent: { value: isCropPlanted ? mcg.get_TotalBiomassNContent() : 0, unit: '[?]' }
+      //   , SumTotalNUptake: { value: isCropPlanted ? mcg.get_SumTotalNUptake() : 0, unit: '[kg (N) ha-1]' }
+      //   , ActNUptake: { value: isCropPlanted ? mcg.get_ActNUptake() : 0, unit: '[kg (N) ha-1]' }
+      //   , PotNUptake: { value: isCropPlanted ? mcg.get_PotNUptake() : 0, unit: '[kg (N) ha-1]' }
+      //   , TargetNConcentration: { value: isCropPlanted ? mcg.get_TargetNConcentration() : 0, unit: '[kg (N) ha-1]' }
+      //   , CriticalNConcentration: { value: isCropPlanted ? mcg.get_CriticalNConcentration() : 0, unit: '[kg (N) ha-1]' }
+      //   , AbovegroundBiomassNConcentration: { value: isCropPlanted ? mcg.get_AbovegroundBiomassNConcentration() : 0, unit: '[kg (N) ha-1]' }
+      //   , NetPrimaryProduction: { value: isCropPlanted ? mcg.get_NetPrimaryProduction() : 0, unit: '[kg (N) ha-1]' }
+      //   , GrossPrimaryProduction: { value: isCropPlanted ? mcg.get_GrossPrimaryProduction() : 0, unit: '[kg (N) ha-1]' }
+      //   , AutotrophicRespiration: { value: isCropPlanted ? mcg.get_AutotrophicRespiration() : 0, unit: '[kg (C) ha-1]' }
+      // };
 
-      var outLayers = 20;
+      // var outLayers = 20;
 
-      for (var i_Layer = 0; i_Layer < outLayers; i_Layer++)
-        progress['SoilMoisture_' + i_Layer] = { value: msm.get_SoilMoisture(i_Layer), unit: '[m-3 m-3]' };
+      // for (var i_Layer = 0; i_Layer < outLayers; i_Layer++)
+      //   progress['SoilMoisture_' + i_Layer] = { value: msm.get_SoilMoisture(i_Layer), unit: '[m-3 m-3]' };
 
-      progress['dailySumIrrigationWater'] = { value: model.dailySumIrrigationWater(), unit: '[mm]' };
-      progress['Infiltration'] = { value: msm.get_Infiltration(), unit: '[mm]' };
-      progress['SurfaceWaterStorage'] = { value: msm.get_SurfaceWaterStorage(), unit: '[mm]' };
-      progress['SurfaceRunOff'] = { value: msm.get_SurfaceRunOff(), unit: '[mm]' };
-      progress['SnowDepth'] = { value: msm.get_SnowDepth(), unit: '[mm]' }; 
-      progress['FrostDepth'] = { value: msm.get_FrostDepth(), unit: '[mm]' };
-      progress['ThawDepth'] = { value: msm.get_ThawDepth(), unit: '[mm]' };
+      // progress['dailySumIrrigationWater'] = { value: model.dailySumIrrigationWater(), unit: '[mm]' };
+      // progress['Infiltration'] = { value: msm.get_Infiltration(), unit: '[mm]' };
+      // progress['SurfaceWaterStorage'] = { value: msm.get_SurfaceWaterStorage(), unit: '[mm]' };
+      // progress['SurfaceRunOff'] = { value: msm.get_SurfaceRunOff(), unit: '[mm]' };
+      // progress['SnowDepth'] = { value: msm.get_SnowDepth(), unit: '[mm]' }; 
+      // progress['FrostDepth'] = { value: msm.get_FrostDepth(), unit: '[mm]' };
+      // progress['ThawDepth'] = { value: msm.get_ThawDepth(), unit: '[mm]' };
 
-      for (var i_Layer = 0; i_Layer < outLayers; i_Layer++)
-       progress['PASW_' + i_Layer] = { value: msm.get_SoilMoisture(i_Layer) - msa[i_Layer].get_PermanentWiltingPoint(), unit: '[m-3 m-3]' };
+      // for (var i_Layer = 0; i_Layer < outLayers; i_Layer++)
+      //  progress['PASW_' + i_Layer] = { value: msm.get_SoilMoisture(i_Layer) - msa[i_Layer].get_PermanentWiltingPoint(), unit: '[m-3 m-3]' };
 
-      progress['SoilSurfaceTemperature'] = { value: mst.get_SoilSurfaceTemperature(), unit: '[°C]' };
+      // progress['SoilSurfaceTemperature'] = { value: mst.get_SoilSurfaceTemperature(), unit: '[°C]' };
 
-      for(var i_Layer = 0; i_Layer < 5; i_Layer++)
-        progress['SoilTemperature_' + i_Layer] = { value: mst.get_SoilTemperature(i_Layer), unit: '[°C]' };
+      // for(var i_Layer = 0; i_Layer < 5; i_Layer++)
+      //   progress['SoilTemperature_' + i_Layer] = { value: mst.get_SoilTemperature(i_Layer), unit: '[°C]' };
 
-      progress['ActualEvaporation'] = { value: msm.get_ActualEvaporation(), unit: '[mm]' };
-      progress['Evapotranspiration'] = { value: msm.get_Evapotranspiration(), unit: '[mm]' };
-      progress['ET0'] = { value: msm.get_ET0(), unit: '[mm]' };
-      progress['KcFactor'] = { value: msm.get_KcFactor(), unit: '[?]' };
-      progress['AtmosphericCO2Concentration'] = { value: model.get_AtmosphericCO2Concentration(), unit: '[ppm]' };
-      progress['GroundwaterDepth'] = { value: model.get_GroundwaterDepth(), unit: '[m]' };
-      progress['GroundwaterRecharge'] = { value: msm.get_GroundwaterRecharge(), unit: '[mm]' };
-      progress['NLeaching'] = { value: msq.get_NLeaching(), unit: '[kg (N) ha-1]' };
+      // progress['ActualEvaporation'] = { value: msm.get_ActualEvaporation(), unit: '[mm]' };
+      // progress['Evapotranspiration'] = { value: msm.get_Evapotranspiration(), unit: '[mm]' };
+      // progress['ET0'] = { value: msm.get_ET0(), unit: '[mm]' };
+      // progress['KcFactor'] = { value: msm.get_KcFactor(), unit: '[?]' };
+      // progress['AtmosphericCO2Concentration'] = { value: model.get_AtmosphericCO2Concentration(), unit: '[ppm]' };
+      // progress['GroundwaterDepth'] = { value: model.get_GroundwaterDepth(), unit: '[m]' };
+      // progress['GroundwaterRecharge'] = { value: msm.get_GroundwaterRecharge(), unit: '[mm]' };
+      // progress['NLeaching'] = { value: msq.get_NLeaching(), unit: '[kg (N) ha-1]' };
 
-      for(var i_Layer = 0; i_Layer < outLayers; i_Layer++)
-        progress['SoilNO3_' + i_Layer] = { value: msc.soilLayer(i_Layer).get_SoilNO3(), unit: '[kg (N) m-3]' };
+      // for(var i_Layer = 0; i_Layer < outLayers; i_Layer++)
+      //   progress['SoilNO3_' + i_Layer] = { value: msc.soilLayer(i_Layer).get_SoilNO3(), unit: '[kg (N) m-3]' };
 
-      progress['SoilCarbamid'] = { value: msc.soilLayer(0).get_SoilCarbamid(), unit: '[kg (N) m-3]' };
+      // progress['SoilCarbamid'] = { value: msc.soilLayer(0).get_SoilCarbamid(), unit: '[kg (N) m-3]' };
 
-      for(var i_Layer = 0; i_Layer < outLayers; i_Layer++)
-        progress['SoilNH4_' + i_Layer] = { value: msc.soilLayer(i_Layer).get_SoilNH4(), unit: '[kg (N) m-3]' };
+      // for(var i_Layer = 0; i_Layer < outLayers; i_Layer++)
+      //   progress['SoilNH4_' + i_Layer] = { value: msc.soilLayer(i_Layer).get_SoilNH4(), unit: '[kg (N) m-3]' };
 
-      for(var i_Layer = 0; i_Layer < 4; i_Layer++)
-        progress['SoilNO2_' + i_Layer] = { value: msc.soilLayer(i_Layer).get_SoilNO2(), unit: '[kg (N) m-3]' };
+      // for(var i_Layer = 0; i_Layer < 4; i_Layer++)
+      //   progress['SoilNO2_' + i_Layer] = { value: msc.soilLayer(i_Layer).get_SoilNO2(), unit: '[kg (N) m-3]' };
 
-      for(var i_Layer = 0; i_Layer < 6; i_Layer++)
-        progress['SoilOrganicCarbon_' + i_Layer] = { value: msc.soilLayer(i_Layer).vs_SoilOrganicCarbon(), unit: '[kg (C) kg-1]' };
+      // for(var i_Layer = 0; i_Layer < 6; i_Layer++)
+      //   progress['SoilOrganicCarbon_' + i_Layer] = { value: msc.soilLayer(i_Layer).vs_SoilOrganicCarbon(), unit: '[kg (C) kg-1]' };
 
     }
   

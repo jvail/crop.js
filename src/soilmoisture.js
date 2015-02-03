@@ -161,6 +161,14 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
         vc_NetPrecipitation = vw_Precipitation;
       }
 
+      if (DEBUG) {
+        debug('vc_PercentageSoilCoverage', vc_PercentageSoilCoverage);
+        debug('vc_KcFactor', vc_KcFactor);
+        debug('vc_CropHeight', vc_CropHeight);
+        debug('vc_DevelopmentalStage', vc_DevelopmentalStage);
+        debug('vc_NetPrecipitation', vc_NetPrecipitation);
+      }
+
     } else {
       vc_CropPlanted = false;
       vc_KcFactor = centralParameterProvider.userSoilMoistureParameters.pm_KcFactor;
@@ -737,6 +745,8 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     vs_Latitude
   ) {
 
+    if (DEBUG) debug(arguments);
+
     var vm_EReducer_1 = 0.0;
     var vm_EReducer_2 = 0.0;
     var vm_EReducer_3 = 0.0;
@@ -862,6 +872,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
             // Transpiration is derived from ET0; Soil coverage and Kc factors
             // already considered in crop part!
             vm_Transpiration[i_Layer] = monica.cropGrowth().get_Transpiration(i_Layer);
+            debug('vm_Transpiration[i_Layer]', vm_Transpiration[i_Layer]);
 
 
             // Transpiration is capped in case potential ET after surface
