@@ -18,7 +18,7 @@ var debugArgs = function (arguments_, funcName) {
         return (isNaN(x) || x === null || x === undefined || x === Infinity);
       }
     , doLog = function (x) {
-        logger(MSG.DEBUG, 'args: ' + JSON.stringify(x, null, 2));
+        logger(MSG.DEBUG, funcName + ' args: ' + JSON.stringify(x, null, 2));
       }
     ;
 
@@ -110,7 +110,7 @@ var debug = function () {
     arguments[0].length != undefined && 
     !Array.isArray(arguments[0]) &&
     !isTypedArray(arguments[0])
-  ) return debugArgs(arguments[0]);
+  ) return debugArgs(arguments[0], arguments[1]);
 
   if (arguments.length === 2) {
     if (typeof arguments[1] === 'string')
