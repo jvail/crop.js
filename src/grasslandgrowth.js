@@ -3470,6 +3470,12 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     return mixture.dwt_shoot() + mixture.dwt_root(); 
   };
 
+  // new interface
+
+  var get_numberOfSpecies = function () {
+    return numberOfSpecies;
+  };
+
 
   return {
       step: step
@@ -3541,6 +3547,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     , get_Transpiration: get_Transpiration
     , get_TranspirationDeficit: get_TranspirationDeficit
     , get_VernalisationFactor: get_VernalisationFactor
+    , get_numberOfSpecies: get_numberOfSpecies
   };
 
 };

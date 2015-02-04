@@ -2869,6 +2869,13 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     return vc_TotalBiomass; 
   };
 
+  // new interface
+
+  var get_numberOfSpecies = function () {
+    return 1;
+  };
+
+
   return {
       step: calculateCropGrowthStep
     , accumulateEvapotranspiration: accumulateEvapotranspiration
@@ -2939,6 +2946,7 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     , get_Transpiration: get_Transpiration
     , get_TranspirationDeficit: get_TranspirationDeficit
     , get_VernalisationFactor: get_VernalisationFactor
+    , get_numberOfSpecies: get_numberOfSpecies
   };
 
 };

@@ -7,7 +7,7 @@ var Weather = function (startDate, endDate) {
   this._startDate = startDate;
   this._endDate = endDate;
   this._data = null;
-  this._numberOfSteps = ceil((endDate - startDate) / MS_PER_DAY);
+  this._numberOfSteps = floor((endDate - startDate) / MS_PER_DAY) + 1;
   this._dates = [];
 
   this.setData = function (data) {
