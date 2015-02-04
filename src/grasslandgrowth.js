@@ -179,8 +179,8 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       , fAsh_leaf: 0.03
       , fAsh_stem: 0.05
       , N_ref: 0.04
-      , d_r_h: 0.25
-      , d_r_mx: 1.0
+      , d_r_h: 0.15
+      , d_r_mx: 0.4
       , τ_veg: 200
       , photo: {
             T_ref: this.isC4 ? 25 : 20
@@ -2273,6 +2273,9 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         if (NC.r > 0)
           NC.r = max(0, NC.r + (P_growth * NC.r / NC_p));
 
+        species.vars.Ω_N = 1;
+        species.vars.N_assim = 0;
+        species.vars.N_req = 0;
         vars.G = vars.G = vars.G_leaf = vars.G_stem = vars.G_root = 0;
 
       }
@@ -2799,14 +2802,19 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
   function nitrogenUptake() {
 
     var d_r_mx = mixture.d_r_mx(); // max. root depth [m]
+    var dwt2carbon = 1 / 0.45; // TODO: calculate real conversion per species
 
     for (var l = 0; l < vs_NumberOfLayers; l++) {
       /* kg (N) m-3 / kg (soil) m-3 = kg (N) kg-1 (soil) */
       var N = soilColumn[l].get_SoilNO3() / soilColumn[l].vs_SoilBulkDensity(); // TODO: NH4?
       /* Johnson 2013, eq. 3.69 [kg (soil) kg-1 (root C)] TODO: error in doc. ? suppose it is per kg (root C) instead per kg (root d.wt) */
-      var ξ_N = 200; // TODO: value? unit? allow per species
+      var ξ_N = 200 * dwt2carbon; // convert from dwt to carbon TODO: value? unit? allow per species
       /* total uptake from layer must not exceed layer N */
       N_up_sum[l] = min(soilColumn[l].get_SoilNO3() * vs_LayerThickness, ξ_N * N * W_r_sum[l]);
+      debug('ξ_N', ξ_N);
+      debug('N', N);
+      debug('N_ppm', N * 1e6);
+      debug('N_up_sum[l]', N_up_sum[l]);
     }
 
     for (var l = 0; l < vs_NumberOfLayers; l++) {
