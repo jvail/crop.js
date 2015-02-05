@@ -1833,10 +1833,9 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
       var f_Pm_N = 0
         , f_N_ref = (isC4) ? (0.03 / F_C) : (0.04 / F_C)
-        , f_N_mx = f_N_ref
         ;
 
-      f_Pm_N = (f_N < f_N_ref) ? (f_N / f_N_ref) : (f_N_mx / f_N_ref);
+      f_Pm_N = (f_N < f_N_ref) ? (f_N / f_N_ref) : 1;
 
       return f_Pm_N; 
 
