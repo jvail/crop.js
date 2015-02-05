@@ -192,7 +192,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
           , α_amb_15: 0.05
           , P_m_ref: this.isC4 ? 22 : 16
           , λ: this.isC4 ? 1.05 : 1.2
-          , f_C_m: this.isC4 ? 1.1 : 1.5
+          , f_C_m: this.isC4 ? 1.1 : 1.49999999
           , γ_Pm: 10
           , λ_α: 0.02 
           , γ_α: 6
@@ -1787,23 +1787,35 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
     /*
       (1.16) CO2 response function
-
-      C_amb [μmol mol-1]  ambient CO2 concentration
+  
+      Takes unity at C_amb_ref, λ at double C_amb_ref and f_C_m at C -> ∞
+  
+      TODO: calculation of parameters required only once: move somewhere else 
+      
+      f_C   [-]           scale factor
+      C     [μmol mol-1]  ambient CO2 concentration
+      λ     [-]           f_C at double C_amb_ref
+      f_C_m [-]           f_C at saturating C
     */
-
-    function f_C(C_amb, λ, f_C_m) {
-
-      if (DEBUG) debug(arguments, 'f_C');
-
-      var f_C = 0
-        , Φ = 0.8
-        , β = 0.0032
+    
+    function f_C(C, λ, f_C_m) {
+  
+      // check (1.21)
+      if (f_C_m >= λ / (2 - λ)) {
+        f_C_m = λ / (2 - λ) - 1e-10; // make sure it is smaller
+        logger(MSG.WARN, 'Adjusted f_C_m to ' + f_C_m + ' since f_C_m >= λ / (2 - λ)');
+      }
+  
+      var f_C = 1
+        , C_amb_ref = 380
+        , Φ = (f_C_m * (λ * (f_C_m - 1) - 2 * (f_C_m - λ))) / (pow(λ, 2) * (f_C_m - 1) - 2 * (f_C_m - λ))
+        , β = (λ * (f_C_m - Φ * λ)) / (2 * C_amb_ref * (f_C_m - λ))
         ;
-
-      f_C = 1 / (2 * Φ) * (β * C_amb + f_C_m - sqrt(pow(β * C_amb + f_C_m, 2) - 4 * Φ * β * f_C_m * C_amb));
-
+  
+      f_C = 1 / (2 * Φ) * (β * C + f_C_m - sqrt(pow(β * C + f_C_m, 2) - 4 * Φ * β * f_C_m * C));
+  
       return f_C;
-
+  
     }
 
 
