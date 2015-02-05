@@ -1721,21 +1721,74 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       , T_I_mn = T
       ;
 
-    var P_g_mx = P_g(I_mx, T_I_mx, f_s, C_amb); // array
-    var P_g_mn = P_g(I_mn, T_I_mn, f_s, C_amb); // array
+    if (numberOfSpecies > 1) { 
 
-    /* iterate over mixture array */
-    for (var s = 0, ps = mixture.length; s < ps; s++) {
+      var P_g_mx = P_g(I_mx, T_I_mx, f_s, C_amb); // array
+      var P_g_mn = P_g(I_mn, T_I_mn, f_s, C_amb); // array
 
-      var vars = mixture[s].vars
-        , Ω_water = vars.Ω_water
+      /* iterate over mixture array */
+      for (var s = 0, ps = mixture.length; s < ps; s++) {
+
+        var vars = mixture[s].vars
+          , Ω_water = vars.Ω_water
+          ;
+
+        /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) Ω_water missing in Johnson (2013) */
+        vars.P_g_day = (1e-3 * 12 / 44) * 1e-6 * (τ / 2) * (P_g_mx[s] + P_g_mn[s]) * Ω_water;
+
+      }
+
+    } else { // one species
+
+      // TODO: diffuse/direct radiation
+      var species = mixture[0] 
+        , cons = species.cons
+        , α_amb_15 = cons.photo.α_amb_15
+        , P_m_ref = cons.photo.P_m_ref
+        , k = cons.photo.k
+        , f_N = species.f_N_live_leaf() // TODO: leaf or shoot?
+        , isC4 = species.isC4
+        , α = 0
+        , P_m = 0
+        , ξ = cons.photo.ξ
+        , λ_α = cons.photo.λ_α
+        , γ_α = cons.photo.γ_α
+        , γ_Pm = cons.photo.γ_Pm
+        , T_mn = cons.photo.T_mn
+        , T_ref = cons.photo.T_ref
+        , T_opt_Pm_amb = cons.photo.T_opt_Pm_amb
+        , λ = cons.photo.λ
+        , f_C_m = cons.photo.f_C_m
+        , F_C = species.F_C()
+        , LAI = species.L()
         ;
 
-      /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) Ω_water missing in Johnson (2013) */
-      vars.P_g_day = 0.012 * 1e-6 * (τ / 2) * (P_g_mx[s] + P_g_mn[s]) * Ω_water;
+      /* (3.23) Photosynthetic efficiency, α */
+      α = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
+      if (!isC4)
+        α = α * f_α_TC(T, C_amb, λ_α, γ_α, λ, f_C_m);
 
-    } 
+      /* (3.8) Light saturated photosynthesis, P_m. TODO: why not related to light extiction (exp(-kl)) any more? */
+      P_m = P_m_ref * f_C(C_amb, λ, f_C_m) * f_Pm_TC(T, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, isC4, F_C);
 
+      var delta_l = 0.1;
+      var n = LAI / delta_l;
+      var P_g_day = 0;
+
+      for (var i = 1; i <= n; i++) {
+        
+        var l_i = (2 * i - 1) * delta_l / 2;
+        //console.log(l_i);
+        var I_l_mx = cons.photo.k * I_mx * exp(-cons.photo.k * l_i);
+        var I_l_mn = cons.photo.k * I_mn * exp(-cons.photo.k * l_i);
+        P_g_day += P_l(I_l_mx, α, P_m, ξ) * delta_l;
+        P_g_day += P_l(I_l_mn, α, P_m, ξ) * delta_l;
+        
+      }
+
+      species.vars.P_g_day = (1e-3 * 12 / 44) * 1e-6 * (τ / 2) * P_canopy_gross;
+
+    }
 
     /*
       (2.21) Direct solar radiation
