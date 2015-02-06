@@ -1399,6 +1399,8 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       logger(MSG.INFO, { SC: SC, NC: NC, PN: PN });
     }
 
+    /* 75% means that (75 - 100) / numberOfSpecies * PPF will be allocated to each species directly */
+    mixture.homogeneity = 0.75;
 
     mixture.N_req_opt = function () {
 
@@ -1733,6 +1735,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       , T_I_mn = T
       ;
 
+    /* TODO: implement homogeneity */
     if (numberOfSpecies > 1) { 
 
       var P_g_mx = P_g(I_mx, T_I_mx, f_s, C_amb); // array
