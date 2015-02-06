@@ -192,7 +192,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
           , α_amb_15: 0.05
           , P_m_ref: this.isC4 ? 22 : 16
           , λ: this.isC4 ? 1.05 : 1.2
-          , f_C_m: this.isC4 ? 1.1 : 1.49999999
+          , f_C_m: this.isC4 ? 1.1 : 1.49
           , γ_Pm: 10
           , λ_α: 0.02 
           , γ_α: 6
@@ -265,6 +265,8 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         Ω_N: 1.0
       , Ω_water: 1.0 
       , P_g_day: 0.0
+      , R_m: 0.0
+      , R_N: 0
       , G: 0.0
       , G_leaf: 0 // growth to leaf [kg (C) m-2]
       , G_stem: 0
@@ -316,16 +318,18 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         // TODO: are those pools only for live tissue?
         /* non-structural carbon hydrate pool kg (C) m-2 */
       , NC: { l: 0.0, s: 0.0, r: 0.0 }
+      , NC_dead: { l: 0.0, s: 0.0, r: 0.0 }
         /* daily non-structural carbon hydrate growth pool kg (C) m-2 */
       , dNC: { l: 0.0, s: 0.0, r: 0.0 }
         /* protein pool kg (C) m-2 */
       , PN: { l: 0.0, s: 0.0, r: 0.0 }
+      , PN_dead: { l: 0.0, s: 0.0, r: 0.0 }
         /* daily protein growth pool kg (C) m-2 */
       , dPN: { l: 0.0, s: 0.0, r: 0.0 }
         /* total litter; from senecenced leaf and stem */
-      , Λ_litter: { sc: 0.0, pn: 0.0 }
+      , Λ_litter: { sc: 0.0, pn: 0.0, nc: 0.0 }
         /* total senecenced root */ 
-      , Λ_r: { sc: 0, pn: 0 }
+      , Λ_r: { sc: 0, pn: 0, nc: 0.0 }
     };
 
 
@@ -355,7 +359,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         this.cons.photo.α_amb_15 = 0.05;
         this.cons.photo.P_m_ref = 16;
         this.cons.photo.λ = 1.2;
-        this.cons.photo.f_C_m = 1.5;
+        this.cons.photo.f_C_m = 1.49;
         this.cons.photo.γ_Pm = 10;
         this.cons.photo.λ_α = 0.02; 
         this.cons.photo.γ_α = 6;
@@ -410,7 +414,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         this.cons.photo.α_amb_15 = 0.05;
         this.cons.photo.P_m_ref = 12.9; // Topp (2004)
         this.cons.photo.λ = 1.2;
-        this.cons.photo.f_C_m = 1.5;
+        this.cons.photo.f_C_m = 1.49;
         this.cons.photo.γ_Pm = 10;
         this.cons.photo.λ_α = 0.02; 
         this.cons.photo.γ_α = 6;
@@ -465,7 +469,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         this.cons.photo.α_amb_15 = 0.05;
         this.cons.photo.P_m_ref = 16;
         this.cons.photo.λ = 1.2;
-        this.cons.photo.f_C_m = 1.5;
+        this.cons.photo.f_C_m = 1.49;
         this.cons.photo.γ_Pm = 10;
         this.cons.photo.λ_α = 0.02; 
         this.cons.photo.γ_α = 6;
@@ -520,7 +524,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         this.cons.photo.α_amb_15 = 0.05;
         this.cons.photo.P_m_ref = 16;
         this.cons.photo.λ = 1.2;
-        this.cons.photo.f_C_m = 1.5;
+        this.cons.photo.f_C_m = 1.49;
         this.cons.photo.γ_Pm = 10;
         this.cons.photo.λ_α = 0.02; 
         this.cons.photo.γ_α = 6;
@@ -576,7 +580,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         this.cons.photo.α_amb_15 = 0.05;
         this.cons.photo.P_m_ref = 16;
         this.cons.photo.λ = 1.2;
-        this.cons.photo.f_C_m = 1.5;
+        this.cons.photo.f_C_m = 1.49;
         this.cons.photo.γ_Pm = 10;
         this.cons.photo.λ_α = 0.02; 
         this.cons.photo.γ_α = 6;
@@ -940,7 +944,11 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
     this.dwt_dead_leaf = function () {
 
-      return that.vars.SC.dead_l / fC_sc; 
+      return (
+        that.vars.SC.dead_l / fC_sc + 
+        that.vars.PN_dead.l / fC_pn + 
+        that.vars.NC_dead.l / fC_nc
+      ); 
 
     };
 
@@ -982,7 +990,11 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
     this.dwt_dead_stem = function () {
 
-      return that.vars.SC.dead_s / fC_sc; 
+      return (
+        that.vars.SC.dead_s / fC_sc + 
+        that.vars.PN_dead.s / fC_pn + 
+        that.vars.NC_dead.s / fC_nc
+      ); 
 
     };
 
@@ -1734,7 +1746,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
           ;
 
         /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) Ω_water missing in Johnson (2013) */
-        vars.P_g_day = (1e-3 * 12 / 44) * 1e-6 * (τ / 2) * (P_g_mx[s] + P_g_mn[s]) * Ω_water;
+        vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * (P_g_mx[s] + P_g_mn[s]) * Ω_water;
 
       }
 
@@ -1763,6 +1775,8 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         , LAI = species.L()
         ;
 
+      debug(species.vars);
+
       /* (3.23) Photosynthetic efficiency, α */
       α = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
       if (!isC4)
@@ -1786,7 +1800,13 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         
       }
 
-      species.vars.P_g_day = (1e-3 * 12 / 44) * 1e-6 * (τ / 2) * P_canopy_gross;
+      species.vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day * species.vars.Ω_water;
+
+      if (DEBUG) {
+        debug('P_g_day', species.vars.P_g_day);
+        debug('P_gΩ_water_day', species.vars.P_g_day);
+        debug('LAI', LAI);
+      }
 
     }
 
@@ -2125,7 +2145,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         , vars = species.vars
         , cons = species.cons
         , f_N = species.f_N_live_shoot()
-        , P_g_day = species.vars.P_g_day
+        , P_g_day = vars.P_g_day
         , C_total = species.C_live_shoot() + species.C_root()
         , N_avail = species.vars.N_avail
         , isC4 = species.isC4
@@ -2134,8 +2154,15 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
       /*(3.57) Gross assimilation P_g_day adjusted for maintenance respiration, 
       respiratory costs of nitrogen uptake and fixation. Use R_N from previous day (circularity) */
-      var P_growth = P_g_day - R_m(T, f_N, C_total, isC4, F_C) - R_N(species.vars.N_up, species.vars.N_fix);
+      vars.R_m = R_m(T, f_N, C_total, isC4, F_C);
+      vars.R_N = R_N(species.vars.N_up, species.vars.N_fix);
+      
+      var P_growth = P_g_day - vars.R_m - vars.R_N;
+      debug('P_g_day: ' + P_g_day);
       debug('P_growth: ' + P_growth);
+      debug('vars.R_m: ' + vars.R_m);
+      debug('vars.R_N: ' + vars.R_N);
+      debug('C_total: ' + C_total);
 
       if (P_growth > 0) {
 
@@ -2326,16 +2353,18 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         // TODO: what if nc pool is empty?
 
         var NC = vars.NC
-          , NC_p = NC.l + NC.s + NC.r
+          , NC_pool = NC.l + NC.s + NC.r
           ;
 
         /* reduce nc pools by share as long as non-structural pool > 0 */
-        if (NC.l > 0)
-          NC.l = max(0, NC.l + (P_growth * NC.l / NC_p));
-        if (NC.s > 0)
-          NC.s = max(0, NC.s + (P_growth * NC.s / NC_p));
-        if (NC.r > 0)
-          NC.r = max(0, NC.r + (P_growth * NC.r / NC_p));
+        if (NC_pool > 0) {
+          if (NC.l > 0)
+            NC.l = max(0, NC.l + (P_growth * NC.l / NC_pool));
+          if (NC.s > 0)
+            NC.s = max(0, NC.s + (P_growth * NC.s / NC_pool));
+          if (NC.r > 0)
+            NC.r = max(0, NC.r + (P_growth * NC.r / NC_pool));
+        }
 
         species.vars.Ω_N = 1;
         species.vars.N_assim = 0;
@@ -2448,7 +2477,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         , T_m_mn = (isC4) ? 12 : 3
         , T_ref = (isC4) ? 25 : 20
 
-      f_m = (T - T_m_mn) / (T_ref - T_m_mn);
+      f_m = T < T_m_mn ? 0 : (T - T_m_mn) / (T_ref - T_m_mn);
 
       return f_m;
 
@@ -2514,7 +2543,9 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         , SC = vars.SC
         , NC = vars.NC
         , dNC = vars.dNC
+        , NC_dead = vars.NC_dead
         , PN = vars.PN
+        , PN_dead = vars.PN_dead
         , dPN = vars.dPN
         , Λ_r = vars.Λ_r
         , Λ_litter = vars.Λ_litter
@@ -2529,10 +2560,12 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
           /* leaf appearance rate */
         , Φ_l = 1 / 8
           /* leaf flux parameter */
-        , γ_l = f_γ(T) * Φ_l * 3 / 10
+        , l_live_per_tiller = 3
+        , no_boxes = 3
+        , γ_l = f_γ(T) * 0.05 // TODO: Φ_l * no_boxes / l_live_per_tiller
           /* stem flux parameter TODO: how to better relate γ_s, γ_r to γ_l */
-        , γ_s = 0.5 * γ_l
-        , γ_r = 0.5 * γ_l
+        , γ_s = 0.8 * γ_l // 0.8 is scale factor turn over rate relative to leaves
+        , γ_r = 0.02
           /* dead to litter flux parameter (value from AgPasture) */
         , γ_dead = 0.11
         ;
@@ -2560,6 +2593,12 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       dSC.live_l_3 = (γ_l * SC.live_l_2) - (γ_l * SC.live_l_3);
       dSC.dead_l = (γ_l * SC.live_l_3) - (γ_dead * SC.dead_l);
 
+      if (DEBUG) {
+        debug('γ_l', γ_l);
+        debug('T', T);
+        debug('f_γ(T)', f_γ(T));
+      }
+
       /* (3.93 ff) sheath and stem */
       dSC.live_s_1 = (G_s * (f_dwt_s.sc / dwt_s)) - (2 * γ_s * SC.live_s_1);
       dSC.live_s_2 = (2 * γ_s * SC.live_s_1) - (γ_s * SC.live_s_2);
@@ -2569,13 +2608,35 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       /* (3.97) root */
       dSC.r = (G_r * (f_dwt_r.sc / dwt_r)) - (γ_r * SC.r);
       
-      /* senescenced root */
+      /* senescenced root TODO: remove variable?*/
       Λ_r.sc += γ_r * SC.r;
 
-      /* (4.18m) input to litter. Johnson (2005/2008) */
-      Λ_litter.sc += γ_dead * (SC.dead_l + SC.dead_s);
 
       // logger(MSG.INFO, { dSC: dSC, dNC: dNC, dPN: dPN });
+
+
+      /* (4.18m) input to litter. Johnson (2005/2008) TODO: here it includes root, add own pool? */
+      Λ_litter.sc += γ_dead * (SC.dead_l + SC.dead_s);
+      Λ_litter.nc += γ_dead * (NC_dead.l + NC_dead.s + NC_dead.r);
+      Λ_litter.pn += γ_dead * (PN_dead.l + PN_dead.s + PN_dead.r);
+
+      /* TODO: this is just a test: flux of pn and nc to litter pools (assume 80% remob in NC and 50% in PN) */
+      dNC.l -= 0.2 * γ_l * NC.l;
+      dNC.s -= 0.2 * γ_s * NC.s;
+      dNC.r -= 0.2 * γ_r * NC.r;
+
+      NC_dead.l += 0.2 * γ_l * NC.l - γ_dead * NC_dead.l;
+      NC_dead.s += 0.2 * γ_s * NC.s - γ_dead * NC_dead.s;
+      NC_dead.r += 0.2 * γ_r * NC.r - γ_dead * NC_dead.r;
+
+      dPN.l -= 0.5 * γ_l * PN.l;
+      dPN.s -= 0.5 * γ_s * PN.s;
+      dPN.r -= 0.5 * γ_r * PN.r;
+
+      PN_dead.l += 0.5 * γ_l * PN.l - γ_dead * PN_dead.l;
+      PN_dead.s += 0.5 * γ_s * PN.s - γ_dead * PN_dead.s;
+      PN_dead.r += 0.5 * γ_r * PN.r - γ_dead * PN_dead.r;
+
 
       /* update C pools with dSC, dPN, dNC */
 
@@ -2601,9 +2662,9 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       PN.r += dPN.r;
 
       /* cost of tissue aging e.g. lignin synthesis TODO: calculate cost of ndf synthesis, increase ndf share? */
-      NC.l = max(0, NC.l - 0.05 * (2 * γ_l * SC.live_l_1));
-      NC.s = max(0, NC.s - 0.05 * (2 * γ_s * SC.live_s_1));
-      NC.r = max(0, NC.r - 0.05 * (γ_r * SC.r));
+      // NC.l = max(0, NC.l - 0.05 * (2 * γ_l * SC.live_l_1));
+      // NC.s = max(0, NC.s - 0.05 * (2 * γ_s * SC.live_s_1));
+      // NC.r = max(0, NC.r - 0.05 * (γ_r * SC.r));
 
       // logger(MSG.INFO, { SC: SC, NC: NC, PN: PN });
     
@@ -3540,9 +3601,33 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     return numberOfSpecies;
   };
 
+  /* [kg (C) ha-1] */
+  var get_P_g = function () {
+    var P_g = 0;
+    for (var i = 0; i < numberOfSpecies; i++)
+      P_g += mixture[i].vars.P_g_day;
+    return P_g * SQM_PER_HA;
+  };
+
+  /* [kg (C) ha-1] */
+  var get_R_m = function () {
+    var R_m = 0;
+    for (var i = 0; i < numberOfSpecies; i++)
+      R_m += mixture[i].vars.R_m;
+    return R_m * SQM_PER_HA;
+  };
+
+  /* [kg (dwt) ha-1] */
+  var get_dwt_dead_shoot = function () {
+    return mixture.dwt_dead_shoot() * SQM_PER_HA;
+  };
+
 
   return {
       step: step
+    , get_P_g: get_P_g
+    , get_R_m: get_R_m
+    , get_dwt_dead_shoot: get_dwt_dead_shoot
     , accumulateEvapotranspiration: accumulateEvapotranspiration
     , isDying: get_isDying
     , totalBiomass: get_totalBiomass
