@@ -1781,25 +1781,35 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       debug(species.vars);
 
       /* (3.23) Photosynthetic efficiency, α */
-      α = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
-      if (!isC4)
-        α = α * f_α_TC(T, C_amb, λ_α, γ_α, λ, f_C_m);
+      var α_mx = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
+      var α_mn = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
+      if (!isC4) {
+        α_mx = α_mx * f_α_TC(T_I_mx, C_amb, λ_α, γ_α, λ, f_C_m);
+        α_mn = α_mx * f_α_TC(T_I_mn, C_amb, λ_α, γ_α, λ, f_C_m);
+      }
 
       /* (3.8) Light saturated photosynthesis, P_m. TODO: why not related to light extiction (exp(-kl)) any more? */
-      P_m = P_m_ref * f_C(C_amb, λ, f_C_m) * f_Pm_TC(T, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, isC4, F_C);
+      var P_m_mx = P_m_ref * f_C(C_amb, λ, f_C_m) * f_Pm_TC(T_I_mx, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, isC4, F_C);
+      var P_m_mn = P_m_ref * f_C(C_amb, λ, f_C_m) * f_Pm_TC(T_I_mn, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, isC4, F_C);
 
-      var delta_l = 0.1;
-      var n = LAI / delta_l;
+      var Δ_l = 0.1;
+      var n = LAI / Δ_l;
       var P_g_day = 0;
 
       for (var i = 1; i <= n; i++) {
         
-        var l_i = (2 * i - 1) * delta_l / 2;
-        //console.log(l_i);
-        var I_l_mx = cons.photo.k * I_mx * exp(-cons.photo.k * l_i);
-        var I_l_mn = cons.photo.k * I_mn * exp(-cons.photo.k * l_i);
-        P_g_day += P_l(I_l_mx, α, P_m, ξ) * delta_l;
-        P_g_day += P_l(I_l_mn, α, P_m, ξ) * delta_l;
+        var l_i = (2 * i - 1) * Δ_l / 2;
+        
+        /* direct (s) and diffuse (d) radiation */
+        var I_l_mx_s = k * I_mx * (f_s + (1 - f_s) * exp(-k * l_i));
+        var I_l_mx_d = k * I_mx * (1 - f_s) * exp(-k * l_i);
+        var I_l_mn_s = k * I_mn * (f_s + (1 - f_s) * exp(-k * l_i));
+        var I_l_mn_d = k * I_mn * (1 - f_s) * exp(-k * l_i);
+        
+        P_g_day += P_l(I_l_mx_s, α_mx, P_m_mx, ξ) * exp(-k * l_i) * Δ_l;
+        P_g_day += P_l(I_l_mx_d, α_mx, P_m_mx, ξ) * (1 - exp(-k * l_i)) * Δ_l;
+        P_g_day += P_l(I_l_mn_s, α_mn, P_m_mn, ξ) * exp(-k * l_i) * Δ_l;
+        P_g_day += P_l(I_l_mn_d, α_mn, P_m_mn, ξ) * (1 - exp(-k * l_i)) * Δ_l;
         
       }
 
