@@ -107,7 +107,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
     var vc_NetPrimaryProduction = crop ? crop.get_NetPrimaryProduction() : 0;
 
-    debug('vc_NetPrimaryProduction', vc_NetPrimaryProduction);
+    // debug('vc_NetPrimaryProduction', vc_NetPrimaryProduction);
 
     //fo_OM_Input(vo_AOM_Addition);
     fo_Urea(vw_Precipitation + irrigationAmount);

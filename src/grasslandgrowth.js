@@ -28,6 +28,7 @@
     - add litter and dead root to soilorganic (seems this is not implemented in MONICA)?
     - move Mixture and species? 
     - NH4 uptake?
+    - what if a species (due to height in sward) dies?
 */
 
 var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes additional grassland param
@@ -46,6 +47,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     , vc_InterceptionStorage = 0.0
     , vc_accumulatedETa = 0
     , pc_NitrogenResponseOn = gps.pc_NitrogenResponseOn
+    , waterDeficitResponseOn = gps.pc_WaterDeficitResponseOn
     , vc_NetPrecipitation = 0
     , vc_InterceptionStorage = 0
     , vc_ReferenceEvapotranspiration = 0
@@ -55,6 +57,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     ;
 
   var numberOfSpecies = species.length;
+  var mixtureUnsorted = [];
 
   var f_r = [] /* root fraction per species and soil layer */
     , f_r_sum = []  /* root fraction sum per species TODO: find a way to avoid keeping the sum */
@@ -135,7 +138,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     /* defaults */
     this.isLegume = false;
     this.isC4 = false;
-    this.type = 'pasture grass';
+    this.type = 'pasture grass'; // generic
 
     /* 
       constants; defaults for rye grass 
@@ -197,6 +200,13 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
           , λ_α: 0.02 
           , γ_α: 6
         }
+      , resp: {
+            m_ref: 0.025  // maintenance coeficient at reference temperature
+          , T_ref: this.isC4 ? 25 : 20
+          , T_m_mn: this.isC4 ? 12 : 3
+          , λ_N_up: 0.6                 // [kg (C) kg-1 (N)] N uptake respiration coefficent
+          , λ_N_fix: 6                  // [kg (C) kg-1 (N)] N fixation respiration coefficent
+        }
       , part: {
             ρ_shoot_ref: 0.75  // SGS
           , ρ_l: 0.7 // SGS
@@ -217,10 +227,10 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       , dW_s_fdwt_ref: { sc: 0.63, nc: 0.18, pn: 0.13, ah: 0.05 }
       , dW_r_fdwt_ref: { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 }
       , N_leaf: { /* [kg (N) kg-1 (C)] */
-        opt: 0.100,    // 
-        max: 0.125,    //[kg (N) kg-1 (C)] AgPasture: 0.05 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
-        min: 0.030,    //[kg (N) kg-1 (C)] AgPasture: 0.012 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
-        ref: 0.100    //[kg (N) kg-1 (C)] TODO: source?
+        opt: 0.04 / 0.45,    // 
+        max: 0.05 / 0.45,    //[kg (N) kg-1 (C)] AgPasture: 0.05 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
+        min: 0.012 / 0.45,    //[kg (N) kg-1 (C)] AgPasture: 0.012 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
+        ref: 0.04 / 0.45    //[kg (N) kg-1 (C)] TODO: source?
        }
     };
 
@@ -387,10 +397,10 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.26, ah: 0.03 };
 
         /* leaf nitrogen TODO: remove? */
-        this.cons.N_leaf.opt = 0.100;
-        this.cons.N_leaf.max = 0.125;
-        this.cons.N_leaf.min = 0.030;
-        this.cons.N_leaf.ref = 0.100;
+        this.cons.N_leaf.opt = 0.04 / 0.45;
+        this.cons.N_leaf.max = 0.05 / 0.45;
+        this.cons.N_leaf.min = 0.012 / 0.45;
+        this.cons.N_leaf.ref = 0.04 / 0.45;
 
         break;
       case 'red clover':
@@ -442,10 +452,10 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 };
 
         /* leaf nitrogen TODO: remove? */
-        this.cons.N_leaf.opt = 0.100;
-        this.cons.N_leaf.max = 0.125;
-        this.cons.N_leaf.min = 0.030;
-        this.cons.N_leaf.ref = 0.100;
+        this.cons.N_leaf.opt = 0.04 / 0.45;
+        this.cons.N_leaf.max = 0.05 / 0.45;
+        this.cons.N_leaf.min = 0.012 / 0.45;
+        this.cons.N_leaf.ref = 0.04 / 0.45;
 
         break;
       case 'pasture grass':
@@ -497,10 +507,10 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 };
 
         /* leaf nitrogen TODO: remove? */
-        this.cons.N_leaf.opt = 0.100;
-        this.cons.N_leaf.max = 0.125;
-        this.cons.N_leaf.min = 0.030;
-        this.cons.N_leaf.ref = 0.100;
+        this.cons.N_leaf.opt = 0.04 / 0.45;
+        this.cons.N_leaf.max = 0.05 / 0.45;
+        this.cons.N_leaf.min = 0.012 / 0.45;
+        this.cons.N_leaf.ref = 0.04 / 0.45;
 
         break;
       case 'meadow grass early':
@@ -553,10 +563,10 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 };
 
         /* leaf nitrogen TODO: remove? */
-        this.cons.N_leaf.opt = 0.100;
-        this.cons.N_leaf.max = 0.125;
-        this.cons.N_leaf.min = 0.030;
-        this.cons.N_leaf.ref = 0.100;
+        this.cons.N_leaf.opt = 0.04 / 0.45;
+        this.cons.N_leaf.max = 0.05 / 0.45;
+        this.cons.N_leaf.min = 0.012 / 0.45;
+        this.cons.N_leaf.ref = 0.04 / 0.45;
 
         break;
       case 'meadow grass late':
@@ -609,10 +619,10 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 };
 
         /* leaf nitrogen TODO: remove? */
-        this.cons.N_leaf.opt = 0.100;
-        this.cons.N_leaf.max = 0.125;
-        this.cons.N_leaf.min = 0.030;
-        this.cons.N_leaf.ref = 0.100;
+        this.cons.N_leaf.opt = 0.04 / 0.45;
+        this.cons.N_leaf.max = 0.05 / 0.45;
+        this.cons.N_leaf.min = 0.012 / 0.45;
+        this.cons.N_leaf.ref = 0.04 / 0.45;
 
         break;
       }
@@ -1022,11 +1032,11 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
 
     /* (3.101) h [m] height relationship between canopy height and leaf area */
-    this.h = function (L_tot) {
+    this.h = function () {
 
       var h = 0
         , cons = that.cons
-        , L = L_tot // scale to m2; assume same total dwt per m2 TODO: assumtion?
+        , L = that.L() // TODO: ?
         , h_m = cons.h_m
         , L_half = cons.L_half
         , ξ = 0.9 // fixed curvatur parameter
@@ -1545,6 +1555,74 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     };
 
 
+    /* f_N_live_leaf [kg (N) kg-1 (C) m-2] */
+    mixture.f_N_live_leaf = function () {
+
+      var N_live_leaf = 0
+        , C_live_leaf = 0
+        ;
+
+      for (var s = 0, ps = this.length; s < ps; s++) {
+        N_live_leaf += this[s].N_live_leaf();
+        C_live_leaf += this[s].C_live_leaf();
+      }
+
+      return N_live_leaf / C_live_leaf;
+
+    };
+
+
+    /* f_N_live_leaf_dwt [kg (N) kg-1 (OM) m-2] */
+    mixture.f_N_live_leaf_dwt = function () {
+
+      var N_live_leaf = 0
+        , dwt_live_leaf = 0
+        ;
+
+      for (var s = 0, ps = this.length; s < ps; s++) {
+        N_live_leaf += this[s].N_live_leaf();
+        dwt_live_leaf += this[s].dwt_live_leaf();
+      }
+
+      return N_live_leaf / dwt_live_leaf;
+
+    };
+
+
+    /* f_N_live_stem_dwt [kg (N) kg-1 (OM) m-2] */
+    mixture.f_N_live_stem_dwt = function () {
+
+      var N_live_stem = 0
+        , dwt_live_stem = 0
+        ;
+
+      for (var s = 0, ps = this.length; s < ps; s++) {
+        N_live_stem += this[s].N_live_stem();
+        dwt_live_stem += this[s].dwt_live_stem();
+      }
+
+      return N_live_stem / dwt_live_stem;
+
+    };
+
+
+    /* f_N_root_dwt [kg (N) kg-1 (OM) m-2] */
+    mixture.f_N_root_dwt = function () {
+
+      var N_root = 0
+        , dwt_root = 0
+        ;
+
+      for (var s = 0, ps = this.length; s < ps; s++) {
+        N_root += this[s].N_root();
+        dwt_root += this[s].dwt_root();
+      }
+
+      return N_root / dwt_root;
+
+    };
+
+
     /* total leaf area */
     mixture.L_tot = function () {
 
@@ -1563,11 +1641,11 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
       var h_mx = 0 
         , h = 0
-        , L_tot = this.L_tot()
+        //, L_tot = this.L_tot()
         ;
 
       for (var s = 0, ps = this.length; s < ps; s++) {
-        h = this[s].h(L_tot);
+        h = this[s].h();
         h_mx = (h > h_mx) ? h : h_mx;
       }
 
@@ -1608,10 +1686,11 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       
       var n_start_p = []
         , L_tot = this.L_tot()
+        , h_mx = this.h_mx()
         ;
       
       for (var s = 0, ps = this.length; s < ps; s++) {
-        n_start_p[s] = 1 + round((1 - this[s].h(L_tot) / this.h_mx()) * n_L); 
+        n_start_p[s] = 1 + ceil((1 - this[s].h() / h_mx) * n_L); 
       }
       
       return n_start_p;
@@ -1625,7 +1704,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       var δL_p = [];
 
       for (var s = 0, ps = this.length; s < ps; s++)
-        δL_p[s] = this[s].L() / (n_L - (n_start_p[s] - 1));
+        δL_p[s] = this[s].L() / (n_L - n_start_p[s]);
 
       return δL_p;
 
@@ -1634,15 +1713,15 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     /* (3.113) total LAI in layer i */
     mixture.δL_i = function (n_start_p, n_L, δL_p) {
       
-      var δL_i = []
+      var δL_i = [0]
         , ΣδL = 0
         ;
 
-      for (var i = 0; i < n_L; i++) {
+      for (var i = 1; i <= n_L; i++) {
         ΣδL = 0;
         for (var s = 0, ps = this.length; s < ps; s++) {
           /* (3.110) 'i <=' error in SGS documentation? */
-          if ((i + 1) >= n_start_p[s]) // first layer is i = 1
+          if (n_start_p[s] <= i) // first layer is i = 1
             ΣδL += δL_p[s];
         }
         δL_i[i] = ΣδL;
@@ -1654,21 +1733,18 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
 
     /* (3.109) 'effective' light extinction coefficient for each LAI layer i*/
-    mixture.k_e_i = function () {
+    mixture.k_e_i = function (n_L, n_start_p, δL_p)   {
       
-      var k_e_i = []
-        , n_L = this.n_L()
-        , n_start_p = this.n_start_p(n_L)
-        , δL_p = this.δL_p(n_start_p, n_L)
+      var k_e_i = [0]
         , ΣkδL = 0
         , ΣδL = 0
         ;
       
-      for (var i = 0; i < n_L; i++) {
+      for (var i = 1; i <= n_L; i++) {
         ΣkδL = ΣδL = 0;
         for (var s = 0, ps = this.length; s < ps; s++) {
           /* (3.110) 'i <=' error in SGS documentation? */
-          if ((i + 1) >= n_start_p[s]) { // first layer is i = 1
+          if (n_start_p[s] <= i) { // first layer is i = 1
             ΣkδL += this[s].cons.photo.k * δL_p[s];
             ΣδL += δL_p[s];
           }
@@ -1738,24 +1814,26 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     /* TODO: implement homogeneity */
     if (numberOfSpecies > 1) { 
 
-      var P_g_mx = P_g(I_mx, T_I_mx, f_s, C_amb); // array
-      var P_g_mn = P_g(I_mn, T_I_mn, f_s, C_amb); // array
+      // array
+      var P_g_day = P_g(I_mx, I_mn, T_I_mx, T_I_mn, f_s, C_amb);
+      // if (DEBUG) {
+      //   debug('P_g_day', P_g_day);
+      //   for (var s = 0; s < numberOfSpecies; s++) {
+      //     if (sum(P_g_day) / numberOfSpecies != P_g_day[s])
+      //       throw new Error ('sum(P_g_day) / numberOfSpecies != P_g_day[s]');
+      //   }
+      // }
 
       /* iterate over mixture array */
-      for (var s = 0, ps = mixture.length; s < ps; s++) {
-
-        var vars = mixture[s].vars
-          , Ω_water = vars.Ω_water
-          ;
+      for (var s = 0; s < numberOfSpecies; s++) {
 
         /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) Ω_water missing in Johnson (2013) */
-        vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * (P_g_mx[s] + P_g_mn[s]) * Ω_water;
+        mixture[s].vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day[s] * mixture[s].vars.Ω_water;
 
       }
 
     } else { // one species
 
-      // TODO: diffuse/direct radiation
       var species = mixture[0] 
         , cons = species.cons
         , α_amb_15 = cons.photo.α_amb_15
@@ -1774,23 +1852,24 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         , T_opt_Pm_amb = cons.photo.T_opt_Pm_amb
         , λ = cons.photo.λ
         , f_C_m = cons.photo.f_C_m
-        , F_C = species.F_C()
+        , f_N = species.N_live_leaf() / species.C_live_leaf()
+        , f_N_ref = cons.N_leaf.ref
         , LAI = species.L()
         ;
 
       debug(species.vars);
 
       /* (3.23) Photosynthetic efficiency, α */
-      var α_mx = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
-      var α_mn = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
+      var α_mx = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, f_N_ref);
+      var α_mn = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, f_N_ref);
       if (!isC4) {
         α_mx = α_mx * f_α_TC(T_I_mx, C_amb, λ_α, γ_α, λ, f_C_m);
         α_mn = α_mx * f_α_TC(T_I_mn, C_amb, λ_α, γ_α, λ, f_C_m);
       }
 
       /* (3.8) Light saturated photosynthesis, P_m. TODO: why not related to light extiction (exp(-kl)) any more? */
-      var P_m_mx = P_m_ref * f_C(C_amb, λ, f_C_m) * f_Pm_TC(T_I_mx, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, isC4, F_C);
-      var P_m_mn = P_m_ref * f_C(C_amb, λ, f_C_m) * f_Pm_TC(T_I_mn, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, isC4, F_C);
+      var P_m_mx = P_m_ref * f_C(C_amb, λ, f_C_m) * f_Pm_TC(T_I_mx, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, f_N_ref);
+      var P_m_mn = P_m_ref * f_C(C_amb, λ, f_C_m) * f_Pm_TC(T_I_mn, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, f_N_ref);
 
       var Δ_l = 0.1;
       var n = LAI / Δ_l;
@@ -1833,19 +1912,19 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       fs    [-]                       :fraction direct solar radiation
     */
     
-    function I_s_l(l, I_0, k_e_i, k) {
+    // function I_s_l(l, I_0, k_e_i, k) {
 
-      if (DEBUG) debug(arguments, 'I_s_l');
+    //   if (DEBUG) debug(arguments, 'I_s_l');
       
-      var I_s_l = 0
-        , fs = fs || 0.7
-        ; 
+    //   var I_s_l = 0
+    //     , fs = fs || 0.7
+    //     ; 
         
-      I_s_l =  k * I_0 * (f_s + (1 - f_s) * exp(-k_e_i * l));
+    //   I_s_l =  k * I_0 * (f_s + (1 - f_s) * exp(-k_e_i * l));
 
-      return I_s_l;
+    //   return I_s_l;
 
-    }
+    // }
     
 
     /*
@@ -1858,17 +1937,17 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       f_s   [-]                       :fraction direct solar radiation 
     */
 
-    function I_d_l(l, I_0, k_e_i, k, f_s) {
+    // function I_d_l(l, I_0, k_e_i, k, f_s) {
 
-      if (DEBUG) debug(arguments, 'I_d_l');
+    //   if (DEBUG) debug(arguments, 'I_d_l');
       
-      var I_d_l = 0;
+    //   var I_d_l = 0;
 
-      I_d_l =  k * I_0 * (1 - f_s) * exp(-k_e_i * l);
+    //   I_d_l =  k * I_0 * (1 - f_s) * exp(-k_e_i * l);
 
-      return I_d_l;
+    //   return I_d_l;
 
-    }
+    // }
 
 
     /*
@@ -1913,13 +1992,11 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       TODO: use species.cons.N_ref
     */
 
-    function f_Pm_N(f_N, isC4, F_C) {
+    function f_Pm_N(f_N, f_N_ref) {
 
       if (DEBUG) debug(arguments, 'f_Pm_N');
 
-      var f_Pm_N = 0
-        , f_N_ref = (isC4) ? (0.03 / F_C) : (0.04 / F_C)
-        ;
+      var f_Pm_N = 0;
 
       f_Pm_N = (f_N < f_N_ref) ? (f_N / f_N_ref) : 1;
 
@@ -1974,6 +2051,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       if (DEBUG) debug(arguments, 'f_α_TC');
 
       var f_α_TC = 0
+        , C_amb_ref = 380
         , T_opt_α = 15 + γ_α * (f_C(C_amb, λ, f_C_m) - 1)
         ;
 
@@ -1990,13 +2068,11 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       f_N [kg (N) kg-1 (C)] nitrogen fraction
     */
 
-    function f_α_N(f_N, isC4, F_C) {
+    function f_α_N(f_N, f_N_ref) {
 
       if (DEBUG) debug(arguments, 'f_α_N');
 
-      var f_α_N = 0
-        , f_N_ref = (isC4) ? (0.03 / F_C) : (0.04 / F_C)
-        ;
+      var f_α_N = 0;
 
       f_α_N = (f_N > f_N_ref) ? 1 : (0.5 + 0.5 * (f_N / f_N_ref));
 
@@ -2039,7 +2115,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       C_amb
     */
     
-    function P_g(I_0, T, f_s, C_amb) {
+    function P_g(I_mx, I_mn, T_I_mx, T_I_mn, f_s, C_amb) {
 
       if (DEBUG) debug(arguments, 'P_g');
 
@@ -2047,86 +2123,140 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         , δL = mixture.δL
         , n_L = mixture.n_L()
         , n_start_p = mixture.n_start_p(n_L) // array
-        , k_e_i = mixture.k_e_i() // array index starts with 0!
-        // , k_e = mixture.k_e() // weighted k over all species by total leaf area share 
         , δL_p = mixture.δL_p(n_start_p, n_L)
-        , δL_i = mixture.δL_i(n_start_p, n_L, δL_p) // array index starts with 0!
+        , δL_i = mixture.δL_i(n_start_p, n_L, δL_p)
+        , k_e_i = mixture.k_e_i(n_L, n_start_p, δL_p)
+        , α_mx = []
+        , α_mn = []
+        , P_m_mx = []
+        , P_m_mn = []
+        , ξ = []
+        , k = []
+        ;
+
+      if (DEBUG) {
+        debug('n_start_p', n_start_p);
+        debug('δL_p', δL_p);
+        debug('δL_i', δL_i);
+        debug('k_e_i', k_e_i);
+        for (var s = 0; s < numberOfSpecies; s++)
+          debug('LAI', mixture[s].L());
+        if (sum(n_start_p) / numberOfSpecies != 1)
+          throw new Error('sum(n_start_p) / numberOfSpecies != 1');
+      }
+
+      var I_s_mx = I_mx * f_s
+        , I_s_mn = I_mn * f_s
+        , I_d_mx = I_mx * (1 - f_s)
+        , I_d_mn = I_mn * (1 - f_s)
         ;
 
       /* iterate over species */
-      for (var s = 0, ps = mixture.length; s < ps; s++) {
+      for (var s = 0; s < numberOfSpecies; s++) {
 
-        P_g[s] = 0.0;
+        P_g[s] = 0;
 
         var species = mixture[s] 
           , cons = species.cons
-          , l = 0
-          , α_amb_15 = cons.photo.α_amb_15
-          , P_m_ref = cons.photo.P_m_ref
-          , k = cons.photo.k
-          , f_N = species.f_N_live_leaf() // TODO: leaf or shoot?
+          , photo = cons.photo
+          , α_amb_15 = photo.α_amb_15
+          , P_m_ref = photo.P_m_ref
           , isC4 = species.isC4
-          , α = 0
-          , P_m = 0
-          , ξ = cons.photo.ξ
-          , λ_α = cons.photo.λ_α
-          , γ_α = cons.photo.γ_α
-          , γ_Pm = cons.photo.γ_Pm // TODO: value?
-          , T_mn = cons.photo.T_mn
-          , T_ref = cons.photo.T_ref
-          , T_opt_Pm_amb = cons.photo.T_opt_Pm_amb
-          , λ = cons.photo.λ
-          , f_C_m = cons.photo.f_C_m
-          , F_C = species.F_C()
+          , λ_α = photo.λ_α
+          , γ_α = photo.γ_α
+          , γ_Pm = photo.γ_Pm // TODO: value?
+          , T_mn = photo.T_mn
+          , T_ref = photo.T_ref
+          , T_opt_Pm_amb = photo.T_opt_Pm_amb
+          , λ = photo.λ
+          , f_C_m = photo.f_C_m
+          , f_N = species.N_live_leaf() / species.C_live_leaf()
+          , f_N_ref = cons.N_leaf.ref
           ;
 
+        if (DEBUG) {
+          debug('s', s);
+          debug('f_N', f_N);
+          debug('f_N_ref', f_N_ref);
+        }
+        
+        k[s] = photo.k;
+        ξ[s] = photo.ξ;
+
         /* (3.23) Photosynthetic efficiency, α */
-        if (isC4)
-          α = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
-        else
-          α = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_TC(T, C_amb, λ_α, γ_α, λ, f_C_m) * f_α_N(f_N, isC4, F_C);
+        if (isC4) {
+          α_mx[s] = a_mn[s] = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, f_N_ref);
+        } else {
+          α_mx[s] = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_TC(T_I_mx, C_amb, λ_α, γ_α, λ, f_C_m) * f_α_N(f_N, f_N_ref);
+          α_mn[s] = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_TC(T_I_mn, C_amb, λ_α, γ_α, λ, f_C_m) * f_α_N(f_N, f_N_ref);
+        }
 
         /* (3.8) Light saturated photosynthesis, P_m. TODO: why not related to light extiction (exp(-kl)) any more? */
-        P_m = P_m_ref * f_C(C_amb, λ, f_C_m) * f_Pm_TC(T, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, isC4, F_C);
+        P_m_mx[s] = P_m_ref * f_C(C_amb, λ, f_C_m) * f_Pm_TC(T_I_mx, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, f_N_ref);
+        P_m_mn[s] = P_m_ref * f_C(C_amb, λ, f_C_m) * f_Pm_TC(T_I_mn, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, f_N_ref);
 
-        /*  
-            numerical integration:
-          - iterate through the depth of the canopy of species.
-          - if a new species appears in layer i (i >= n_start_p[s]) LAI increment 
-            increases by δL_p and k_e_i (weighted k) changes
-          - the fraction of leafs in direct light declines through the depth of 
-            the canopy: exp(-k * l). The fraction in diffuse light increases: 1 - exp(-k * l)
-          - the fraction in direct light is always also in diffuse light (2.21) 
-        */
+      } // for s
 
-        /* iterate over leaf area layers */
-        for (var i = 1; i < n_L + 1; i++) {
 
-          /* cummulative leaf area at layer i */
-          l += δL_i[i - 1] - (δL_i[i - 1] / 2); // l = (2 * i - 1) * (δL_p[s] / 2);
+      if (DEBUG) {
+        debug('k', k);
+        debug('ξ', ξ);
+        debug('α_mx', α_mx);
+        debug('α_mn', α_mn);
+      }
+
+      /*  
+          numerical integration:
+        - iterate through the depth of the canopy of species.
+        - if a new species appears in layer i (i >= n_start_p[s]) LAI increment 
+          increases by δL_p and k_e_i (weighted k) changes
+        - the fraction of leafs in direct light declines through the depth of 
+          the canopy: exp(-k * l). The fraction in diffuse light increases: 1 - exp(-k * l)
+        - the fraction in direct light is always also in diffuse light (2.21) 
+      */
+
+      var I_s_l_mx = 0
+        , I_s_l_mn = 0
+        , I_d_l_mx = 0
+        , I_d_l_mn = 0
+        , L_s = 1
+        , L_d = 0
+        ;
+
+      /* iterate over leaf area layers */
+      for (var i = 1; i <= n_L; i++) {
+
+        /* include species s in integeration if s has occured in layer i */
+        for (var s = 0; s < numberOfSpecies; s++) {
           
-          /* direct radiation within the canopy at leaf area l with weighted k_e in layer i */
-          var I_s_l_i = I_s_l(l, I_0, k_e_i[i - 1], k);
-          
-          /* diffuse radiation  within the canopy at leaf area l with weighted k_e in layer i */
-          var I_d_l_i = I_d_l(l, I_0, k_e_i[i - 1], k, f_s);
-  
-          /* include species s in integeration if s has occured in layer i. 
-             Error in SGS documentation?: i <= n_start_p[s] */
-          if (i >= n_start_p[s]) {
+          if (n_start_p[s] <= i) {
 
-            /* gross assmilates from direct radiation */
-            P_g[s] += P_l(I_s_l_i, α, P_m, ξ) * exp(-k_e_i[i - 1] * l) * δL_p[s];
-            
-            /* gross assmilates from diffuse radiation */
-            P_g[s] += P_l(I_d_l_i, α, P_m, ξ) * (1 - exp(-k_e_i[i - 1] * l)) * δL_p[s];
+            I_s_l_mx = k[s] * (I_s_mx + I_d_mx);
+            I_s_l_mn = k[s] * (I_s_mn + I_d_mn);
+            I_d_l_mx = k[s] * I_d_mx;
+            I_d_l_mn = k[s] * I_d_mn;
+
+            P_g[s] += P_l(I_s_l_mx, α_mx[s], P_m_mx[s], ξ[s]) * L_s * δL_p[s];
+            P_g[s] += P_l(I_s_l_mn, α_mn[s], P_m_mn[s], ξ[s]) * L_s * δL_p[s];
+            P_g[s] += P_l(I_d_l_mx, α_mx[s], P_m_mx[s], ξ[s]) * L_d * δL_p[s];
+            P_g[s] += P_l(I_d_l_mn, α_mn[s], P_m_mn[s], ξ[s]) * L_d * δL_p[s];
 
           } // if s in i
 
-        } // for i
+        
+        } // for s
 
-      } // for s
-      
+        /* diffuse light at layer i+1 */
+        I_d_mx = I_d_mx * (1 - k_e_i[i] * δL_i[i]);
+        I_d_mn = I_d_mn * (1 - k_e_i[i] * δL_i[i]);
+
+        /* fraction leaves in direct light */
+        L_s = L_s * (1 - k_e_i[i] * δL_i[i]);
+        /* fraction leaves only in diffuse light */
+        L_d = 1 - L_s;
+
+      } // for i
+
       return P_g;
       
     }
@@ -2165,11 +2295,22 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         , F_C = species.F_C()
         ;
 
-      /*(3.57) Gross assimilation P_g_day adjusted for maintenance respiration, 
-      respiratory costs of nitrogen uptake and fixation. Use R_N from previous day (circularity) */
-      vars.R_m = R_m(T, f_N, C_total, isC4, F_C);
+      var C_live_leaf = species.C_live_leaf()
+        , N_live_leaf = species.N_live_leaf()
+        , C_live_stem = species.C_live_stem()
+        , N_live_stem = species.N_live_stem()
+        , C_root = species.C_root()
+        , N_root = species.N_root()
+        ;
+        
+      vars.R_m = R_m(T, N_live_leaf / C_live_leaf, cons.N_leaf.ref, C_live_leaf);
+      vars.R_m += R_m(T, N_live_stem / C_live_stem, cons.N_leaf.ref * 0.5, C_live_stem);
+      vars.R_m += R_m(T, N_root / C_root, cons.N_leaf.ref * 0.5, C_root);
+
       vars.R_N = R_N(species.vars.N_up, species.vars.N_fix);
       
+      /*(3.57) Gross assimilation P_g_day adjusted for maintenance respiration, 
+      respiratory costs of nitrogen uptake and fixation. Use R_N from previous day (circularity) */
       var P_growth = P_g_day - vars.R_m - vars.R_N;
       debug('P_g_day: ' + P_g_day);
       debug('P_growth: ' + P_growth);
@@ -2204,7 +2345,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
             - how to partition available N between organs? If any is below a minimum serve this orgen first? 
         */
 
-        /* calculate current tissue N conc. of live tissue [kg (C,protein) kg-1 (C, live tissue)]*/
+        /* calculate current tissue N conc. of live tissue [kg (N,protein) kg-1 (C, live tissue)]*/
         var f_N_live = {
           leaf: species.N_live_leaf() / species.C_live_leaf(),
           stem: species.N_live_stem() / species.C_live_stem(),
@@ -2212,6 +2353,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         };
 
         debug('f_N_live', f_N_live);
+        debug('f_N_live_dwt', species.N_live_leaf() / species.dwt_live_leaf());
 
         /* is any below optimum? */
         var ordering = [LEAF, SHOOT, ROOT];
@@ -2341,7 +2483,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
             vars.dW_s_fdwt.sc = (C_assimilated * f_sc / fC_sc) / dwt;
             vars.dW_s_fdwt.nc = (C_assimilated * f_nc / fC_nc) / dwt;
             vars.dW_s_fdwt.pn = (C_assimilated * f_pn / fC_pn) / dwt;
-          } if (ordering[organ] === ROOT) {
+          } else if (ordering[organ] === ROOT) {
             vars.Y_root = Y;
             vars.G_root = C_assimilated;
             // update organic d.wt composition of new growth to root
@@ -2358,6 +2500,12 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         species.vars.N_assim = N_assim;
         species.vars.N_req = N_req;
         vars.G = vars.G_leaf + vars.G_stem + vars.G_root;
+
+        if (DEBUG) {
+          debug('Ω_N', species.vars.Ω_N);
+          debug('N_assim', species.vars.N_assim);
+          debug('N_req', species.vars.N_req);
+        }
 
 
       } else { // no growth: assimilates are not sufficent for respiratory costs 
@@ -2462,16 +2610,15 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
     */
     
-    function R_m(T, f_N, W, isC4, F_C) {
+    function R_m(T, f_N, f_N_ref, W) {
 
       if (DEBUG) debug(arguments);
-      
+
       var R_m = 0
-        , m_ref = 0.025
-        , f_N_ref = (isC4) ? (0.03 / F_C) : (0.04 / F_C)
+        , m_ref = cons.resp.m_ref
         ;
       
-      R_m = m_ref * f_m(T, isC4) * (f_N / f_N_ref) * W;
+      R_m =  m_ref * f_m(T) * (f_N / f_N_ref) * W;
 
       return R_m;
       
@@ -2482,15 +2629,16 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       (3.44) Maintenance temperature response
     */
 
-    function f_m(T, isC4) {
+    function f_m(T) {
 
       if (DEBUG) debug(arguments);
 
-      var f_m = 0
-        , T_m_mn = (isC4) ? 12 : 3
-        , T_ref = (isC4) ? 25 : 20
+      var f_m = 1
+        , T_m_mn = cons.resp.T_m_mn
+        , T_ref = cons.resp.T_ref
+        ;
 
-      f_m = T < T_m_mn ? 0 : (T - T_m_mn) / (T_ref - T_m_mn);
+      f_m = (T <= T_m_mn) ? 0 : (T - T_m_mn) / (T_ref - T_m_mn);
 
       return f_m;
 
@@ -2514,8 +2662,8 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       if (DEBUG) debug(arguments);
 
       var R_N = 0
-        , λ_N_up = 0.6
-        , λ_N_fix = 6
+        , λ_N_up = cons.resp.λ_N_up
+        , λ_N_fix = cons.resp.λ_N_fix
         ;
 
       R_N = λ_N_up * N_up + λ_N_fix * N_fix;
@@ -2735,6 +2883,10 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
   mixture = new Mixture(spec, { DM: dm });
 
+  /* since mixture might be re-sortet in each step we can not rely on the original index if species parameters are accessed */
+  for (var s = 0; s > numberOfSpecies; s++)
+    mixtureUnsorted[s] = mixture[s];
+
   /*
     T           [C°]            mean daily temperature
     T_mx        [C°]            maximum daily temperature
@@ -2792,6 +2944,13 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     } // <-- from fc_CropWaterUptake
 
     var E_T_pot = vc_RemainingEvapotranspiration;
+
+    /* sort by stress factor in asc. order: make sure a species is not in relative higher stress because it is always
+       the last in mixture that nitrogen and water is allocated to */ 
+    mixture.sort(function (a, b) {
+      // return sqrt(a.vars.Ω_water * a.vars.Ω_N) - sqrt(b.vars.Ω_water * b.vars.Ω_N);
+      return a.vars.Ω_water - b.vars.Ω_water;
+    });
 
     /* set actual transpiration and water limiting factor */
     transpiration(E_T_pot);
@@ -3191,17 +3350,22 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     }
 
     /* set water growth limiting factor */
-    for (var s = 0; s < numberOfSpecies; s++) {
-      /* update sum */
-      E_T_sum[s] = sum(E_T[s]);
-      if (E_T_sum[s] === 0)
-         mixture[s].vars.Ω_water = 1; /* 0 / 0 = NaN */
-      else
-        mixture[s].vars.Ω_water = min(1, E_T_sum[s] / E_T_demand[s]);
-      if (DEBUG) {
-        debug('Ω_water', mixture[s].vars.Ω_water);
-        debug('E_T[s]', E_T[s]);
+    if (waterDeficitResponseOn) {
+      for (var s = 0; s < numberOfSpecies; s++) {
+        /* update sum */
+        E_T_sum[s] = sum(E_T[s]);
+        if (E_T_sum[s] === 0)
+           mixture[s].vars.Ω_water = 1; /* 0 / 0 = NaN */
+        else
+          mixture[s].vars.Ω_water = min(1, E_T_sum[s] / E_T_demand[s]);
+        if (DEBUG) {
+          debug('Ω_water', mixture[s].vars.Ω_water);
+          debug('E_T[s]', E_T[s]);
+        }
       }
+    } else {
+      for (var s = 0; s < numberOfSpecies; s++)
+        mixture[s].vars.Ω_water = 1;
     }
 
   } // transpiration
@@ -3635,12 +3799,38 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     return mixture.dwt_dead_shoot() * SQM_PER_HA;
   };
 
+  /* [kg (N) kg-1 (C)] */
+  var get_f_N_live_leaf = function () {
+    return mixture.f_N_live_leaf();
+  };
+
+  /* [kg (N) kg-1 (OM)] */
+  var f_N_live_leaf_dwt = function () {
+    return mixture.f_N_live_leaf_dwt();
+  };
+
+  /* [kg (N) kg-1 (OM)] */
+  var f_N_live_stem_dwt = function () {
+    return mixture.f_N_live_stem_dwt();
+  };
+
+  /* [kg (N) kg-1 (OM)] */
+  var f_N_root_dwt = function () {
+    return mixture.f_N_root_dwt();
+  };
+
+
+
 
   return {
       step: step
     , get_P_g: get_P_g
     , get_R_m: get_R_m
     , get_dwt_dead_shoot: get_dwt_dead_shoot
+    , get_f_N_live_leaf: get_f_N_live_leaf
+    , f_N_live_leaf_dwt: f_N_live_leaf_dwt
+    , f_N_live_stem_dwt: f_N_live_stem_dwt
+    , f_N_root_dwt: f_N_root_dwt
     , accumulateEvapotranspiration: accumulateEvapotranspiration
     , isDying: get_isDying
     , totalBiomass: get_totalBiomass
