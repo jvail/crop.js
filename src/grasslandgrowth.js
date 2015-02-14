@@ -41,6 +41,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     , cropParams = cps
     , centralParameterProvider = cpp
     , vs_NumberOfLayers  = sc.vs_NumberOfLayers()
+    , vs_NumberOfOrganicLayers  = sc.vs_NumberOfOrganicLayers()
     , vs_LayerThickness = soilColumn.vs_LayerThickness()
     , vs_Latitude  = stps.vs_Latitude
     , vs_HeightNN = stps.vs_HeightNN
@@ -4041,6 +4042,46 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     return stress;
   };
 
+
+  /* array, per soil layer [AOM_Properties] TODO: implement in generic crop as well */
+  var senescencedRoot = function () {
+
+    var AOM = [];
+
+    for (var l = 0; l < vs_NumberOfOrganicLayers; l++) {
+
+      var aom = Object.create(AOM_Properties);
+      var N = 0;
+      
+      for (var s = 0; s < numberOfSpecies; s++) {
+
+        var Λ_r = mixture[s].vars.Λ_r;
+
+        /* because of maxMineralizationDepth vs_NumberOfOrganicLayers might be < vs_NumberOfLayers ->
+           multiply by (vs_NumberOfLayers / vs_NumberOfOrganicLayers).  TODO: check */
+        aom.vo_AOM_Slow += (Λ_r.sc + Λ_r.nc + Λ_r.pn) * f_r[s][l] / f_r_sum[s] / vs_LayerThickness * (vs_NumberOfLayers / vs_NumberOfOrganicLayers);
+        N += Λ_r.pn / fC_pn * fN_pn  / vs_LayerThickness * (vs_NumberOfLayers / vs_NumberOfOrganicLayers);
+
+      }
+
+      aom.vo_CN_Ratio_AOM_Slow = (N === 0) ? 200 : aom.vo_AOM_Slow / N;
+      /* check for null AOM in soilOrganic */
+      AOM[l] = aom;
+    }
+
+    // reset Λ_r
+    for (var s = 0; s < numberOfSpecies; s++) {
+      var Λ_r = mixture[s].vars.Λ_r;
+      Λ_r.sc = Λ_r.nc = Λ_r.pn = 0;
+    }
+
+    debug('AOM', AOM);
+
+    return AOM;
+
+  };
+
+
   return {
       step: step
     , get_P_g: get_P_g
@@ -4055,6 +4096,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     , LAI: LAI
     , δ_shoot: δ_shoot
     , Ω_water: Ω_water
+    , senescencedRoot: senescencedRoot
     , accumulateEvapotranspiration: accumulateEvapotranspiration
     , isDying: get_isDying
     , totalBiomass: get_totalBiomass
