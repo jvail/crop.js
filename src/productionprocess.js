@@ -45,10 +45,12 @@ var addApplication = function (app) {
 
 if ((crop.seedDate().setHours(0,0,0,0) != new Date(1951, 0, 1).setHours(0,0,0,0)) && (crop.seedDate().setHours(0,0,0,0) != new Date(0,0,0).setHours(0,0,0,0)))
   addApplication(new Seed(crop.seedDate(), crop));
-if ((crop.harvestDate().setHours(0,0,0,0) != new Date(1951, 0, 1).setHours(0,0,0,0)) && (crop.harvestDate().setHours(0,0,0,0) != new Date(0,0,0).setHours(0,0,0,0)))
+if ((crop.harvestDate().isValid() && crop.harvestDate().setHours(0,0,0,0) != new Date(1951, 0, 1).setHours(0,0,0,0)) && (crop.harvestDate().setHours(0,0,0,0) != new Date(0,0,0).setHours(0,0,0,0)))
 {
   addApplication(new Harvest(crop.harvestDate(), crop , _cropResult));
 }
+
+debug('_worksteps', _worksteps);
 
 
 var cuttingDates = crop.getCuttingDates();

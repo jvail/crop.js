@@ -27,7 +27,7 @@ var Model = function (env) {
     , _currentCrop = null
     ;
 
-  var run = function (progressCallback) {
+  var run = function (progressCallbacks) {
 
     if (env.cropRotation.length === 0) {
       logger(MSG.ERROR, "rotation is empty");
@@ -113,8 +113,10 @@ var Model = function (env) {
         cropStep(dayOfSimulation);
       
       /* if progressCallback is provided */
-      if (progressCallback)
-        progressCallback(dayOfSimulation, currentDate, this);
+      if (progressCallbacks.length) {
+        for (var c = 0, cs = progressCallbacks.length; c < cs; c++)
+          progressCallbacks[c](dayOfSimulation, currentDate, this);
+      }
 
       generalStep(dayOfSimulation);
 
@@ -122,9 +124,11 @@ var Model = function (env) {
 
     logger(MSG.INFO, "returning from runModel");
     
-    /* if progressCallback is provided send null i.e. we are done*/
-    if (progressCallback)
-      progressCallback(null, null);
+    /* if progressCallbacks is provided send null i.e. we are done*/
+    if (progressCallbacks) {
+      for (var c = 0, cs = progressCallbacks.length; c < cs; c++)
+        progressCallbacks[c](null, null);
+    }
 
     return; /* TODO: what to return? */
 

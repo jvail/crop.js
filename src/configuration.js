@@ -23,10 +23,10 @@
   }
   doDebug         [bool]          debug model and show MSG.DEBUG output
   isVerbose       [bool]          show MSG.INFO output
-  outputCallback  [function]      access model variables at each time step
+  progressCallbacks [array]         array functions, of access model variables at each time step
 */
 
-var Configuration = function (weather, doDebug, isVerbose, outputCallback) {
+var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
 
   DEBUG = (doDebug === true) ? true : false;
   VERBOSE = (isVerbose === true) ? true : false;
@@ -36,7 +36,8 @@ var Configuration = function (weather, doDebug, isVerbose, outputCallback) {
   var run = function run(simInput, siteInput, prodInput) {
 
     /* set to default if arg not provided */
-    outputCallback = outputCallback || defaultOutputCallback;
+    if (progressCallbacks.length === 0)
+      progressCallbacks = [defaultCallback];
     
     logger(MSG.INFO, 'Fetching parameters.');
     
@@ -136,7 +137,7 @@ var Configuration = function (weather, doDebug, isVerbose, outputCallback) {
 
     logger(MSG.INFO, 'Start model run.');
 
-    return model.run(outputCallback);
+    return model.run(progressCallbacks);
     
   };
 
@@ -573,7 +574,7 @@ var Configuration = function (weather, doDebug, isVerbose, outputCallback) {
 
   };
 
-  var defaultOutputCallback = function (dayOfSimulation, date, model) {
+  var defaultCallback = function (dayOfSimulation, date, model) {
 
     var progress = {};
 

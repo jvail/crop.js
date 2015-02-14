@@ -458,6 +458,61 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         this.cons.N_leaf.ref = 0.04 / 0.45;
 
         break;
+      case 'ryegrass':
+
+        this.isLegume = false;
+        this.type = 'ryegrass';
+
+        this.cons.h_m = 0.5;
+        this.cons.L_half = 2.0;
+        this.cons.σ = 25.8; // Topp (2004)
+        this.cons.fAsh_leaf = 0.03;
+        this.cons.fAsh_stem = 0.05;
+
+        /* photosysthesis */
+        this.cons.photo.T_ref = 20;
+        this.cons.photo.T_mn = 3;
+        this.cons.photo.T_opt_Pm_amb = 23;
+        this.cons.photo.ξ = 0.8;
+        this.cons.photo.k = 0.5;
+        this.cons.photo.m = 0.0;
+        this.cons.photo.α_amb_15 = 0.05;
+        this.cons.photo.P_m_ref = 16;
+        this.cons.photo.λ = 1.2;
+        this.cons.photo.f_C_m = 1.49;
+        this.cons.photo.γ_Pm = 10;
+        this.cons.photo.λ_α = 0.02; 
+        this.cons.photo.γ_α = 6;
+
+        /* partitioning */
+        this.cons.part.ρ_shoot_ref = 0.8;
+        this.cons.part.ρ_l = 0.7;
+
+        /* NDF digestibility per age class */
+        this.cons.δ_ndf_l_1 = 0.7;
+        this.cons.δ_ndf_l_2 = 0.6;
+        this.cons.δ_ndf_l_3 = 0.5;
+        this.cons.δ_ndf_l_dead = 0.2;
+        this.cons.δ_ndf_s_1 = 0.5;
+        this.cons.δ_ndf_s_2 = 0.4;
+        this.cons.δ_ndf_s_3 = 0.3;
+        this.cons.δ_ndf_s_dead = 0.2;
+
+        /* NDSC digestibility per age class */
+        this.cons.δ_nc = 1.00;
+        
+        /* reference composition of new tissue dry matter, fractions */ 
+        this.cons.dW_l_fdwt_ref = { sc: 0.50, nc: 0.22, pn: 0.25, ah: 0.03 };
+        this.cons.dW_s_fdwt_ref = { sc: 0.63, nc: 0.18, pn: 0.13, ah: 0.05 };
+        this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 };
+
+        /* leaf nitrogen TODO: remove? */
+        this.cons.N_leaf.opt = 0.04 / 0.45;
+        this.cons.N_leaf.max = 0.05 / 0.45;
+        this.cons.N_leaf.min = 0.012 / 0.45;
+        this.cons.N_leaf.ref = 0.04 / 0.45;
+
+        break;
       case 'pasture grass':
 
         this.isLegume = false;
@@ -945,7 +1000,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       return (
         /* convert leaf kg C to kg d.wt incl. ashes TODO: ashes */
         (SC.live_l_1 + SC.live_l_2 + SC.live_l_3 + SC.dead_l) / fC_sc + 
-        NC.l / fC_nc + 
+        NC.l / fC_nc + // TODO: add dead pools
         PN.l / fC_pn
       );  
 
@@ -1323,7 +1378,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     dm array [-] fraction of species dry matter share 
 
   */
-  var Mixture = function (species, cfg) {
+  var Mixture = function (species, config) {
 
     /* pass array of species or single species */
     var mixture = Array.isArray(species) ? species : [species];
@@ -1339,18 +1394,20 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       , DM = []
       ;
   
-    if (cfg && cfg.DM) {
-      DM = cfg.DM;
+    if (config && config.DM) {
+      DM = config.DM;
     } else {
       for (var s = 0, ps = species.length; s < ps; s++)
         DM[s] = 1 / ps;
     }
 
+    mixture.homogeneity = config.hasOwnProperty('homogeneity') ? config.homogeneity : 0.75;
+
     /*Vergleich der Biomasseproduktion bei Schnittnutzung und Kurzrasenweide
       unter biologischen Bedingungen im ostalpinen Raum*/;
-    if (cfg && cfg.DM_shoot) 
-      DM_shoot = cfg.DM_shoot * 1e-4 // kg ha-1 to kg m-2
-    if (cfg && cfg.DM_root) 
+    if (config && config.DM_shoot) 
+      DM_shoot = config.DM_shoot * 1e-4 // kg ha-1 to kg m-2
+    if (config && config.DM_root) 
       DM_root = 1000 * 1e-4 // kg ha-1 to kg m-2
 
 
@@ -1409,7 +1466,6 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       logger(MSG.INFO, { SC: SC, NC: NC, PN: PN });
     }
 
-    mixture.homogeneity = 1;
 
     mixture.N_req_opt = function () {
 
@@ -1835,7 +1891,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       /* iterate over mixture array */
       for (var s = 0; s < numberOfSpecies; s++) {
 
-        /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) Ω_water missing in Johnson (2013) */
+        /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) mixture[s].vars.Ω_water * sqrt(mixture[s].vars.Ω_N) missing in Johnson (2013) */
         mixture[s].vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day_mix[s] * mixture[s].vars.Ω_water * mixture.homogeneity;
         if (mixture.homogeneity < 1)
           mixture[s].vars.P_g_day += (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day[s] * mixture[s].vars.Ω_water / L_scale * (1 - mixture.homogeneity);
@@ -1851,6 +1907,8 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
         /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) Ω_water missing in Johnson (2013) */
         mixture[s].vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day[s] * mixture[s].vars.Ω_water;
+
+        debug('P_g_day[s] [kg (C) m-2 d-1]', (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day[s])
 
       }
 
@@ -2125,7 +2183,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
           , T_opt_Pm_amb = photo.T_opt_Pm_amb
           , λ = photo.λ
           , f_C_m = photo.f_C_m
-          , f_N = species.N_live_leaf() / species.C_live_leaf()
+          , f_N = species.N_live_leaf() / species.C_live_leaf() // TODO: canopy or leaf?
           , f_N_ref = cons.N_leaf.ref
           ;
 
@@ -2244,7 +2302,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
           , T_opt_Pm_amb = cons.photo.T_opt_Pm_amb
           , λ = cons.photo.λ
           , f_C_m = cons.photo.f_C_m
-          , f_N = species.N_live_leaf() / species.C_live_leaf()
+          , f_N = species.N_live_leaf() / species.C_live_leaf() // TODO: canopy or leaf?
           , f_N_ref = cons.N_leaf.ref
           , LAI = species.L() * L_scale
           ;
@@ -2285,9 +2343,16 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         }
 
         if (DEBUG) {
-          debug('P_g_day', species.vars.P_g_day);
-          debug('P_gΩ_water_day', species.vars.P_g_day);
-          debug('LAI', LAI);
+          debug('I_mx', I_mx);
+          debug('I_mn', I_mn);
+          debug('Ω_N', species.vars.Ω_N);
+          debug('α_amb_15', α_amb_15);
+          debug('α_mx', α_mx);
+          debug('α_mn', α_mn);
+          debug('P_m_ref', P_m_ref);
+          debug('P_m_mx', P_m_mx);
+          debug('P_m_mn', P_m_mn);
+          debug('P_g[s] [μmol (CO2) m-2 s-1]', P_g[s]);
         }
 
       } // for s
@@ -2330,6 +2395,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         , F_C = species.F_C()
         ;
 
+      // vars.R_m = R_m(T, species.N_live_shoot() / species.C_live_shoot(), cons.N_leaf.ref, C_total);
       var C_live_leaf = species.C_live_leaf()
         , N_live_leaf = species.N_live_leaf()
         , C_live_stem = species.C_live_stem()
@@ -2337,7 +2403,6 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         , C_root = species.C_root()
         , N_root = species.N_root()
         ;
-        
       vars.R_m = R_m(T, N_live_leaf / C_live_leaf, cons.N_leaf.ref, C_live_leaf);
       vars.R_m += R_m(T, N_live_stem / C_live_stem, cons.N_leaf.ref * 0.5, C_live_stem);
       vars.R_m += R_m(T, N_root / C_root, cons.N_leaf.ref * 0.5, C_root);
@@ -3701,6 +3766,8 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
 
   var get_CropNRedux = function () {
+    if (numberOfSpecies === 1)
+      return mixture[0].vars.Ω_N;
     var dm_total = mixture.dwt_root() + mixture.dwt_stem() + mixture.dwt_leaf();
     var stress = 0;
     for (var i = 0; i < numberOfSpecies; i++)
@@ -3858,8 +3925,121 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     return mixture.f_N_root_dwt();
   };
 
+  /* 
+    array   [kg [OM] ha-1] 
+  */
+  var removal_dwt = function (residual) {
 
+    var dm = [];
+    // default residual 0.1 [kg dwt ha-1] ~ 1 [t ha-1]
+    var dwt_shoot_residual = residual || 0.1;
+    var dwt_shoot = mixture.dwt_shoot();
+    for (var s = 0; s < numberOfSpecies; s++) {
+      if (dwt_shoot <= dwt_shoot_residual) {
+        dm[s] = 0;
+      } else {
 
+        var species = mixture[s]
+          , vars = species.vars
+          , SC = vars.SC
+          , NC = vars.NC
+          , PN = vars.PN
+          , f_keep = 1 - (dwt_shoot - dwt_shoot_residual) / dwt_shoot
+          ;
+
+        dm[s] = SQM_PER_HA * (
+          species.dwt_leaf() * (1 - f_keep) +
+          species.dwt_stem() * (1 - f_keep)
+        );
+
+        // update pools
+        SC.live_l_1 *= f_keep;
+        SC.live_l_2 *= f_keep; 
+        SC.live_l_3 *= f_keep; 
+        SC.dead_l   *= f_keep;   
+        SC.live_s_1 *= f_keep; 
+        SC.live_s_2 *= f_keep; 
+        SC.live_s_3 *= f_keep; 
+        SC.dead_s   *= f_keep;
+        // TODO: add dead PN&NC pools
+        NC.l *= f_keep;
+        NC.s *= f_keep;
+        PN.l *= f_keep;
+        PN.s *= f_keep;
+
+      }
+
+    }
+
+    // cut by height does not work very well with current height(LAI) implementation
+    // for (var s = 0; s < numberOfSpecies; s++) {
+    //   var species = mixture[s];
+    //   var vars = species.vars;
+    //   var SC = vars.SC;
+    //   var NC = vars.NC;
+    //   var PN = vars.PN;
+    //   var h = species.h();
+    //   /* we keep a minimum of 1 % if height = 0 */
+    //   var f_keep = 1 - ((h === 0) ? 0.01 : max(0.01, (h - height) / h));
+    //   var leaf_dwt = species.dwt_leaf() * (1 - f_keep); 
+    //   var stem_dwt = species.dwt_stem() * (1 - f_keep);
+    //   // update pools
+    //   vars.SC.live_l_1 *= f_keep;
+    //   vars.SC.live_l_2 *= f_keep; 
+    //   vars.SC.live_l_3 *= f_keep; 
+    //   vars.SC.dead_l   *= f_keep;   
+    //   vars.SC.live_s_1 *= f_keep; 
+    //   vars.SC.live_s_2 *= f_keep; 
+    //   vars.SC.live_s_3 *= f_keep; 
+    //   vars.SC.dead_s   *= f_keep;
+    //   // TODO: add dead PN&NC pools
+    //   vars.NC.l *= f_keep;
+    //   vars.NC.s *= f_keep;
+    //   vars.PN.l *= f_keep;
+    //   vars.PN.s *= f_keep;
+
+    //   dm[s] = (leaf_dwt + stem_dwt) * SQM_PER_HA; 
+      
+    //   if (DEBUG) {
+    //     debug('f_keep', f_keep);
+    //     debug('leaf_dwt', leaf_dwt);
+    //     debug('stem_dwt', stem_dwt);
+    //   }
+    // }
+
+    return dm;
+
+  };
+
+  /* [m] */
+  var height = function () {
+    return mixture.h_mx();
+  };
+
+  /* [m2 m-2] */
+  var LAI = function () {
+    return mixture.L_tot();
+  };
+
+  /* [%] */
+  var δ_shoot = function () {
+    if (numberOfSpecies === 1)
+      return mixture[0].δ_shoot();
+
+    return 0;
+  };
+
+  /* [0-1] */
+  var Ω_water = function () {
+    if (numberOfSpecies === 1)
+      return mixture[0].vars.Ω_water;
+    var dm_total = mixture.dwt_root() + mixture.dwt_stem() + mixture.dwt_leaf();
+    var stress = 0;
+    for (var i = 0; i < numberOfSpecies; i++)
+      stress += mixture[i].vars.Ω_water * (mixture[i].dwt_root() + mixture[i].dwt_stem() + mixture[i].dwt_leaf()) / dm_total;
+    /* TODO: normalize (0-1) */
+    return stress;
+  };
 
   return {
       step: step
@@ -3870,6 +4050,11 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     , f_N_live_leaf_dwt: f_N_live_leaf_dwt
     , f_N_live_stem_dwt: f_N_live_stem_dwt
     , f_N_root_dwt: f_N_root_dwt
+    , removal_dwt: removal_dwt
+    , height: height
+    , LAI: LAI
+    , δ_shoot: δ_shoot
+    , Ω_water: Ω_water
     , accumulateEvapotranspiration: accumulateEvapotranspiration
     , isDying: get_isDying
     , totalBiomass: get_totalBiomass
