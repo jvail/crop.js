@@ -2827,7 +2827,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         , γ_l = f_γ(T) * 0.05 // TODO: Φ_l * no_boxes / l_live_per_tiller
           /* stem flux parameter TODO: how to better relate γ_s, γ_r to γ_l */
         , γ_s = 0.8 * γ_l // 0.8 is scale factor turn over rate relative to leaves
-        , γ_r = 0.02
+        , γ_r = 0.02 // root senescense rate
           /* dead to litter flux parameter (value from AgPasture) */
         , γ_dead = 0.11
         ;
@@ -2879,8 +2879,8 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
       /* (4.18m) input to litter. Johnson (2005/2008) TODO: here it includes root, add own pool? */
       Λ_litter.sc += γ_dead * (SC.dead_l + SC.dead_s);
-      Λ_litter.nc += γ_dead * (NC_dead.l + NC_dead.s + NC_dead.r);
-      Λ_litter.pn += γ_dead * (PN_dead.l + PN_dead.s + PN_dead.r);
+      Λ_litter.nc += γ_dead * (NC_dead.l + NC_dead.s);
+      Λ_litter.pn += γ_dead * (PN_dead.l + PN_dead.s);
 
       /* TODO: this is just a test: flux of pn and nc to litter pools (assume 80% remob in NC and 50% in PN) */
       dNC.l -= 0.2 * γ_l * NC.l;
@@ -2889,7 +2889,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
       NC_dead.l += 0.2 * γ_l * NC.l - γ_dead * NC_dead.l;
       NC_dead.s += 0.2 * γ_s * NC.s - γ_dead * NC_dead.s;
-      NC_dead.r += 0.2 * γ_r * NC.r - γ_dead * NC_dead.r;
+      NC_dead.r += 0.2 * γ_r * NC.r;
 
       dPN.l -= 0.5 * γ_l * PN.l;
       dPN.s -= 0.5 * γ_s * PN.s;
@@ -2897,7 +2897,13 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
       PN_dead.l += 0.5 * γ_l * PN.l - γ_dead * PN_dead.l;
       PN_dead.s += 0.5 * γ_s * PN.s - γ_dead * PN_dead.s;
-      PN_dead.r += 0.5 * γ_r * PN.r - γ_dead * PN_dead.r;
+      PN_dead.r += 0.5 * γ_r * PN.r;
+
+      if (DEBUG) {
+        debug('Λ_r', Λ_r);
+        debug('PN_dead.r', PN_dead.r);
+        debug('NC_dead.r', NC_dead.r);
+      }
 
 
       /* update C pools with dSC, dPN, dNC */
@@ -4059,16 +4065,17 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
           , Λ_r = vars.Λ_r
           , NC_dead = vars.NC_dead
           , PN_dead = vars.PN_dead
+          , scale = f_r[s][l] / f_r_sum[s] / vs_LayerThickness / vs_NumberOfOrganicLayers
           ;
 
         /* because of maxMineralizationDepth vs_NumberOfOrganicLayers might be < vs_NumberOfLayers ->
            multiply by (vs_NumberOfLayers / vs_NumberOfOrganicLayers).  TODO: check */
-        aom.vo_AOM_Slow += (Λ_r.sc + NC_dead.r + PN_dead.r) * f_r[s][l] / f_r_sum[s] / vs_LayerThickness * (vs_NumberOfLayers / vs_NumberOfOrganicLayers);
-        N += PN_dead.r / fC_pn * fN_pn  / vs_LayerThickness * (vs_NumberOfLayers / vs_NumberOfOrganicLayers);
+        aom.vo_AOM_Slow += (Λ_r.sc + NC_dead.r + PN_dead.r) * scale;
+        N += PN_dead.r / fC_pn * fN_pn * scale;
 
       }
 
-      aom.vo_CN_Ratio_AOM_Slow = (N === 0) ? 200 : aom.vo_AOM_Slow / N;
+      aom.vo_CN_Ratio_AOM_Slow = (aom.vo_AOM_Slow === 0) ? 0 : (N === 0) ? 200 : aom.vo_AOM_Slow / N;
       /* check for null AOM in soilOrganic */
       AOM[l] = aom;
     }
