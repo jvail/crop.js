@@ -4055,12 +4055,16 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       
       for (var s = 0; s < numberOfSpecies; s++) {
 
-        var Λ_r = mixture[s].vars.Λ_r;
+        var vars = mixture[s].vars 
+          , Λ_r = vars.Λ_r
+          , NC_dead = vars.NC_dead
+          , PN_dead = vars.PN_dead
+          ;
 
         /* because of maxMineralizationDepth vs_NumberOfOrganicLayers might be < vs_NumberOfLayers ->
            multiply by (vs_NumberOfLayers / vs_NumberOfOrganicLayers).  TODO: check */
-        aom.vo_AOM_Slow += (Λ_r.sc + Λ_r.nc + Λ_r.pn) * f_r[s][l] / f_r_sum[s] / vs_LayerThickness * (vs_NumberOfLayers / vs_NumberOfOrganicLayers);
-        N += Λ_r.pn / fC_pn * fN_pn  / vs_LayerThickness * (vs_NumberOfLayers / vs_NumberOfOrganicLayers);
+        aom.vo_AOM_Slow += (Λ_r.sc + NC_dead.r + PN_dead.r) * f_r[s][l] / f_r_sum[s] / vs_LayerThickness * (vs_NumberOfLayers / vs_NumberOfOrganicLayers);
+        N += PN_dead.r / fC_pn * fN_pn  / vs_LayerThickness * (vs_NumberOfLayers / vs_NumberOfOrganicLayers);
 
       }
 
@@ -4072,7 +4076,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     // reset Λ_r
     for (var s = 0; s < numberOfSpecies; s++) {
       var Λ_r = mixture[s].vars.Λ_r;
-      Λ_r.sc = Λ_r.nc = Λ_r.pn = 0;
+      Λ_r.sc = NC_dead.r = PN_dead.r = 0;
     }
 
     debug('AOM', AOM);

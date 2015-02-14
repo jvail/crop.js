@@ -137,20 +137,24 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     vo_SOM_FastInput = 0.0;
     addedOrganicMatter = false;
 
-    /* add senescenced root. Only weekly? Seems this (daily) operation is very time consuming */
+    /* add senescenced root */
     if (crop && crop.hasOwnProperty('senescencedRoot')) { // not implemented in generic crop
 
       var AOM = crop.senescencedRoot();
       var nools = soilColumn.vs_NumberOfOrganicLayers();
     
-      for(var i_Layer = 0; i_Layer < nools; i_Layer++) {
+      for (var i_Layer = 0; i_Layer < nools; i_Layer++) {
         var aom_root = soilColumn[i_Layer].vo_AOM_Pool[0];
         var aom = AOM[i_Layer];
-        aom_root.vo_CN_Ratio_AOM_Slow =   (
-          ((aom_root.vo_CN_Ratio_AOM_Slow * aom_root.vo_AOM_Slow) + (aom.vo_CN_Ratio_AOM_Slow * aom.vo_AOM_Slow)) /
-          (aom_root.vo_AOM_Slow + aom.vo_AOM_Slow)
-        );
+        if (aom.vo_CN_Ratio_AOM_Slow > 0) {
+          aom_root.vo_CN_Ratio_AOM_Slow = (
+            (aom_root.vo_AOM_Slow + aom.vo_AOM_Slow) /
+            ((1 / aom_root.vo_CN_Ratio_AOM_Slow * aom_root.vo_AOM_Slow) + (1 / aom.vo_CN_Ratio_AOM_Slow * aom.vo_AOM_Slow))
+          );
+        }
         aom_root.vo_AOM_Slow += aom.vo_AOM_Slow;
+
+        debug('aom_root', aom_root);
       }
     }
 
