@@ -634,10 +634,19 @@ var SoilColumn = function (gps, sp, cpp) {
   for(var i_Layer = 0; i_Layer < that._vs_NumberOfOrganicLayers; i_Layer++) {
     var aom = Object.create(AOM_Properties);
     /* parameters from wheat residuals. TODO: look for specific parameters for root decay in DAISY */
-    aom.vo_AOM_SlowDecCoeffStandard = 0.012;
-    aom.vo_AOM_FastDecCoeffStandard = 0.05;
-    aom.vo_PartAOM_Slow_to_SMB_Slow = 0.5;
-    aom.vo_PartAOM_Slow_to_SMB_Fast = 0.5;
+      aom.vo_AOM_DryMatterContent = 1;
+      aom.vo_AOM_NH4Content = 0;
+      aom.vo_AOM_NO3Content = 0;
+      aom.vo_AOM_CarbamidContent = 0;
+      aom.vo_AOM_SlowDecCoeffStandard = 0.012;
+      aom.vo_AOM_FastDecCoeffStandard = 0.05;
+      aom.vo_PartAOM_to_AOM_Slow = 0.67;
+      aom.vo_PartAOM_to_AOM_Fast = 0.33;
+      aom.vo_CN_Ratio_AOM_Slow = 200;
+      aom.vo_CN_Ratio_AOM_Fast = 0;
+      aom.vo_PartAOM_Slow_to_SMB_Slow = 0.5;
+      aom.vo_PartAOM_Slow_to_SMB_Fast = 0.5;
+      aom.vo_NConcentration = 0;
     soilColumnArray[i_Layer].vo_AOM_Pool[0] = aom;
   }
 
