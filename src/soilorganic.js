@@ -138,9 +138,9 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     addedOrganicMatter = false;
 
     /* add senescenced root */
-    if (crop && crop.hasOwnProperty('senescencedRoot')) { // not implemented in generic crop
+    if (crop && crop.hasOwnProperty('senescencedTissue')) { // not implemented in generic crop
 
-      var AOM = crop.senescencedRoot();
+      var AOM = crop.senescencedTissue();
       var nools = soilColumn.vs_NumberOfOrganicLayers();
     
       for (var i_Layer = 0; i_Layer < nools; i_Layer++) {

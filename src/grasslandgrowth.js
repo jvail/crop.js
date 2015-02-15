@@ -4050,14 +4050,17 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
 
   /* array, per soil layer [AOM_Properties] TODO: implement in generic crop as well */
-  var senescencedRoot = function () {
+  var senescencedTissue = function () {
 
     var AOM = [];
+    /* assume a rate for OM flux from litter to soil. TODO: value in SGS? */
+    var f_litter = 0.1;
 
     for (var l = 0; l < vs_NumberOfOrganicLayers; l++) {
 
       var aom = Object.create(AOM_Properties);
       var N = 0;
+
       
       for (var s = 0; s < numberOfSpecies; s++) {
 
@@ -4065,11 +4068,22 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
           , Λ_r = vars.Λ_r
           , NC_dead = vars.NC_dead
           , PN_dead = vars.PN_dead
-          , scale = f_r[s][l] / f_r_sum[s] / vs_LayerThickness / vs_NumberOfOrganicLayers
+          , Λ_litter = vars.Λ_litter
+            /* [m-1] because of maxMineralizationDepth vs_NumberOfOrganicLayers might be < vs_NumberOfLayers ->
+               multiply by (vs_NumberOfLayers / vs_NumberOfOrganicLayers).  TODO: check */
+          , scale = f_r[s][l] / f_r_sum[s] / vs_LayerThickness * vs_NumberOfLayers / vs_NumberOfOrganicLayers
           ;
 
-        /* because of maxMineralizationDepth vs_NumberOfOrganicLayers might be < vs_NumberOfLayers ->
-           multiply by (vs_NumberOfLayers / vs_NumberOfOrganicLayers).  TODO: check */
+        /* include litter */
+        if (l === 0) {
+          aom.vo_AOM_Slow += (Λ_litter.sc + Λ_litter.nc + Λ_litter.pn) * f_litter / vs_LayerThickness;
+          N += Λ_litter.pn  * f_litter / fC_pn * fN_pn  / vs_LayerThickness;
+          Λ_litter.sc *= 1 - f_litter;
+          Λ_litter.nc *= 1 - f_litter;
+          Λ_litter.pn *= 1 - f_litter;
+        }
+
+        debug('scale', scale);
         aom.vo_AOM_Slow += (Λ_r.sc + NC_dead.r + PN_dead.r) * scale;
         N += PN_dead.r / fC_pn * fN_pn * scale;
 
@@ -4107,7 +4121,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     , LAI: LAI
     , δ_shoot: δ_shoot
     , Ω_water: Ω_water
-    , senescencedRoot: senescencedRoot
+    , senescencedTissue: senescencedTissue
     , accumulateEvapotranspiration: accumulateEvapotranspiration
     , isDying: get_isDying
     , totalBiomass: get_totalBiomass
