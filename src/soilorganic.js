@@ -144,17 +144,17 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       var nools = soilColumn.vs_NumberOfOrganicLayers();
     
       for (var i_Layer = 0; i_Layer < nools; i_Layer++) {
-        var aom_root = soilColumn[i_Layer].vo_AOM_Pool[0];
+        var aom_senescence = soilColumn[i_Layer].vo_AOM_Pool[0];
         var aom = AOM[i_Layer];
         if (aom.vo_CN_Ratio_AOM_Slow > 0) {
-          aom_root.vo_CN_Ratio_AOM_Slow = (
-            (aom_root.vo_AOM_Slow + aom.vo_AOM_Slow) /
-            ((1 / aom_root.vo_CN_Ratio_AOM_Slow * aom_root.vo_AOM_Slow) + (1 / aom.vo_CN_Ratio_AOM_Slow * aom.vo_AOM_Slow))
+          aom_senescence.vo_CN_Ratio_AOM_Slow = (
+            (aom_senescence.vo_AOM_Slow + aom.vo_AOM_Slow) /
+            ((1 / aom_senescence.vo_CN_Ratio_AOM_Slow * aom_senescence.vo_AOM_Slow) + (1 / aom.vo_CN_Ratio_AOM_Slow * aom.vo_AOM_Slow))
           );
         }
-        aom_root.vo_AOM_Slow += aom.vo_AOM_Slow;
+        aom_senescence.vo_AOM_Slow += aom.vo_AOM_Slow;
 
-        debug('aom_root', aom_root);
+        debug('aom_senescence', aom_senescence);
       }
     }
 

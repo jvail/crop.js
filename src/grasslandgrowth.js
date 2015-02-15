@@ -4064,14 +4064,14 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       
       for (var s = 0; s < numberOfSpecies; s++) {
 
-        var vars = mixture[s].vars 
+        var species = mixture[s] 
+          , vars = species.vars 
           , Λ_r = vars.Λ_r
           , NC_dead = vars.NC_dead
           , PN_dead = vars.PN_dead
           , Λ_litter = vars.Λ_litter
-            /* [m-1] because of maxMineralizationDepth vs_NumberOfOrganicLayers might be < vs_NumberOfLayers ->
-               multiply by (vs_NumberOfLayers / vs_NumberOfOrganicLayers).  TODO: check */
-          , scale = f_r[s][l] / f_r_sum[s] / vs_LayerThickness * vs_NumberOfLayers / vs_NumberOfOrganicLayers
+            /* [m-1] due to maxMineralizationDepth vs_NumberOfOrganicLayers might be < root depth TODO: what to do with OM below min. depth? */
+          , scale = f_r[s][l] / f_r_sum[s] / vs_LayerThickness
           ;
 
         /* include litter */
