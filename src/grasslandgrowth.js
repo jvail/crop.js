@@ -1082,7 +1082,10 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     /* (3.83) L [m2 (leaf) m-2 (ground) leaf area (CO2 dependence not included (3.84)) */
     this.L = function () {
 
-      return that.cons.σ * that.dwt_live_leaf();
+      // return that.cons.σ * that.dwt_live_leaf();
+      // test: SLA depends on N concentration: Plant Ecology By Ernst-Detlef Schulze, Erwin Beck, Klaus Müller-Hohenstein p. 359
+      // Schulze. 1994. The influence of N2-fixation on the carbon balance of leguminous plants
+      return (that.cons.σ + ((that.N_live_leaf() / that.dwt_live_leaf()) - that.cons.N_leaf.ref)) * that.dwt_live_leaf();
 
     };
 
