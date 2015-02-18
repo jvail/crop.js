@@ -2886,20 +2886,23 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
       Λ_litter.pn += γ_dead * (PN_dead.l + PN_dead.s);
 
       /* TODO: this is just a test: flux of pn and nc to litter pools (assume 80% remob in NC and 50% in PN) */
-      dNC.l -= 0.2 * γ_l * NC.l;
-      dNC.s -= 0.2 * γ_s * NC.s;
+      var live_2_dead_l_flux = SC.live_l_3 / (SC.live_l_1 + SC.live_l_2);
+      var live_2_dead_s_flux = SC.live_s_3 / (SC.live_s_1 + SC.live_s_2);
+
+      dNC.l -= 0.2 * γ_l * NC.l * live_2_dead_l_flux;
+      dNC.s -= 0.2 * γ_s * NC.s * live_2_dead_s_flux;
       dNC.r -= 0.2 * γ_r * NC.r;
 
-      NC_dead.l += 0.2 * γ_l * NC.l - γ_dead * NC_dead.l;
-      NC_dead.s += 0.2 * γ_s * NC.s - γ_dead * NC_dead.s;
+      NC_dead.l += 0.2 * γ_l * NC.l * live_2_dead_l_flux - γ_dead * NC_dead.l;
+      NC_dead.s += 0.2 * γ_s * NC.s * live_2_dead_s_flux- γ_dead * NC_dead.s;
       NC_dead.r += 0.2 * γ_r * NC.r;
 
-      dPN.l -= 0.5 * γ_l * PN.l;
-      dPN.s -= 0.5 * γ_s * PN.s;
+      dPN.l -= 0.5 * γ_l * PN.l * live_2_dead_l_flux;
+      dPN.s -= 0.5 * γ_s * PN.s * live_2_dead_s_flux;
       dPN.r -= 0.5 * γ_r * PN.r;
 
-      PN_dead.l += 0.5 * γ_l * PN.l - γ_dead * PN_dead.l;
-      PN_dead.s += 0.5 * γ_s * PN.s - γ_dead * PN_dead.s;
+      PN_dead.l += 0.5 * γ_l * PN.l * live_2_dead_l_flux - γ_dead * PN_dead.l;
+      PN_dead.s += 0.5 * γ_s * PN.s * live_2_dead_s_flux - γ_dead * PN_dead.s;
       PN_dead.r += 0.5 * γ_r * PN.r;
 
       if (DEBUG) {
