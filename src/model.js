@@ -450,8 +450,7 @@ var Model = function (env) {
       , precip =  _dataAccessor.dataForTimestep(WEATHER.PRECIP, stepNo)
       , vw_WindSpeedHeight = centralParameterProvider.userEnvironmentParameters.p_WindSpeedHeight
       , f_s = _dataAccessor.dataForTimestep(WEATHER.F_DIRECTRAD, stepNo)
-      , daylength = _dataAccessor.dataForTimestep(WEATHER.DAYLENGTH, stepNo) * 60 * 60 /* to seconds */
-      , PPF = _dataAccessor.dataForTimestep(WEATHER.PPF, stepNo)
+      , daylength = _dataAccessor.dataForTimestep(WEATHER.DAYLENGTH, stepNo) * SEC_PER_HOUR
       , R_a = _dataAccessor.dataForTimestep(WEATHER.EXRAD, stepNo)
       ;
 
@@ -473,7 +472,6 @@ var Model = function (env) {
       precip,
       f_s,
       daylength,
-      PPF,
       R_a
     );
 

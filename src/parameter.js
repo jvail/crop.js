@@ -233,7 +233,7 @@ var SoilParameters = function () {
   };
 
   this.texture2lambda = function (sand, clay) {
-    return Tools.texture2lambda(sand, clay);
+    return tools.texture2lambda(sand, clay);
   };
 
 };

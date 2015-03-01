@@ -6,24 +6,23 @@
     - what if sunhours not available?
 
   weather = {                     object
-      tmin        [°C]            array, daily minimum temperature
-    , tmax        [°C]            array, daily maximum temperature
-    , tavg        [°C]            array, daily average temperature
-    , globrad     [MJ m-2]        array, global radiation
-    , exrad       [MJ m-2]        array, extraterrestrial radiation
-    , wind        [m s-1]         array, wind speed
-    , precip      [mm]            array, rainfall
-    , sunhours    [h]             array, sunshine hours, optional (use empty array if not available)
-    , relhumid    [%]             array, relative humidity, optional (use empty array if not available)
-    , ppf         [μmol m-2 d-1]  array, photosynthetic photon flux. required by grassland model
-    , daylength   [h]             array, daylength. required by grassland model
-    , f_directrad [h h-1]         array, fraction direct solar radiation. required by grassland model
-    , date        [date]          array, ISO date strings
-    , doy         [#]             array, no. of day
+      tmin          [°C]            array, daily minimum temperature
+    , tmax          [°C]            array, daily maximum temperature
+    , tavg          [°C]            array, daily average temperature
+    , globrad       [MJ m-2]        array, global radiation
+    , exrad         [MJ m-2]        array, extraterrestrial radiation
+    , wind          [m s-1]         array, wind speed
+    , precip        [mm]            array, rainfall
+    , sunhours      [h]             array, sunshine hours, optional (use empty array if not available)
+    , relhumid      [%]             array, relative humidity, optional (use empty array if not available)
+    , daylength     [h]             array, daylength. required by grassland model
+    , f_directrad   [h h-1]         array, fraction direct solar radiation. required by grassland model
+    , date          [date]          array, ISO date strings
+    , doy           [#]             array, day of year
   }
-  doDebug         [bool]          debug model and show MSG.DEBUG output
-  isVerbose       [bool]          show MSG.INFO output
-  progressCallbacks [array]         array functions, of access model variables at each time step
+  doDebug           [bool]          debug model and show MSG.DEBUG output
+  isVerbose         [bool]          show MSG.INFO output
+  progressCallbacks [array]       array functions, of access model variables at each time step
 */
 
 var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
@@ -190,8 +189,8 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
         soilParameters.vs_SoilClayContent = horizon.clay;
         soilParameters.vs_SoilStoneContent = horizon.sceleton;
         soilParameters.vs_SoilpH = horizon.pH;
-        soilParameters.vs_SoilTexture = Tools.texture2KA5(horizon.sand, horizon.clay);
-        soilParameters.vs_Lambda = Tools.texture2lambda(soilParameters.vs_SoilSandContent, soilParameters.vs_SoilClayContent);
+        soilParameters.vs_SoilTexture = tools.texture2KA5(horizon.sand, horizon.clay);
+        soilParameters.vs_Lambda = tools.texture2lambda(soilParameters.vs_SoilSandContent, soilParameters.vs_SoilClayContent);
 
         /* optional parameters */
         soilParameters.vs_SoilpH = getValue(horizon, 'pH', 6.9);
@@ -210,11 +209,11 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
         } else { /* if any is missing */
 
           /* if density class according to KA5 is available (trockenrohdichte-klassifikation) TODO: add ld_class to JSON cfg */
-          // soilParameters.set_vs_SoilRawDensity(Tools.ld_eff2trd(3 /*ld_class*/, horizon.clay));
-          // Tools.soilCharacteristicsKA5(soilParameters);
+          // soilParameters.set_vs_SoilRawDensity(tools.ld_eff2trd(3 /*ld_class*/, horizon.clay));
+          // tools.soilCharacteristicsKA5(soilParameters);
 
           /* else use Saxton */
-          var saxton = Tools.saxton(horizon.sand, horizon.clay, horizon.organicMatter, horizon.sceleton).saxton_86;
+          var saxton = tools.saxton(horizon.sand, horizon.clay, horizon.organicMatter, horizon.sceleton).saxton_86;
           debug(saxton);
           soilParameters.set_vs_SoilBulkDensity(roundN(2, saxton.BD));
           soilParameters.vs_FieldCapacity = roundN(2, saxton.FC);
@@ -560,7 +559,6 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
     data[WEATHER.PRECIP] = new Float64Array(weatherInput.precip);              /* [mm] */
 
     /* required for grassland model */
-    data[WEATHER.PPF] = new Float64Array(weatherInput.ppf);                    /* [μmol m-2 d-1] photosynthetic photon flux */
     data[WEATHER.DAYLENGTH] = new Float64Array(weatherInput.daylength);        /* [h] */
     data[WEATHER.F_DIRECTRAD] = new Float64Array(weatherInput.f_directrad);    /* [h h-1] fraction direct solar radiation */
 

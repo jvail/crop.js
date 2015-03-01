@@ -56,7 +56,10 @@ var abs    = Math.abs
   , tan    = Math.tan
   , PI     = Math.PI
   , MS_PER_DAY = 1000 * 60 * 60 * 24
+  , SEC_PER_HOUR = 60 * 60
   , SQM_PER_HA = 10000
+    /* [MJ m-2] to [μmol (PAR photons) m-2] */
+  , PPF_PER_MJ_GLOBAL_RADIATION = 0.5 * 1e6 / 0.218
   ;
 
 var ORGANIC_CONSTANTS = {
@@ -80,12 +83,11 @@ var WEATHER = {
   , PRECIP: 5
   , SUNHOURS: 6
   , RELHUMID: 7
-  , PPF: 8            /* [μmol m-2 d-1] photosynthetic photon flux. required by grassland model */
-  , DAYLENGTH: 9      /* [seconds]      daylength. required by grassland model */
-  , F_DIRECTRAD: 10   /* [h h-1]        fraction direct solar radiation. required by grassland model */
-  , ISODATESTRING: 11 /* ISO date string */
-  , DOY: 12           /* day of year */
-  , EXRAD: 13         /* [MJ m-2] extraterrestrial radiation */
+  , DAYLENGTH: 8      /* [seconds]      daylength. required by grassland model */
+  , F_DIRECTRAD: 9    /* [h h-1]        fraction direct solar radiation. required by grassland model */
+  , ISODATESTRING: 10 /* ISO date string */
+  , DOY: 11           /* day of year */
+  , EXRAD: 12         /* [MJ m-2] extraterrestrial radiation */
 };
 
 // TODO: do not change JS types. Instead create own type.
@@ -95,7 +97,7 @@ Date.prototype.isValid = function () {
 };
 
 Date.prototype.isLeapYear = function () { 
-  return (ceil((new Date(this.getFullYear() + 1, 0, 1) - new Date(this.getFullYear(), 0, 1)) / (24 * 60 * 60 * 1000)) === 366); 
+  return (ceil((new Date(this.getFullYear() + 1, 0, 1) - new Date(this.getFullYear(), 0, 1)) / MS_PER_DAY) === 366); 
 };
 
 /* log function */

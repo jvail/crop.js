@@ -3014,13 +3014,14 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     rr          [mm]            rainfall
     f_s         [-]             fraction direct solar radiation
     τ           [s]             daylength
-    PPF         [μmol m-2 d-1]  photosynthetic photon  flux
     R_a         [MJ m-2]        extraterrestrial radiation
   */
 
-  var step = function (T, T_mx, T_mn, R_s, sunhours, julday, rh, u, u_h, C_amb, rr, f_s, τ, PPF, R_a) {
+  var step = function (T, T_mx, T_mn, R_s, sunhours, julday, rh, u, u_h, C_amb, rr, f_s, τ, R_a) {
 
     if (DEBUG) debug(arguments);
+
+    var PPF = R_s * PPF_PER_MJ_GLOBAL_RADIATION;
 
     /* set root distribution variables */
     rootDistribution();
