@@ -81,7 +81,7 @@ var Model = function (env) {
         /* if application date was not valid, we're (probably) at the end
           of the application list of this production process
           -> go to the next one in the crop rotation */
-        if (!nextProductionProcessApplicationDate.isValid() && _currentCrop.name() != 'grassland') { // TODO: _currentCrop.name() != 'grassland' just a work around
+        if (!nextProductionProcessApplicationDate.isValid() && _currentCrop instanceof FieldCrop) { // TODO: in grassland?
 
           /* to count the applied fertiliser for the next production process */
           resetFertiliserCounter();
@@ -148,7 +148,7 @@ var Model = function (env) {
     p_accuHeatStress = 0.0;
     p_accuOxygenStress = 0.0;
 
-    if(_currentCrop.isValid() && _currentCrop.name() != 'grassland') {
+    if(_currentCrop.isValid() && _currentCrop instanceof FieldCrop) {
 
       cps = _currentCrop.cropParameters();
       that._currentCropGrowth = new FieldCropGrowth(_soilColumn, _env.general, cps, _env.site, _env.centralParameterProvider);
@@ -177,7 +177,7 @@ var Model = function (env) {
       
       }
 
-    } else if (_currentCrop.isValid() && _currentCrop.name() === 'grassland') {
+    } else if (_currentCrop.isValid() && _currentCrop instanceof Grass) {
 
       cps = {};
       that._currentCropGrowth = new GrasslandGrowth(_soilColumn, _env.general, _currentCrop.mixture, _env.site, _env.centralParameterProvider);
