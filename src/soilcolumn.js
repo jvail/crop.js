@@ -632,7 +632,7 @@ var SoilColumn = function (gps, sp, cpp) {
 
   // !JS create a default root decay pool at index 0 that gets not deleted
   for(var i_Layer = 0; i_Layer < that._vs_NumberOfOrganicLayers; i_Layer++) {
-    var aom = Object.create(AOM_Properties);
+    var aom = new AOM_Properties();
     /* parameters from wheat residuals. TODO: look for specific parameters for root decay in DAISY */
       aom.vo_AOM_DryMatterContent = 1;
       aom.vo_AOM_NH4Content = 0;

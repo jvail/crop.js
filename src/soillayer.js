@@ -37,7 +37,7 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
     this.vo_AOM_Pool = [];
 
     // JV! initialized with default instead of real user values
-    var centralParameterProvider = Object.create(ParameterProvider); // JS!
+    var centralParameterProvider = new ParameterProvider(); // JS!
     this.vs_SoilMoisture_m3 = this.vs_FieldCapacity * centralParameterProvider.userInitValues.p_initPercentageFC;
     this.vs_SoilMoistureOld_m3 = this.vs_FieldCapacity * centralParameterProvider.userInitValues.p_initPercentageFC;
     this.vs_SoilNO3 = centralParameterProvider.userInitValues.p_initSoilNitrate;
@@ -45,8 +45,8 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
 
   } else {
 
-    if (arguments.length !== 3 || !(ParameterProvider.isPrototypeOf(arguments[2])))
-      throw arguments;
+    if (arguments.length !== 3 || !(arguments[2] instanceof ParameterProvider))
+      throw new Error('arguments.length !== 3 || !(arguments[2] instanceof ParameterProvider');
 
     this.vs_LayerThickness = vs_LayerThickness;
     this.vs_SoilSandContent = sps.vs_SoilSandContent;

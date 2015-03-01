@@ -42,8 +42,8 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
     logger(MSG.INFO, 'Fetching parameters.');
     
     /* init parameters */
-    var parameterProvider = Object.create(ParameterProvider);
-    var siteParameters = Object.create(SiteParameters);
+    var parameterProvider = new ParameterProvider();
+    var siteParameters = new SiteParameters();
     var generalParameters = new GeneralParameters();
 
     /* sim */
@@ -183,7 +183,7 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
 
         depth += lThicknessCm;
 
-        var soilParameters = Object.create(SoilParameters);
+        var soilParameters = new SoilParameters();
 
         soilParameters.set_vs_SoilOrganicMatter(horizon.organicMatter);
         soilParameters.vs_SoilSandContent = horizon.sand;
@@ -423,10 +423,15 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
         continue;
       }
 
-      var fDate = new Date(Date.parse(fertilizer.date));
-      var method = fertilizer.method;
-      var name = fertilizer.name; // changed from id to name
-      var amount = fertilizer.amount; // [kg (N) ha-1]
+      var fDate = new Date(Date.parse(fertilizer.date))
+        , method = fertilizer.method
+        , name = fertilizer.name // changed from id to name
+        , amount = fertilizer.amount // [kg (N) ha-1]
+        , carbamid = fertilizer.carbamid
+        , no3 = fertilizer.no3
+        , nh4 = fertilizer.nh4
+        , dm = fertilizer.dm
+        ;
 
       if (!fDate.isValid()) {
         ok = false;
@@ -434,9 +439,9 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
       }
 
       if (isOrganic)
-        productionProcess.addApplication(new OrganicFertiliserApplication(fDate, new OrganicFertilizer(name), amount, true));
+        productionProcess.addApplication(new OrganicFertiliserApplication(fDate, new OrganicFertilizer(name, carbamid, no3, nh4, dm), amount, true));
       else
-        productionProcess.addApplication(new MineralFertiliserApplication(fDate, new MineralFertilizer(name), amount));
+        productionProcess.addApplication(new MineralFertiliserApplication(fDate, new MineralFertilizer(name, carbamid, no3, nh4), amount));
 
       logger(MSG.INFO, 'Fetched ' + (isOrganic ? 'organic' : 'mineral') + ' fertiliser ' + f + '.');
 

@@ -200,7 +200,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     for(var i_Layer = 0; i_Layer < nools; i_Layer++) {
       //New AOM pool
       if(i_Layer == 0) {
-        var aom_pool = Object.create(AOM_Properties);
+        var aom_pool = new AOM_Properties();
 
         aom_pool.vo_DaysAfterApplication = 0;
         aom_pool.vo_AOM_DryMatterContent = vo_AOM_DryMatterContent;
@@ -262,7 +262,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
       } else {//if (i_Layer == 0)
 
-        var aom_pool = Object.create(AOM_Properties);
+        var aom_pool = new AOM_Properties();
 
         aom_pool.vo_DaysAfterApplication = 0;
         aom_pool.vo_AOM_DryMatterContent = 0.0;

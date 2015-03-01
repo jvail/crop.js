@@ -2,7 +2,7 @@
 
 var MineralFertilizer = function (name, carbamid, no3, nh4) {
 
-  var _name = name.toLowerCase()
+  var _name = (name !== undefined || name === null) ? name.toLowerCase() : ''
     , _vo_Carbamid = carbamid || 0 // [kg (N) kg-1 (N)]
     , _vo_NO3 = no3 || 0           // [kg (N) kg-1 (N)]
     , _vo_NH4 = nh4 || 0           // [kg (N) kg-1 (N)]
@@ -52,7 +52,7 @@ var MineralFertilizer = function (name, carbamid, no3, nh4) {
     _vo_NO3 = 0;
     _vo_NH4 = 0.18;
     _vo_Carbamid = 0.82;
-  } else {
+  } else if (_name !== undefined) {
     logger(MSG.WARN, 'Mineral fertilzer ' + _name + ' unknown.');
   }
 
@@ -76,23 +76,23 @@ var MineralFertilizer = function (name, carbamid, no3, nh4) {
 };
 
 
-var OrganicFertilizer = function (name) {
+var OrganicFertilizer = function (name, carbamid, no3, nh4, dm) {
 
-  this.name = name.toLowerCase();
+  this.name = (name !== undefined || name === null) ? name.toLowerCase() : '';
 
-  this.vo_AOM_DryMatterContent = 0.0;     // [kg (DM) kg-1 (FM)]
-  this.vo_AOM_NH4Content = 0.0;           // [kg (N)  kg-1 (FM)]
-  this.vo_AOM_NO3Content = 0.0;           // [kg (N)  kg-1 (FM)]
-  this.vo_AOM_CarbamidContent = 0.0;      // [kg (N)  kg-1 (FM)]
-  this.vo_AOM_SlowDecCoeffStandard = 0.0;
-  this.vo_AOM_FastDecCoeffStandard = 0.0;
-  this.vo_PartAOM_to_AOM_Slow = 0.0;
-  this.vo_PartAOM_to_AOM_Fast = 0.0;
-  this.vo_CN_Ratio_AOM_Slow = 0.0;
-  this.vo_CN_Ratio_AOM_Fast = 0.0;
-  this.vo_PartAOM_Slow_to_SMB_Slow = 0.0;
-  this.vo_PartAOM_Slow_to_SMB_Fast = 0.0;
-  this.vo_NConcentration = 0.0;
+  this.vo_AOM_DryMatterContent = dm || 0.0;       // [kg (DM) kg-1 (FM)]
+  this.vo_AOM_NH4Content = nh4 || 0.0;            // [kg (N)  kg-1 (FM)]
+  this.vo_AOM_NO3Content = no3 || 0.0;            // [kg (N)  kg-1 (FM)]
+  this.vo_AOM_CarbamidContent = carbamid || 0.0;  // [kg (N)  kg-1 (FM)]
+  this.vo_AOM_SlowDecCoeffStandard = 0.0002;
+  this.vo_AOM_FastDecCoeffStandard = 0.002;
+  this.vo_PartAOM_to_AOM_Slow = 0.72;
+  this.vo_PartAOM_to_AOM_Fast = 0.18;
+  this.vo_CN_Ratio_AOM_Slow = 100;
+  this.vo_CN_Ratio_AOM_Fast = 6.5;
+  this.vo_PartAOM_Slow_to_SMB_Slow = 0;
+  this.vo_PartAOM_Slow_to_SMB_Fast = 1;
+  this.vo_NConcentration = 0.00;
 
   if (this.name === 'cattle deep-litter manure') {
     this.vo_AOM_DryMatterContent = 0.289;
@@ -430,7 +430,7 @@ var OrganicFertilizer = function (name) {
     this.vo_PartAOM_Slow_to_SMB_Slow = 0;
     this.vo_PartAOM_Slow_to_SMB_Fast = 1;
     this.vo_NConcentration = 0.00;
-  } else {
+  } else if (this.name !== undefined) {
     logger(MSG.WARN, 'Organic fertilzer ' + this.name + ' unknown.');
   }
 

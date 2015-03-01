@@ -4064,7 +4064,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
 
     for (var l = 0; l < vs_NumberOfOrganicLayers; l++) {
 
-      var aom = Object.create(AOM_Properties);
+      var aom = new AOM_Properties();
       var N = 0;
 
       
