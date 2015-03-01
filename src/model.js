@@ -180,7 +180,7 @@ var Model = function (env) {
     } else if (_currentCrop.isValid() && _currentCrop.name() === 'grassland') {
 
       cps = {};
-      that._currentCropGrowth = new GrasslandGrowth(_soilColumn, _env.general, cps, _env.site, _env.centralParameterProvider, _currentCrop.species) ;
+      that._currentCropGrowth = new GrasslandGrowth(_soilColumn, _env.general, _currentCrop.mixture, _env.site, _env.centralParameterProvider);
 
       _soilTransport.put_Crop(that._currentCropGrowth);
       _soilColumn.put_Crop(that._currentCropGrowth);
