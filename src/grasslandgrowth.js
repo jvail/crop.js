@@ -1082,10 +1082,10 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
     /* (3.83) L [m2 (leaf) m-2 (ground) leaf area (CO2 dependence not included (3.84)) */
     this.L = function () {
 
-      // return that.cons.σ * that.dwt_live_leaf();
+      return that.cons.σ * that.dwt_live_leaf();
       // test: SLA depends on N concentration: Plant Ecology By Ernst-Detlef Schulze, Erwin Beck, Klaus Müller-Hohenstein p. 359
       // Schulze. 1994. The influence of N2-fixation on the carbon balance of leguminous plants
-      return (that.cons.σ + ((that.N_live_leaf() / that.dwt_live_leaf()) - that.cons.N_leaf.ref)) * that.dwt_live_leaf();
+      // return (that.cons.σ + ((that.N_live_leaf() / that.dwt_live_leaf()) - that.cons.N_leaf.ref)) * that.dwt_live_leaf();
 
     };
 
@@ -2600,7 +2600,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
         } // for each organ
 
         // TODO: dont forget to account for remob and fixation here!
-        species.vars.Ω_N = min(1, N_assim / N_req);
+        species.vars.Ω_N = pc_NitrogenResponseOn ? min(1, N_assim / N_req) : 1;
         species.vars.N_assim = N_assim;
         species.vars.N_req = N_req;
         vars.G = vars.G_leaf + vars.G_stem + vars.G_root;
@@ -3438,7 +3438,7 @@ var GrasslandGrowth = function (sc, gps, cps, stps, cpp, species) { // takes add
             continue;
 
           /* Johnson 2013/2008, eq. 3.2. */
-          var add = min(max(0, θ[l] - θ_w[l]), (f_r[s][l] / f_r_sum[s]) * g_water[l] * E_T_demand_remaining[s]);
+          var add = min(θ[l] - θ_w[l], (f_r[s][l] / f_r_sum[s]) * g_water[l] * E_T_demand_remaining[s]);
           E_T[s][l] += add;
           θ[l] -= add; /* update soil water */
           E_T_demand_remaining[s] -= add; /* keep track of remaining E_T demand */
