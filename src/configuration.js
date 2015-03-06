@@ -159,10 +159,6 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
     logger(MSG.INFO, 'Fetching ' + hs + ' horizons.');
 
     for (var h = 0; h < hs; ++h ) {
-
-      debug('lThicknessCm', lThicknessCm);
-      debug('maxNoOfLayers', maxNoOfLayers);
-      debug('depth', depth);
       
       var horizon = horizons[h];
       var hThicknessCm = horizon.thickness * 100;
@@ -214,15 +210,12 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
 
           /* else use Saxton */
           var saxton = tools.saxton(horizon.sand, horizon.clay, horizon.organicMatter, horizon.sceleton).saxton_86;
-          debug(saxton);
           soilParameters.set_vs_SoilBulkDensity(roundN(2, saxton.BD));
           soilParameters.vs_FieldCapacity = roundN(2, saxton.FC);
           soilParameters.vs_Saturation = roundN(2, saxton.SAT);
           soilParameters.vs_PermanentWiltingPoint = roundN(2, saxton.PWP);
 
         }
-
-        debug('soilParameters', soilParameters);
         
         /* TODO: hinter readJSON verschieben */ 
         if (!soilParameters.isValid()) {
@@ -264,15 +257,11 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
       } else {
         var sd = new Date(Date.parse(crop.sowingDate));
         var hd = new Date(Date.parse(crop.finalHarvestDate));
-        debug(sd, 'sd');
-        debug(hd, 'hd');
         if (!sd.isValid() || !hd.isValid()) {
           ok = false;
           logger(MSG.ERROR, 'Invalid sowing or harvest date in ' + crop.name);
         }
       }
-
-      debug('isGrassland', isGrassland);
 
       if (isGrassland) {
 

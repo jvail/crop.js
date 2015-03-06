@@ -1,8 +1,6 @@
 
 var SoilLayer = function (vs_LayerThickness, sps, cpp) {
 
-  if (DEBUG) debug(arguments);
-
   var that = this;
 
   // JS! Contructor with 0 arguments. Only used in SoilTemperature (ground and bottom layer)
@@ -418,7 +416,7 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
    */
   var get_SoilNmin = function () { return this.vs_SoilNO3 + this.vs_SoilNO2 + this.vs_SoilNH4; };
   var get_Vs_SoilMoisture_m3 = function () { return vs_SoilMoisture_m3; };
-  var set_Vs_SoilMoisture_m3 = function (ms) { /*debug('set_Vs_SoilMoisture_m3', ms);*/ vs_SoilMoisture_m3 = ms; };
+  var set_Vs_SoilMoisture_m3 = function (ms) { vs_SoilMoisture_m3 = ms; };
   var get_Vs_SoilTemperature = function () { return vs_SoilTemperature; };
   var set_Vs_SoilTemperature = function (st) { vs_SoilTemperature = st; };
   var vs_SoilOrganicCarbon = function () { return _vs_SoilOrganicCarbon; }; /**< Soil layer's organic carbon content [kg C kg-1] */

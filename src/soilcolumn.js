@@ -295,8 +295,6 @@ var SoilColumn = function (gps, sp, cpp) {
   soilColumnArray.deleteAOMPool = function () {
 
     // JS: soilLayer(x) === this[x]
-    debug('deleteAOMPool');
-
      // !JS do not remove first pool (root decay) start with index 1
     for (var i_AOMPool = 1; i_AOMPool < this[0].vo_AOM_Pool.length;) {
 
@@ -310,19 +308,12 @@ var SoilColumn = function (gps, sp, cpp) {
 
       //cout << "Pool " << i_AOMPool << " -> Slow: " << vo_SumAOM_Slow << "; Fast: " << vo_SumAOM_Fast << endl;
 
-      if (DEBUG) {
-        debug('i_AOMPool', i_AOMPool);
-        debug('vo_SumAOM_Slow', vo_SumAOM_Slow);
-        debug('vo_SumAOM_Fast', vo_SumAOM_Fast);
-      }
-
       if ((vo_SumAOM_Slow + vo_SumAOM_Fast) < 0.00001) {
         for (var i_Layer = 0; i_Layer < that._vs_NumberOfOrganicLayers; i_Layer++){
           var it_AOMPool = 0; // TODO: Korrekt in JS? Konstruktion nicht klar
           it_AOMPool += i_AOMPool;
           this[i_Layer].vo_AOM_Pool.splice(it_AOMPool, 1);
         }
-        debug('Deleted AOM pool no. ' + it_AOMPool);
       } else {
         i_AOMPool++;
       }
@@ -361,7 +352,6 @@ var SoilColumn = function (gps, sp, cpp) {
 
     // add up all parameters that are affected by tillage
     for (var i = 0; i < layer_index; i++) {
-      // debug('SoilColumn::applyTillage layer i:', i);
       soil_organic_carbon += this[i].vs_SoilOrganicCarbon();
       soil_organic_matter += this[i].vs_SoilOrganicMatter();
       soil_temperature += this[i].get_Vs_SoilTemperature();
@@ -399,8 +389,6 @@ var SoilColumn = function (gps, sp, cpp) {
     no2 = no2 / layer_index;
     no3 = no3 / layer_index;
 
-    // debug('SoilColumn::layer_index', layer_index);
-
     // use calculated mean values for all affected layers
     for (var i = 0; i < layer_index; i++) {
 
@@ -408,7 +396,6 @@ var SoilColumn = function (gps, sp, cpp) {
       this[i].set_SoilOrganicCarbon(soil_organic_carbon);
       this[i].set_SoilOrganicMatter(soil_organic_matter);
       this[i].set_Vs_SoilTemperature(soil_temperature);
-      // debug('call: SoilColumn::this[i].set_Vs_SoilMoisture_m3(soil_moisture) i=' + i);
       this[i].set_Vs_SoilMoisture_m3(soil_moisture);
       this[i].vs_SoilMoistureOld_m3 = soil_moistureOld;
       this[i].vs_SOM_Slow = som_slow;
@@ -649,8 +636,6 @@ var SoilColumn = function (gps, sp, cpp) {
       aom.vo_NConcentration = 0;
     soilColumnArray[i_Layer].vo_AOM_Pool[0] = aom;
   }
-
-  debug(soilColumnArray);
 
   return soilColumnArray;
 

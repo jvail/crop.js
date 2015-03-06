@@ -44,8 +44,6 @@ var Model = function (env) {
       , nextProductionProcessApplicationDate = currentProductionProcess.start()
       ;
 
-    debug('totalNoDays', totalNoDays);
-
     logger(MSG.INFO, "next app-date: " + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
 
     /* if for some reason there are no applications (no nothing) in the production process: quit */
@@ -96,8 +94,6 @@ var Model = function (env) {
           if (productionProcessIdx < env.cropRotation.length) {
 
             currentProductionProcess = env.cropRotation[productionProcessIdx];
-            debug('productionProcessIdx', productionProcessIdx);
-            debug('env.cropRotation', env.cropRotation);
             nextProductionProcessApplicationDate = currentProductionProcess.start();
             logger(MSG.INFO, 'new valid next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
           
@@ -137,8 +133,6 @@ var Model = function (env) {
   };
 
   var seedCrop = function (crop) {
-
-    debug("seedCrop");
 
     _currentCrop = crop;
     var cps = null; // JS!
@@ -393,9 +387,6 @@ var Model = function (env) {
       leapYear
     );
     
-    debug('vw_AtmosphericCO2Concentration', that.vw_AtmosphericCO2Concentration);
-    debug('General step: ' + stepNo + ' / ' + julday + ' / ' + currentDate.toISOString().split('T')[0]);
-
     //31 + 28 + 15
     var pc_JulianDayAutomaticFertilising = user_env.p_JulianDayAutomaticFertilising;
 
@@ -443,8 +434,6 @@ var Model = function (env) {
     _soilOrganic.step(tavg, precip, wind);
     _soilTransport.step();
 
-    debug('End general step: ' + stepNo + ' / ' + julday);
-
   };
 
   /* Simulating crop growth for one time step. */
@@ -472,8 +461,6 @@ var Model = function (env) {
       ;
 
     p_daysWithCrop++;
-
-    debug('Crop growth step: ' + stepNo + ' / ' + julday);
 
     that._currentCropGrowth.step(
       tavg,

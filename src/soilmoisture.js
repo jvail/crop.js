@@ -123,8 +123,6 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     vs_JulianDay
   ) {
 
-    if(DEBUG) debug(arguments);
-
     for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
       // initialization with moisture values stored in the layer
       vm_SoilMoisture[i_Layer] = soilColumn[i_Layer].get_Vs_SoilMoisture_m3();
@@ -159,14 +157,6 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
         vc_NetPrecipitation = monica.cropGrowth().get_NetPrecipitation();
       } else {
         vc_NetPrecipitation = vw_Precipitation;
-      }
-
-      if (DEBUG) {
-        debug('vc_PercentageSoilCoverage', vc_PercentageSoilCoverage);
-        debug('vc_KcFactor', vc_KcFactor);
-        debug('vc_CropHeight', vc_CropHeight);
-        debug('vc_DevelopmentalStage', vc_DevelopmentalStage);
-        debug('vc_NetPrecipitation', vc_NetPrecipitation);
       }
 
     } else {
@@ -227,7 +217,6 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     fm_CapillaryRise();
 
     for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
-      // debug('vm_SoilMoisture[i_Layer], i_Layer = ' + i_Layer, vm_SoilMoisture[i_Layer]);
       soilColumn[i_Layer].set_Vs_SoilMoisture_m3(vm_SoilMoisture[i_Layer]);
       soilColumn[i_Layer].vs_SoilWaterFlux = vm_WaterFlux[i_Layer];
       soilColumn[i_Layer].calc_vs_SoilMoisture_pF();
@@ -238,8 +227,6 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
   };
 
   var fm_Infiltration = function (vm_WaterToInfiltrate, vc_PercentageSoilCoverage, vm_GroundwaterTable) {
-
-    // debug(arguments, 'SoilMoisture::fm_Infiltration');
 
     // For receiving daily precipitation data all variables have to be reset
     var vm_RunOffFactor;
@@ -342,8 +329,6 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
       vm_PercolationRate[0] = (
         (vm_GravitationalWater[0] * vm_GravitationalWater[0] * vm_LambdaReduced) / vm_PercolationFactor
       );
-      // debug("1 vm_Lambda[0]", vm_Lambda[0]);
-      // debug("1 frostComponent.getLambdaRedux(0)", frostComponent.getLambdaRedux(0));
 
       if (vm_PercolationRate[0] > pm_MaxPercolationRate)
           vm_PercolationRate[0] = pm_MaxPercolationRate;
@@ -351,16 +336,8 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
       vm_GravitationalWater[0] = vm_GravitationalWater[0] - vm_PercolationRate[0];
       vm_GravitationalWater[0] = max(0.0, vm_GravitationalWater[0]);
 
-      // debug("2 vm_PercolationRate[0]", vm_PercolationRate[0]);
-
-
       // Adding the excess water remaining after the percolation event to soil moisture
       vm_SoilMoisture[0] = vm_FieldCapacity[0] + (vm_GravitationalWater[0] / 1000.0 / vm_LayerThickness[0]);
-      
-      // debug("vm_FieldCapacity[0]", vm_FieldCapacity[0]);
-      // debug("3 vm_GravitationalWater[0]", vm_GravitationalWater[0]);
-      // debug("vm_LayerThickness[0]", vm_LayerThickness[0]);
-      // debug("m_SoilMoisture", vm_SoilMoisture);
 
       // For groundwater table in first or second top layer no percolation occurs
       if (vm_GroundwaterTable <= 1) {
@@ -745,8 +722,6 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     vs_Latitude
   ) {
 
-    if (DEBUG) debug(arguments);
-
     var vm_EReducer_1 = 0.0;
     var vm_EReducer_2 = 0.0;
     var vm_EReducer_3 = 0.0;
@@ -872,8 +847,6 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
             // Transpiration is derived from ET0; Soil coverage and Kc factors
             // already considered in crop part!
             vm_Transpiration[i_Layer] = monica.cropGrowth().get_Transpiration(i_Layer);
-            debug('vm_Transpiration[i_Layer]', vm_Transpiration[i_Layer]);
-
 
             // Transpiration is capped in case potential ET after surface
             // and interception evaporation has occurred on same day

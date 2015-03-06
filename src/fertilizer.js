@@ -53,7 +53,7 @@ var MineralFertilizer = function (name, carbamid, no3, nh4) {
     _vo_NH4 = 0.18;
     _vo_Carbamid = 0.82;
   } else if (_name !== undefined) {
-    logger(MSG.WARN, 'Mineral fertilzer ' + _name + ' unknown.');
+    logger(MSG.INFO, 'Custom mineral fertilzer.');
   }
 
   return {
@@ -431,7 +431,7 @@ var OrganicFertilizer = function (name, carbamid, no3, nh4, dm) {
     this.vo_PartAOM_Slow_to_SMB_Fast = 1;
     this.vo_NConcentration = 0.00;
   } else if (this.name !== undefined) {
-    logger(MSG.WARN, 'Organic fertilzer ' + this.name + ' unknown.');
+    logger(MSG.INFO, 'Custom organic fertilzer.');
   }
 
   this.vo_NConcentration = this.vo_AOM_NO3Content + this.vo_AOM_NH4Content + this.vo_AOM_CarbamidContent;

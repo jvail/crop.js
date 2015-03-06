@@ -505,16 +505,6 @@ var Grass = function (seedDate, harvestDates, species) {
         (cons.δ_ndf_s_dead * (SC.dead_s / fC_sc / dwt_sc))
       );
 
-      if (DEBUG) {
-        debug('δ_sc', δ_sc);
-        debug('δ_nc', δ_nc);
-        debug('δ_pn', δ_pn);
-        debug('dwt_sc', dwt_sc);
-        debug('dwt_nc', dwt_nc);
-        debug('dwt_pn', dwt_pn);
-        debug('dwt', dwt);
-      }
-
       return (
         (δ_sc * dwt_sc / dwt) + 
         (δ_nc * dwt_nc / dwt) + 
@@ -994,10 +984,6 @@ var Grass = function (seedDate, harvestDates, species) {
       // TODO: we dont know at this point how P_g is patitioned.... what to do?
       var N_req_opt = that.vars.P_g_day === 0 ? 0 : that.cons.N_leaf.opt * that.vars.P_g_day;
 
-      debug('that.vars.P_g_day', that.vars.P_g_day);
-      debug('that.cons.N_leaf.opt', that.cons.N_leaf.opt);
-      debug('N_req_opt', N_req_opt);
-
       return N_req_opt;
 
       // return max(0, (that.f_N_ref() * (that.C_live_shoot() + that.C_root())) - (that.N_live_shoot() + that.N_root()));
@@ -1100,7 +1086,6 @@ var Grass = function (seedDate, harvestDates, species) {
       NC.r += DM_root * DM[s] * 0.10 * fC_sc;
       PN.r += DM_root * DM[s] * 0.10 * fC_sc;
 
-      logger(MSG.INFO, { SC: SC, NC: NC, PN: PN });
     }
 
 

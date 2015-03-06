@@ -50,14 +50,10 @@ if ((crop.harvestDate().isValid() && crop.harvestDate().setHours(0,0,0,0) != new
   addApplication(new Harvest(crop.harvestDate(), crop , _cropResult));
 }
 
-debug('_worksteps', _worksteps);
-
-
 var cuttingDates = crop.getCuttingDates();
 var size = cuttingDates.length;
 
 for (var i=0; i<size; i++) {
-  debug("Add cutting date: " + Date(cuttingDates[i].toString()));
   //    if (i<size-1) {
   addApplication(new Cutting(Date(cuttingDates.at(i)), crop));
   //    } else {

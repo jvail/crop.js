@@ -107,8 +107,6 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
     var vc_NetPrimaryProduction = crop ? crop.get_NetPrimaryProduction() : 0;
 
-    // debug('vc_NetPrimaryProduction', vc_NetPrimaryProduction);
-
     //fo_OM_Input(vo_AOM_Addition);
     fo_Urea(vw_Precipitation + irrigationAmount);
     // Mineralisation Immobilisitation Turn-Over
@@ -154,7 +152,6 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
         }
         aom_senescence.vo_AOM_Slow += aom.vo_AOM_Slow;
 
-        debug('aom_senescence', aom_senescence);
       }
     }
 
@@ -167,7 +164,6 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     nConcentration
     )
   {
-    debug("SoilOrganic: addOrganicMatter: " + params.toString());
     var vo_AddedOrganicMatterAmount = amount;
     var vo_AddedOrganicMatterNConcentration = nConcentration;
 
@@ -226,7 +222,6 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
           vo_AddedOrganicNitrogenAmount = vo_AddedOrganicMatterAmount * vo_AOM_DryMatterContent
           * vo_AddedOrganicMatterNConcentration / 10000.0 / soilColumn[0].vs_LayerThickness;
 
-          debug("Added organic matter N amount: " + vo_AddedOrganicNitrogenAmount);
           if(vo_AddedOrganicMatterNConcentration <= 0.0) {
             vo_AddedOrganicNitrogenAmount = 0.01;
           }
@@ -305,18 +300,8 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     soilColumn[0].vs_SOM_Fast += SOM_FastInput;
 
     // JS!
-    if (DEBUG && (soilColumn[0].vs_SoilNO3 < 0 || soilColumn[0].vs_SoilNH4 < 0)) {
-      debug('vo_AddedOrganicCarbonAmount', vo_AddedOrganicCarbonAmount);
-      debug('vo_AOM_NO3Content', vo_AOM_NO3Content);
-      debug('vo_PartAOM_to_AOM_Slow', vo_PartAOM_to_AOM_Slow);
-      debug('vo_PartAOM_to_AOM_Fast', vo_PartAOM_to_AOM_Fast);
-      debug('vo_AOM_DryMatterContent', vo_AOM_DryMatterContent);
-      debug('vo_AddedOrganicMatterAmount', vo_AddedOrganicMatterAmount);
-      debug('vs_LayerThickness', soilColumn[0].vs_LayerThickness);
-      debug('oilColumn.that[0].vs_SoilNO3', oilColumn.that[0].vs_SoilNO3);
-      debug('soilColumn[0].vs_SoilNH4', soilColumn[0].vs_SoilNH4);
-      throw 'N < 0';
-    }
+    if (DEBUG && (soilColumn[0].vs_SoilNO3 < 0 || soilColumn[0].vs_SoilNH4 < 0))
+      throw new Error('N < 0');
 
     //store for further use
     vo_AOM_SlowInput += AOM_SlowInput;
@@ -399,8 +384,6 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       vo_Hydrolysis_pH_Effect[i_Layer] = exp(-0.064 *
                                          ((soilColumn[i_Layer].vs_SoilpH - 6.5) *
                                          (soilColumn[i_Layer].vs_SoilpH - 6.5)));
-
-      // debug(soilColumn[i_Layer].vs_SoilMoisture_pF(), 'soilColumn[i_Layer].vs_SoilMoisture_pF()');
 
       // kmol urea kg soil-1 s-1
       vo_HydrolysisRate[i_Layer] = vo_HydrolysisRateMax[i_Layer] *
@@ -1022,20 +1005,6 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
         vo_N_PotVolatilisedSum += vo_N_PotVolatilised;
 
-        // debug('vo_VolatilisationRate', vo_VolatilisationRate);
-        // debug('vo_SoilWet', vo_SoilWet);
-        // debug('vw_MeanAirTemperature', vw_MeanAirTemperature);
-        // debug('vw_WindSpeed', vw_WindSpeed);
-        // debug('it_AOM_Pool.vo_AOM_DryMatterContent', it_AOM_Pool.vo_AOM_DryMatterContent);
-        // debug('Number(it_AOM_Pool.incorporation)', Number(it_AOM_Pool.incorporation));
-        // debug('soilColumn[0].vs_SoilpH ', soilColumn[0].vs_SoilpH);
-        // debug('vo_N_PotVolatilised', vo_N_PotVolatilised);
-        // debug('vo_AOM_TAN_Content', vo_AOM_TAN_Content);
-        // debug('vo_MaxVolatilisation', vo_MaxVolatilisation);
-        // debug('vo_VolatilisationHalfLife', vo_VolatilisationHalfLife);
-        // debug('it_AOM_Pool.vo_DaysAfterApplication', it_AOM_Pool.vo_DaysAfterApplication);
-        // debug('AOM_Pool', AOM_Pool);
-
       });
 
       if (soilColumn[0].vs_SoilNH4 > (vo_N_PotVolatilisedSum)) {
@@ -1100,9 +1069,6 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
     }
 
-    // debug('vo_AmmoniaOxidationRateCoeff', vo_AmmoniaOxidationRateCoeff);
-    // debug('vo_NitriteOxidationRate', vo_NitriteOxidationRate);
-
     if (soilColumn[0].vs_SoilNH4 < 0)
       throw soilColumn[0].vs_SoilNH4;
 
@@ -1143,9 +1109,6 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       }
     }
 
-    // debug('vo_NitriteOxidationRate', vo_NitriteOxidationRate);
-    // debug('vo_AmmoniaOxidationRate', vo_AmmoniaOxidationRate);
-
     if (soilColumn[0].vs_SoilNH4 < 0)
       throw soilColumn[0].vs_SoilNH4;
 
@@ -1176,11 +1139,6 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
            * fo_MoistOnDenitrification(soilColumn[i_Layer].get_Vs_SoilMoisture_m3(),
            soilColumn[i_Layer].get_Saturation()), po_TransportRateCoeff
            * soilColumn[i_Layer].vs_SoilNO3);
-
-      // debug('fo_TempOnNitrification ' + i_Layer, fo_TempOnNitrification(soilColumn[i_Layer].get_Vs_SoilTemperature()));
-      // debug('fo_MoistOnDenitrification ' + i_Layer, fo_MoistOnDenitrification(soilColumn[i_Layer].get_Vs_SoilMoisture_m3(),
-      //      soilColumn[i_Layer].get_Saturation()));
-      // debug('soilColumn.that['+i_Layer+'].vs_SoilNO3', soilColumn[i_Layer].vs_SoilNO3);
     }
 
       // update NO3 content of soil layer with denitrification balance [kg N m-3]
@@ -1203,17 +1161,6 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     }
 
     vo_SumDenitrification += vo_TotalDenitrification; // [kg N m-2]
-
-    // debug('vo_PotDenitrificationRate', vo_PotDenitrificationRate);
-    // debug('po_SpecAnaerobDenitrification', po_SpecAnaerobDenitrification);
-    // debug('po_TransportRateCoeff', po_TransportRateCoeff);
-    // debug('vo_TotalDenitrification', vo_TotalDenitrification);
-    // debug('vo_SMB_CO2EvolutionRate'[i_Layer], vo_SMB_CO2EvolutionRate[i_Layer]);
-    // debug('fo_TempOnNitrification', fo_TempOnNitrification(soilColumn[i_Layer].get_Vs_SoilTemperature()));
-    // debug('fo_MoistOnDenitrification', fo_MoistOnDenitrification(soilColumn[i_Layer].get_Vs_SoilMoisture_m3(),
-    //        soilColumn[i_Layer].get_Saturation()));
-    // debug('po_TransportRateCoeff', po_TransportRateCoeff);
-    // debug('vo_ActDenitrificationRate', vo_ActDenitrificationRate);
 
     if (vo_TotalDenitrification < 0)
       throw vo_TotalDenitrification;
@@ -1301,7 +1248,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     } else if (d_SoilClayContent > d_LimitClayEffect && d_SoilClayContent <= 1.0) {
       fo_ClayOnDecompostion = 1.0 - 2.0 * d_LimitClayEffect;
     } else {
-      debug("irregular clay content");
+      throw new Error("irregular clay content");
     }
     return fo_ClayOnDecompostion;
   };
@@ -1323,7 +1270,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
       fo_TempOnDecompostion = exp(0.47 - (0.027 * d_SoilTemperature) + (0.00193 * d_SoilTemperature * d_SoilTemperature));
     } else {
-      debug("irregular soil temperature fo_TempOnDecompostion (d_SoilTemperature = "+d_SoilTemperature+")");
+      throw new Error("irregular soil temperature fo_TempOnDecompostion (d_SoilTemperature = "+d_SoilTemperature+")");
     }
 
     return fo_TempOnDecompostion;
@@ -1353,19 +1300,14 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
       fo_MoistOnDecompostion = 0.0;
 
-    }  else if (d_SoilMoisture_pF === -Infinity) { /* TODO: Special JavaScript case ? */
-      fo_MoistOnDecompostion = 0.0;
-    
     } else {
-      debug("fo_MoistOnDecompostion ( d_SoilMoisture_pF ) : irregular soil water content");
+      throw new Error("fo_MoistOnDecompostion ( d_SoilMoisture_pF ) : irregular soil water content");
     }
 
     return fo_MoistOnDecompostion;
   };
 
   var fo_MoistOnHydrolysis = function (d_SoilMoisture_pF) {
-
-    if (DEBUG) debug('fo_MoistOnHydrolysis', arguments);
 
     var fo_MoistOnHydrolysis=0.0;
 
@@ -1388,7 +1330,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       fo_MoistOnHydrolysis = 0.0;
     
     } else {
-      debug("fo_MoistOnHydrolysis ( d_SoilMoisture_pF: "+d_SoilMoisture_pF+" ) irregular soil water content");
+      throw new Error("fo_MoistOnHydrolysis ( d_SoilMoisture_pF: "+d_SoilMoisture_pF+" ) irregular soil water content");
     }
 
     return fo_MoistOnHydrolysis;
@@ -1411,7 +1353,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       fo_TempOnNitrification
           = exp(0.47 - (0.027 * d_SoilTemperature) + (0.00193 * d_SoilTemperature * d_SoilTemperature));
     } else {
-      debug("irregular soil temperature");
+      throw new Error("irregular soil temperature");
     }
 
     return fo_TempOnNitrification;
@@ -1437,7 +1379,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       fo_MoistOnNitrification = 0.0;
 
     } else {
-      debug("irregular soil water content");
+      throw new Error("irregular soil water content");
     }
     return fo_MoistOnNitrification;
   };
@@ -1462,7 +1404,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       fo_MoistOnDenitrification = po_Denit1 + (1.0 - po_Denit1)
           * ((d_SoilMoisture_m3 / d_Saturation) - po_Denit3) / (1.0 - po_Denit3);
     } else {
-      debug("irregular soil water content");
+      throw new Error("irregular soil water content");
     }
 
     return fo_MoistOnDenitrification;

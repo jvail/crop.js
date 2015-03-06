@@ -51,12 +51,6 @@ var SoilTransport = function (sc, sps, cpp) {
       vq_LayerThickness[i_Layer] = soilColumn[0].vs_LayerThickness;
       vc_NUptakeFromLayer[i_Layer] = crop ? crop.get_NUptakeFromLayer(i_Layer) : 0;
 
-      if (DEBUG) {
-        debug('vc_NUptakeFromLayer[i_Layer]', vc_NUptakeFromLayer[i_Layer]);
-        debug('vq_SoilNO3[i_Layer]', vq_SoilNO3[i_Layer]);
-      }
-
-
       /* crop.js: remove NH4 from uptake and update NH4 in solution */
       /* [kg (N) m-3] */
       var NH4_uptake = min(soilColumn[i_Layer].vs_SoilNH4, vc_NUptakeFromLayer[i_Layer] / vq_LayerThickness[i_Layer]);
@@ -164,8 +158,6 @@ var SoilTransport = function (sc, sps, cpp) {
       }
 
     } // for
-
-    // debug('vc_NUptakeFromLayer', vc_NUptakeFromLayer);
 
     soilColumn.vq_CropNUptake = vq_CropNUptake; // [kg m-2]
 

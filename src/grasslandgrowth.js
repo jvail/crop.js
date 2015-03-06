@@ -14,8 +14,6 @@
 var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes additional grassland param
   'use strict';
 
-  if (DEBUG) debug(arguments);
-
   var soilColumn = sc
     , generalParams = gps
     , centralParameterProvider = cpp
@@ -88,13 +86,10 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   */  
   function grossPhotosynthesis(T, T_mn, T_mx, PPF, τ, C_amb, f_s) {
 
-    if (DEBUG) debug(arguments, 'grossPhotosynthesis');
-
      var P_g_day_mix = [];
      var P_g_day = [];
      /* (1 - mixture.homogeneity) LAI covers (1 - mixture.homogeneity) / numberOfSpecies m-2 */
      var L_scale = (numberOfSpecies === 1 ? 1 : (1 - mixture.homogeneity) / ((1 - mixture.homogeneity) / numberOfSpecies));
-     debug('L_scale', L_scale);
 
     /*
       (4.8b) Diurnal variation (distribution) in irradiance (I) and temperature (T) 
@@ -160,8 +155,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
         /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) Ω_water missing in Johnson (2013) */
         mixture[s].vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day[s] * mixture[s].vars.Ω_water * sqrt(mixture[s].vars.Ω_N);
-
-        debug('P_g_day[s] [kg (C) m-2 d-1]', (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day[s])
 
       }
 
@@ -259,8 +252,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
     function f_Pm_N(f_N, f_N_ref) {
 
-      if (DEBUG) debug(arguments, 'f_Pm_N');
-
       var f_Pm_N = 0;
 
       f_Pm_N = (f_N < f_N_ref) ? (f_N / f_N_ref) : 1;
@@ -278,8 +269,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     */
 
     function f_Pm_TC(T, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) {
-
-      if (DEBUG) debug(arguments, 'f_Pm_TC');
 
       var f_Pm_TC = 0
         , q = 2 // TODO: value? (vgl. S. 12, Johnson 2013)
@@ -313,8 +302,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
     function f_α_TC(T, C_amb, λ_α, γ_α, λ, f_C_m) {
 
-      if (DEBUG) debug(arguments, 'f_α_TC');
-
       var f_α_TC = 0
         , C_amb_ref = 380
         , T_opt_α = 15 + γ_α * (f_C(C_amb, λ, f_C_m) - 1)
@@ -334,8 +321,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     */
 
     function f_α_N(f_N, f_N_ref) {
-
-      if (DEBUG) debug(arguments, 'f_α_N');
 
       var f_α_N = 0;
 
@@ -358,8 +343,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     
     function P_l(I_l, α, P_m, ξ) {
 
-      if (DEBUG) debug(arguments, 'P_l');
-      
       var P_l = 0; 
 
       P_l = 1 / (2 * ξ) * (α * I_l + P_m - sqrt(pow(α * I_l  + P_m, 2) - 4 * ξ * α * I_l * P_m));
@@ -382,8 +365,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     
     function P_g_mix(I_mx, I_mn, T_I_mx, T_I_mn, f_s, C_amb) {
 
-      if (DEBUG) debug(arguments, 'P_g');
-
       var P_g = [] // return values 
         , δL = mixture.δL
         , n_L = mixture.n_L()
@@ -398,18 +379,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         , ξ = []
         , k = []
         ;
-
-      if (DEBUG) {
-        debug('n_L', n_L);
-        debug('n_start_p', n_start_p);
-        debug('δL_p', δL_p);
-        debug('δL_i', δL_i);
-        debug('k_e_i', k_e_i);
-        for (var s = 0; s < numberOfSpecies; s++)
-          debug('LAI', mixture[s].L());
-        // if (sum(n_start_p) / numberOfSpecies != 1)
-        //   throw new Error('sum(n_start_p) / numberOfSpecies != 1');
-      }
 
       var I_s_mx = I_mx * f_s
         , I_s_mn = I_mn * f_s
@@ -440,12 +409,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           , f_N_ref = cons.N_leaf.ref
           ;
 
-        if (DEBUG) {
-          debug('s', s);
-          debug('f_N', f_N);
-          debug('f_N_ref', f_N_ref);
-        }
-        
         k[s] = photo.k;
         ξ[s] = photo.ξ;
 
@@ -462,14 +425,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         P_m_mn[s] = P_m_ref * f_C(C_amb, λ, f_C_m) * f_Pm_TC(T_I_mn, C_amb, γ_Pm, T_mn, T_ref, T_opt_Pm_amb, isC4, λ, f_C_m) * f_Pm_N(f_N, f_N_ref);
 
       } // for s
-
-
-      if (DEBUG) {
-        debug('k', k);
-        debug('ξ', ξ);
-        debug('α_mx', α_mx);
-        debug('α_mn', α_mn);
-      }
 
       /*  
           numerical integration:
@@ -560,9 +515,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           , LAI = species.L() * L_scale
           ;
 
-        debug(species.vars);
-        debug('LAI', LAI);
-
         /* (3.23) Photosynthetic efficiency, α */
         var α_mx = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, f_N_ref);
         var α_mn = α_amb_15 * f_C(C_amb, λ, f_C_m) * f_α_N(f_N, f_N_ref);
@@ -595,19 +547,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           
         }
 
-        if (DEBUG) {
-          debug('I_mx', I_mx);
-          debug('I_mn', I_mn);
-          debug('Ω_N', species.vars.Ω_N);
-          debug('α_amb_15', α_amb_15);
-          debug('α_mx', α_mx);
-          debug('α_mn', α_mn);
-          debug('P_m_ref', P_m_ref);
-          debug('P_m_mx', P_m_mx);
-          debug('P_m_mn', P_m_mn);
-          debug('P_g[s] [μmol (CO2) m-2 s-1]', P_g[s]);
-        }
-
       } // for s
 
       return P_g;
@@ -631,8 +570,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
   */
   function netPhotosynthesis(T) {
-
-    debug('netPhotosynthesis');
 
     /* iterate over mixture array */
     for (var s = 0, ps = numberOfSpecies; s < ps; s++) {
@@ -665,11 +602,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       /*(3.57) Gross assimilation P_g_day adjusted for maintenance respiration, 
       respiratory costs of nitrogen uptake and fixation. Use R_N from previous day (circularity) */
       var P_growth = P_g_day - vars.R_m - vars.R_N;
-      debug('P_g_day: ' + P_g_day);
-      debug('P_growth: ' + P_growth);
-      debug('vars.R_m: ' + vars.R_m);
-      debug('vars.R_N: ' + vars.R_N);
-      debug('C_total: ' + C_total);
 
       if (P_growth > 0) {
 
@@ -705,9 +637,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           root: species.N_root() / species.C_root()
         };
 
-        debug('f_N_live', f_N_live);
-        debug('f_N_live_dwt', species.N_live_leaf() / species.dwt_live_leaf());
-
         /* is any below optimum? */
         var ordering = [LEAF, SHOOT, ROOT];
         if (f_N_live.leaf < N_ref_opt) {
@@ -730,8 +659,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
             ordering[2] = LEAF;
           }
         }
-
-        debug('ordering', ordering)
 
         var N_up_pool = sum(N_up[s]);
 
@@ -767,20 +694,12 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           
           }
 
-          debug('f_pn, max', f_pn);
-          debug('N_ref_opt_organ', N_ref_opt_organ);
-
          /* calculate required N if tissue tries to assimilate up to max. N */
           var f_nc = 1 - (f_sc + f_pn)
             , Y = 1 / (1 + (1 - Y_sc) / Y_sc * f_sc + (1 - Y_nc) / Y_nc * f_nc + (1 - Y_pn) / Y_pn * f_pn)
             , C_assimilated = Y * P_growth * ρ /* [kg (C) m-2] */
             , N_assimilated = C_assimilated * f_pn * fN_pn / fC_pn /* [kg (N) m-2] */
             ;
-
-          if (DEBUG) {
-            if (f_sc + f_pn > 1)
-              throw new Error('f_sc + f_pn > 1');
-          }
 
           if (N_assimilated > N_up_pool)  { // TODO: what if N avail. is below N.min for tissue?
 
@@ -799,12 +718,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
             N_assimilated = C_assimilated * f_pn * fN_pn / fC_pn;
 
             if (DEBUG) {
-              debug(ordering[organ] === LEAF ? 'leaf:' : (ordering[organ] === SHOOT ? 'stem:' : 'root:'));
-              debug('C_assimilated, organ ' + ordering[organ], C_assimilated);
-              debug('N_assimilated, organ ' + ordering[organ], N_assimilated);
-              debug('N_up_pool', N_up_pool);
-              debug('f_pn', f_pn);
-              debug('Y', Y);
               if (roundN(10, N_assimilated) != roundN(10, N_up_pool))
                 throw new Error(N_assimilated != N_up_pool);
             }
@@ -812,11 +725,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
             N_up_pool = 0;
 
           } else {
-
             N_up_pool -= N_assimilated;
-            debug('N_up_pool', N_up_pool)
-            debug('N_assimilated', N_assimilated)
-
           }
 
           // only up to N_opt. No compensation if an organ (due to a low initial N conc.) consumes above N_opt
@@ -858,13 +767,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         species.vars.N_assim = N_assim;
         species.vars.N_req = N_req;
         vars.G = vars.G_leaf + vars.G_stem + vars.G_root;
-
-        if (DEBUG) {
-          debug('Ω_N', species.vars.Ω_N);
-          debug('N_assim', species.vars.N_assim);
-          debug('N_req', species.vars.N_req);
-        }
-
 
       } else { // no growth: assimilates are not sufficent for respiratory costs 
 
@@ -970,8 +872,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     
     function R_m(T, f_N, f_N_ref, W) {
 
-      if (DEBUG) debug(arguments);
-
       var R_m = 0
         , m_ref = cons.resp.m_ref
         ;
@@ -988,8 +888,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     */
 
     function f_m(T) {
-
-      if (DEBUG) debug(arguments);
 
       var f_m = 1
         , T_m_mn = cons.resp.T_m_mn
@@ -1017,8 +915,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
     function R_N(N_up, N_fix) {
 
-      if (DEBUG) debug(arguments);
-
       var R_N = 0
         , λ_N_up = cons.resp.λ_N_up
         , λ_N_fix = cons.resp.λ_N_fix
@@ -1043,9 +939,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       - trampling by animals (4.16m)
   */
   function partitioning(T) {
-
-    debug('partitioning');
-    if (DEBUG) debug(arguments);
 
     /* iterate over mixture array */
     for (var s = 0, ps = mixture.length; s < ps; s++) {
@@ -1112,13 +1005,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       dSC.live_l_3 = (γ_l * SC.live_l_2) - (γ_l * SC.live_l_3);
       dSC.dead_l = (γ_l * SC.live_l_3) - (γ_dead * SC.dead_l);
 
-      if (DEBUG) {
-        debug('γ_l', γ_l);
-        debug('T', T);
-        debug('f_γ(T)', f_γ(T));
-      }
-
-      /* (3.93 ff) sheath and stem */
       dSC.live_s_1 = (G_s * (f_dwt_s.sc / dwt_s)) - (2 * γ_s * SC.live_s_1);
       dSC.live_s_2 = (2 * γ_s * SC.live_s_1) - (γ_s * SC.live_s_2);
       dSC.live_s_3 = (γ_s * SC.live_s_2) - (γ_s * SC.live_s_3);
@@ -1158,13 +1044,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       PN_dead.l += 0.5 * γ_l * PN.l * live_2_dead_l_flux - γ_dead * PN_dead.l;
       PN_dead.s += 0.5 * γ_s * PN.s * live_2_dead_s_flux - γ_dead * PN_dead.s;
       PN_dead.r += 0.5 * γ_r * PN.r;
-
-      if (DEBUG) {
-        debug('Λ_r', Λ_r);
-        debug('PN_dead.r', PN_dead.r);
-        debug('NC_dead.r', NC_dead.r);
-      }
-
 
       /* update C pools with dSC, dPN, dNC */
 
@@ -1245,8 +1124,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         vars.ρ_l = (1 - part.ρ_l_max) + (2 * part.ρ_l_max - 1) * 1 / (1 + exp(10 * ((vars.GDD / (3 * part.GDD_flower)) - 0.5)));
       else
         vars.ρ_l = (1 - part.ρ_l_max) + (2 * part.ρ_l_max - 1) * 1 / (1 + exp(10 * ((vars.GDD / (2 * part.GDD_flower)) - 0.5)));
-
-      console.log(vars.ρ_l);
+    
     }
 
   } // phenology
@@ -1257,7 +1135,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       var part = mixture[s].cons.part;
       var vars = mixture[s].vars;
       vars.ρ_l = part.ρ_l_max;
-      console.log(vars.ρ_l);
     }
 
   }
@@ -1282,8 +1159,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   */
 
   var step = function (T, T_mx, T_mn, R_s, sunhours, julday, rh, u, u_h, C_amb, rr, f_s, τ, R_a, isVegPeriod) {
-
-    if (DEBUG) debug(arguments);
 
     var PPF = R_s * PPF_PER_MJ_GLOBAL_RADIATION;
 
@@ -1336,7 +1211,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     /* set species.vars.P_g_day */
     grossPhotosynthesis(T, T_mn, T_mx, PPF, τ, C_amb, f_s);
 
-    debug('N_up_sum', N_up_sum);
     netPhotosynthesis(T);
 
     for (var s = 0; s < numberOfSpecies; s++) {
@@ -1403,24 +1277,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
     phenology();
 
-
-    if (DEBUG) {
-
-      console.log('------------- N-test ---------------------');
-      /* total soil N [kg m-2] till depth 0.5 */
-      var totalN = 0;
-      for (var l = 0; l < 5; l++)
-        totalN += (soilColumn[l].get_SoilNO3() + soilColumn[l].get_SoilNH4()) * 0.1;
-
-      debug('totalN 0-4: [kg N m-2] ' + totalN);
-      debug('totalRoot: [kg DM m-2] ' + mixture[0].dwt_root());
-      debug('N_up:  [kg N m-2] ', N_up);
-      debug('vars ', mixture[0].vars);
-      console.log('------------- N-test-end -----------------');
-
-    }
-
-
   }; // step end
 
 
@@ -1439,19 +1295,12 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     for (var s = 0; s < numberOfSpecies; s++) {
 
       var species = mixture[s];
-      debug('species.vars', species.vars);
       /* TODO: move k_sum calc. somewhere else */
       species.vars.τ++;
       species.vars.k_sum = min(1, species.vars.τ / species.cons.τ_veg);
       var C_root = species.C_root();
       /* Johnson 2008, eq. 4.19b */ 
       species.vars.d_r = 0.05 + (species.cons.d_r_mx - 0.05) * species.vars.k_sum;
-
-      debug('C_root', C_root);
-      debug('species.vars.d_r', species.vars.d_r);
-      debug('species.vars.k_sum', species.vars.k_sum);
-      debug('species.cons.d_r_mx', species.cons.d_r_mx);
-      debug('species.vars.τ', species.vars.τ);
 
       f_r_sum[s] = 0;
 
@@ -1484,13 +1333,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       }
     }
 
-
-    if (DEBUG) {
-      debug('f_r', f_r);
-      debug('W_r', W_r);
-    }
-
-
     // var dwt_root = mixture.dwt_root() /* [kg (d.wt) m-2] */
     //   , C_root = mixture.C_root()      [kg (C) m-2] 
     //   , pc_SpecificRootLength = 300   /* [m kg-1 (d.wt)] is identical for all crops in MONICA db */
@@ -1521,10 +1363,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       var ξ_N = 200 * dwt2carbon; // convert from dwt to carbon TODO: value? unit? allow per species
       /* total uptake from layer must not exceed layer N */
       N_up_sum[l] = min((layer.get_SoilNO3() + layer.get_SoilNH4()) * vs_LayerThickness, ξ_N * N * W_r_sum[l]);
-      debug('ξ_N', ξ_N);
-      debug('N', N);
-      debug('N_ppm', N * 1e6);
-      debug('N_up_sum[l]', N_up_sum[l]);
     }
 
     for (var l = 0; l < vs_NumberOfLayers; l++) {
@@ -1532,33 +1370,10 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         N_up[s][l] = (W_r_sum[l] === 0) ? 0 : N_up_sum[l] * W_r[s][l] / W_r_sum[l];
     }
 
-    if (DEBUG) {
-
-      debug('N_up', N_up);
-
-      logger(MSG.DEBUG, (sum(N_up_sum) * SQM_PER_HA) + ' N uptake pot. [kg (N) ha-1]');
-      logger(MSG.DEBUG, (sum(W_r_sum) * SQM_PER_HA) + ' C root [kg (C) ha-1]');
-
-      /* total soil N [kg m-2] in root zone */
-      var N_soil = 0;
-      for (var l = 0; l < vs_NumberOfLayers; l++) {
-        N_soil += soilColumn[l].get_SoilNO3() * vs_LayerThickness;
-        if (d_r_mx <= (l + 1) * vs_LayerThickness) /* does root reach into next layer? */
-          break;
-      }
-
-      logger(MSG.DEBUG, (N_soil * SQM_PER_HA) + ' soil N in root zone [kg (N) ha-1]');
-      if (sum(N_up_sum) > N_soil)
-        throw new Error('sum(N_up_sum) > N_soil');
-
-    }
-
   } // nitrogenUptake
 
   
   function fc_ReferenceEvapotranspiration(vw_MeanAirTemperature, vw_MaxAirTemperature, vw_MinAirTemperature, vw_RelativeHumidity, vw_WindSpeed, vw_WindSpeedHeight, vc_GlobalRadiation, vw_AtmosphericCO2Concentration, vc_ExtraterrestrialRadiation) {
-
-    if (DEBUG) debug(arguments);
 
     var vc_AtmosphericPressure; //[kPA]
     var vc_PsycrometerConstant; //[kPA °C-1]
@@ -1746,19 +1561,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           if (DEBUG) {
             if (θ[l] < 0 || θ[l] > θ_sat[l])
               throw new Error('θ < 0 || θ > θ_sat');
-            debug('species', s);
-            debug('layer', l);
-            debug('i', i);
-            debug('θ[l]', θ[l]);
-            debug('E_T_pot', E_T_pot);
-            debug('E_T_demand[s]', E_T_demand[s]);
-            debug('E_T[s][l]', E_T[s][l]);
-            debug('E_T_demand_remaining', E_T_demand_remaining[s]);
-            debug('g_water[l]', g_water[l]);
-            debug('θ_w[l]', θ_w[l]);
-            debug('θ_r[l]', θ_r[l]);
-            debug('θ_fc[l]', θ_fc[l]);
-            debug('θ_sat[l]', θ_sat[l]);
           }
 
         }
@@ -1774,11 +1576,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
            mixture[s].vars.Ω_water = 1; /* avoid 0 / 0 = NaN */
         else
           mixture[s].vars.Ω_water = min(1, E_T_sum[s] / E_T_demand[s]);
-
-        if (DEBUG) {
-          debug('Ω_water', mixture[s].vars.Ω_water);
-        }
-      
       }
     } else {
       for (var s = 0; s < numberOfSpecies; s++)
@@ -2393,7 +2190,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           Λ_litter.pn *= 1 - f_litter;
         }
 
-        debug('scale', scale);
         aom.vo_AOM_Slow += (Λ_r.sc + NC_dead.r + PN_dead.r) * scale;
         N += PN_dead.r / fC_pn * fN_pn * scale;
 
@@ -2409,8 +2205,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       var Λ_r = mixture[s].vars.Λ_r;
       Λ_r.sc = NC_dead.r = PN_dead.r = 0;
     }
-
-    debug('AOM', AOM);
 
     return AOM;
 

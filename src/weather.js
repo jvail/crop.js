@@ -35,8 +35,6 @@ var Weather = function (startDate, endDate) {
   };
 
   this.dataForTimestep = function (index, dayOfSimulation) {
-    debug('index', index);
-    debug('dayOfSimulation', dayOfSimulation);
     return this._data[index][dayOfSimulation];
   };
 

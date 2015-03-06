@@ -26,8 +26,6 @@ var SnowComponent = function (cpp) {
 
   var calcSnowLayer = function (mean_air_temperature, net_precipitation) {
 
-    if (DEBUG) debug(arguments);
-      
     // Calcs netto precipitation
     var net_precipitation_snow = 0.0;
     var net_precipitation_water = 0.0;
@@ -78,8 +76,6 @@ var SnowComponent = function (cpp) {
 
   var calcSnowMelt = function (vw_MeanAirTemperature) {
 
-    if (DEBUG) debug(arguments);
-
     var vm_MeltingFactor = 1.4 * (vm_SnowDensity / 0.1);
     var vm_Snowmelt = 0.0;
 
@@ -107,8 +103,6 @@ var SnowComponent = function (cpp) {
     net_precipitation_water, // return values
     net_precipitation_snow // return values
     ) {
-
-    if (DEBUG) debug(arguments);
     
     var liquid_water_precipitation = 0.0;
 
@@ -138,8 +132,6 @@ var SnowComponent = function (cpp) {
 
   var calcRefreeze = function (mean_air_temperature) {
 
-    if (DEBUG) debug(arguments);
-
     var refreeze = 0.0;
     var refreeze_helper = 0.0;
 
@@ -164,8 +156,6 @@ var SnowComponent = function (cpp) {
   };
 
   var calcNewSnowDensity = function (mean_air_temperature, net_precipitation_snow) {
-
-    if (DEBUG) debug(arguments);
     
     var new_snow_density = 0.0;
     var snow_density_factor = 0.0;
@@ -193,8 +183,6 @@ var SnowComponent = function (cpp) {
 
   var calcAverageSnowDensity = function (net_precipitation_snow, new_snow_density) {
 
-    if (DEBUG) debug(arguments);
-
     var snow_density = 0.0;
     if ((vm_SnowDepth + net_precipitation_snow) <= 0.0) {
       // no snow
@@ -210,8 +198,6 @@ var SnowComponent = function (cpp) {
   };
 
   var calcLiquidWaterRetainedInSnow = function (frozen_water_in_snow, snow_water_equivalent) {
-
-    if (DEBUG) debug(arguments);
 
     var snow_retention_capacity;
     var liquid_water_retained_in_snow;
@@ -233,8 +219,6 @@ var SnowComponent = function (cpp) {
 
   var calcPotentialInfiltration = function (net_precipitation, snow_layer_water_release, snow_depth) {
 
-    if (DEBUG) debug(arguments);
-    
     var water_to_infiltrate = net_precipitation;
     if (snow_depth >= 0.01){
       vm_WaterToInfiltrate = snow_layer_water_release;
@@ -243,8 +227,6 @@ var SnowComponent = function (cpp) {
   };
 
   var calcSnowDepth = function (snow_water_equivalent) {
-
-    if (DEBUG) debug(arguments);
 
     var pm_WaterDensity = 1.0; // [kg dm-3]
     if (snow_water_equivalent <= 0.0) {

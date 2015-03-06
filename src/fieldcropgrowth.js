@@ -7,8 +7,6 @@
 
 var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
 
-  if (DEBUG) debug(arguments); // JS!
-
   var soilColumn = sc
     , generalParams = gps
     , cropParams = cps
@@ -272,50 +270,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
   }
 
   vc_MaxRootingDepth = (vc_SoilSpecificMaxRootingDepth + (pc_CropSpecificMaxRootingDepth * 2.0)) / 3.0; //[m]
-  debug('vc_SoilSpecificMaxRootingDepth', vc_SoilSpecificMaxRootingDepth);
-  debug('pc_CropSpecificMaxRootingDepth', pc_CropSpecificMaxRootingDepth);
-
-  // change organs for yield components in case of eva2 simulation
-  // if type of usage is defined
-  //   debug() << "EVA2 Nutzungsart " << eva2_usage << "\t" << pc_CropName.c_str() << endl;
-  //   if (eva2_usage == NUTZUNG_GANZPFLANZE) {
-  //       debug() << "Ganzpflanze" << endl;
-  //       std::vector<YieldComponent> prim = cropParams.organIdsForPrimaryYield;
-  //       std::vector<YieldComponent> sec = cropParams.organIdsForSecondaryYield;
-
-  //       BOOST_FOREACH(YieldComponent yc, prim){
-  //         eva2_primaryYieldComponents.push_back(yc);
-  //       }
-  // //      vector<YieldComponent>::iterator it = prim.begin();
-  // //      for (it; it!=prim.end(); it++) {
-  // //          YieldComponent y = *it;
-  // //          eva2_primaryYieldComponents.push_back(y);
-  // //      }
-
-  //       BOOST_FOREACH(YieldComponent yc, sec){
-  //          eva2_primaryYieldComponents.push_back(yc);
-  //       }
-  // //      it = sec.begin();
-  // //      for (it; it!=sec.end(); it++) {
-  // //          YieldComponent y = *it;
-  // //          eva2_primaryYieldComponents.push_back(y);
-  // //      }
-  //       eva2_secondaryYieldComponents.clear();
-  //   }
-
-  //   if (eva2_usage == NUTZUNG_GRUENDUENGUNG) {
-  //       // if gruenduengung, put all organs that are in primary yield components
-  //       // into secondary yield component, because the secondary yield stays on
-  //       // the farm
-  //       debug() << "Gründüngung" << endl;
-  //       std::vector<YieldComponent> prim = cropParams.organIdsForPrimaryYield;
-
-  //       for (vector<YieldComponent>::iterator it = prim.begin(); it!=prim.end(); it++) {
-  //           YieldComponent y = *it;
-  //           eva2_secondaryYieldComponents.push_back(y);
-  //       }
-  //   }
-
 
   var calculateCropGrowthStep = function (
     vw_MeanAirTemperature, 
@@ -330,10 +284,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     vw_AtmosphericCO2Concentration,
     vw_GrossPrecipitation
   ) {
-
-    debug("vw_AtmosphericCO2Concentration", vw_AtmosphericCO2Concentration);
-
-    if (DEBUG) debug(arguments);
 
     if (cutting_delay_days>0) {
         cutting_delay_days--;
@@ -569,8 +519,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
   d_BaseDaylength
   ) {
 
-    if (DEBUG) debug(arguments);
-
     if (d_DaylengthRequirement > 0.0) {
 
       // ************ Long-day plants **************
@@ -613,8 +561,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     d_VernalisationRequirement,
     d_VernalisationDays
   ) {
-
-    if (DEBUG) debug(arguments);
 
     var vc_EffectiveVernalisation;
 
@@ -663,7 +609,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     vc_MaxOxygenDeficit
   ) {
 
-    if (DEBUG) debug(arguments);
 
     var vc_AirFilledPoreVolume = vc_AirFilledPoreVolume || 0.0;
     var vc_MaxOxygenDeficit = vc_MaxOxygenDeficit || 0.0;
@@ -705,8 +650,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     vc_DaylengthFactor,
     vc_CropNRedux
   ) {
-
-    if (DEBUG) debug(arguments);
 
     var vc_CapillaryWater;
     var vc_DevelopmentAccelerationByNitrogenStress = 0.0; // old NPROG
@@ -844,8 +787,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
   d_EarlierStageKcFactor
   ) {
 
-    if (DEBUG) debug(arguments);
-
     var vc_KcFactor;
 
     var vc_RelativeDevelopment = d_CurrentTemperatureSum / d_StageTemperatureSum; // old relint
@@ -870,8 +811,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     pc_CropHeightP1,
     pc_CropHeightP2
   ) {
-
-    if (DEBUG) debug(arguments);
 
     var vc_TotalTemperatureSumForHeight = 0.0;
     for (var i_Stage = 1; i_Stage < pc_StageAtMaxHeight + 1; i_Stage++)
@@ -914,8 +853,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     vc_TimeStep
   ) {
 
-    if (DEBUG) debug(arguments);
-
     vc_LeafAreaIndex += (
       (d_LeafBiomassIncrement * (d_SpecificLeafAreaStart + (d_CurrentTemperatureSum /
       d_StageTemperatureSum * (d_SpecificLeafAreaEnd - d_SpecificLeafAreaStart))) * vc_TimeStep) -
@@ -954,8 +891,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     vc_EffectiveDayLength,
     vc_OvercastDayRadiation
   ) {
-
-    if (DEBUG) debug(arguments);
 
     var vc_CO2CompensationPoint = 0.0; // old COcomp
     var vc_CO2CompensationPointReference = 0.0;
@@ -1497,8 +1432,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
 
     var fc_DroughtImpactOnFertility = function (vc_TranspirationDeficit) {
 
-    if (DEBUG) debug(arguments);
-
     if (vc_TranspirationDeficit < 0.0) vc_TranspirationDeficit = 0.0;
 
     // Fertility of the crop is reduced in cases of severe drought during bloom
@@ -1600,8 +1533,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     vw_MeanAirTemperature
   ) {
 
-    if (DEBUG) debug(arguments);
-
     var vc_MaxRootNConcentration                         = 0.0; // old WGM
     var vc_NConcentrationOptimum                         = 0.0; // old DTOPTN
     var vc_RootNIncrement                                = 0.0; // old WUMM
@@ -1628,7 +1559,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
 
     //old PESUM [kg m-2 --> kg ha-1]
     vc_TotalBiomassNContent += soilColumn.vq_CropNUptake * 10000.0;
-    // debug('soilColumn.vq_CropNUptake', soilColumn.vq_CropNUptake);
 
     // Dry matter production
     // old NRKOM
@@ -1985,8 +1915,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     vc_GrossPhotosynthesisReference_mol
   ) {
 
-    if (DEBUG) debug(arguments);
-
     var vc_AtmosphericPressure; //[kPA]
     var vc_PsycrometerConstant; //[kPA °C-1]
     var vc_SaturatedVapourPressureMax; //[kPA]
@@ -2087,8 +2015,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     vc_CurrentTotalTemperatureSum ,
     vc_TotalTemperatureSum
   ) {
-
-    if (DEBUG) debug(arguments);
 
     // JS! make sure it is an "int"
     vc_RootingZone = int(vc_RootingZone);
@@ -2309,8 +2235,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     vc_TotalTemperatureSum
   ) {
 
-    if (DEBUG) debug(arguments);
-
     // JS! make sure it is an "int"
     vc_RootingZone = int(vc_RootingZone);
     vc_GroundwaterTable = int(vc_GroundwaterTable);
@@ -2512,9 +2436,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
 
   var _cropYield = function (v, bmv) {
 
-    if (DEBUG && v.length === 0)
-      debug('organIdsForPrimaryYield', v);
-
     var yield = 0;
     for (var i = 0, is = v.length; i < is; i++)
       yield += bmv[v[i].organId - 1] * (v[i].yieldPercentage);
@@ -2523,9 +2444,6 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
 
   var _cropFreshMatterYield = function (v, bmv) {
     
-    if (DEBUG && v.length === 0)
-      debug('organIdsForPrimaryYield', v);
-
     var freshMatterYield = 0;
     for (var i = 0, is = v.length; i < is; i++)
       freshMatterYield += bmv[v[i].organId - 1] * (v[i].yieldPercentage) / (v[i].yieldDryMatter);

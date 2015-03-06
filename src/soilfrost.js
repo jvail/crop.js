@@ -16,8 +16,6 @@ var FrostComponent = function (sc, cpp) {
 
   var calcSoilFrost = function (mean_air_temperature, snow_depth) {
 
-    if (DEBUG) debug(arguments);
-
     // calculation of mean values
     var mean_field_capacity = getMeanFieldCapacity();
     var mean_bulk_density = getMeanBulkDensity();
@@ -66,8 +64,6 @@ var FrostComponent = function (sc, cpp) {
 
   var calcSii = function (mean_field_capacity) {
 
-    if (DEBUG) debug(arguments);
-
     /** @TODO Parameters to be supplied from outside */
     var pt_F1 = 13.05; // Hansson et al. 2004
     var pt_F2 = 1.06; // Hansson et al. 2004
@@ -84,8 +80,6 @@ var FrostComponent = function (sc, cpp) {
   */
   var calcHeatConductivityFrozen = function (mean_bulk_density, sii) {
 
-    if (DEBUG) debug(arguments);
-
     var cond_frozen = ((3.0 * mean_bulk_density - 1.7) * 0.001) / (1.0
         + (11.5 - 5.0 * mean_bulk_density) * exp((-50.0) * pow((sii / mean_bulk_density), 1.5))) * // [cal cm-1 K-1 s-1]
         86400.0 * pt_TimeStep * // [cal cm-1 K-1 d-1]
@@ -101,8 +95,6 @@ var FrostComponent = function (sc, cpp) {
   */
   var calcHeatConductivityUnfrozen = function (mean_bulk_density, mean_field_capacity) {
 
-    if (DEBUG) debug(arguments);
-
     var cond_unfrozen = ((3.0 * mean_bulk_density - 1.7) * 0.001) / (1.0 + (11.5 - 5.0
           * mean_bulk_density) * exp((-50.0) * pow(((mean_field_capacity * 100.0) / mean_bulk_density), 1.5)))
           * pt_TimeStep * // [cal cm-1 K-1 s-1]
@@ -113,8 +105,6 @@ var FrostComponent = function (sc, cpp) {
   };
 
   var calcThawDepth = function (temperature_under_snow, heat_conductivity_unfrozen, mean_field_capacity) {
-
-    if (DEBUG) debug(arguments);
 
     var thaw_helper1 = 0.0;
     var thaw_helper2 = 0.0;
@@ -155,8 +145,6 @@ var FrostComponent = function (sc, cpp) {
 
   var calcFrostDepth = function (mean_field_capacity, heat_conductivity_frozen, temperature_under_snow) {
 
-    if (DEBUG) debug(arguments);
-
     var frost_depth=0.0;
 
     // Heat released/absorbed on freezing/thawing
@@ -189,8 +177,6 @@ var FrostComponent = function (sc, cpp) {
   };
 
   var calcTemperatureUnderSnow = function (mean_air_temperature, snow_depth) {
-
-    if (DEBUG) debug(arguments);
 
     var temperature_under_snow = 0.0;
     if (snow_depth / 100.0 < 0.01) {

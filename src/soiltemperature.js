@@ -253,8 +253,6 @@ var SoilTemperature = function (sc, mm, cpp) {
    */
   var step = function (tmin, tmax, globrad) {
 
-    if (DEBUG) debug(arguments);
-
     var vt_GroundLayer = vt_NumberOfLayers - 2;
     var vt_BottomLayer = vt_NumberOfLayers - 1;
 
@@ -362,8 +360,6 @@ var SoilTemperature = function (sc, mm, cpp) {
    * @param globrad
    */
   var f_SoilSurfaceTemperature = function (tmin, tmax, globrad) {
-
-    if (DEBUG) debug(arguments);
 
     var shading_coefficient = dampingFactor;
 
