@@ -96,6 +96,8 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
 
   }
 
+  this.vs_SoilNH4_a = 0; /* absorbed, update in soilTransport.step */
+
   /**
    * @brief Returns value for soil organic carbon.
    *
@@ -387,6 +389,12 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
   var get_SoilNH4 = function () { return this.vs_SoilNH4; };
 
   /**
+   * Returns absorbed soil ammonium content.
+   * @return soil ammonium content [kg N m-3]
+   */
+  var get_SoilNH4_a = function () { return this.vs_SoilNH4_a; };
+
+  /**
    * Returns soil nitrite content.
    * @return soil nitrite content [kg N m-3]
    */
@@ -426,6 +434,7 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
     get_Saturation: get_Saturation,
     get_SoilCarbamid: get_SoilCarbamid,
     get_SoilNH4: get_SoilNH4,
+    get_SoilNH4_a: get_SoilNH4_a,
     get_SoilNmin: get_SoilNmin,
     get_SoilNO2: get_SoilNO2,
     get_SoilNO3: get_SoilNO3,
@@ -451,6 +460,7 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
     vs_SoilMoisture_pF: vs_SoilMoisture_pF,
     vs_SoilMoistureOld_m3: this.vs_SoilMoistureOld_m3, /**< Soil layer's moisture content of previous day [m3 m-3] */
     vs_SoilNH4: this.vs_SoilNH4, /**< Soil layer's NH4-N content [kg NH4-N m-3] */
+    vs_SoilNH4_a: this.vs_SoilNH4_a, /**< Soil layer's absorbed NH4-N content [kg NH4-N m-3] */
     vs_SoilNO2: this.vs_SoilNO2, /**< Soil layer's NO2-N content [kg NO2-N m-3] */
     vs_SoilNO3: this.vs_SoilNO3, /**< Soil layer's NO3-N content [kg NO3-N m-3] */
     vs_SoilOrganicCarbon: vs_SoilOrganicCarbon,

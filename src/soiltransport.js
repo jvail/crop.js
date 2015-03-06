@@ -57,6 +57,13 @@ var SoilTransport = function (sc, sps, cpp) {
       }
 
 
+      /* crop.js: remove NH4 from uptake and update NH4 in solution */
+      /* [kg (N) m-3] */
+      var NH4_uptake = min(soilColumn[i_Layer].vs_SoilNH4, vc_NUptakeFromLayer[i_Layer] / vq_LayerThickness[i_Layer]);
+      vc_NUptakeFromLayer[i_Layer] -=  NH4_uptake * vq_LayerThickness[i_Layer];
+      soilColumn[i_Layer].vs_SoilNH4 -= NH4_uptake;
+
+
       if (i_Layer == (vs_NumberOfLayers - 1)){
         vq_PercolationRate[i_Layer] = soilColumn.vs_FluxAtLowerBoundary ; //[mm]
       } else {
@@ -96,6 +103,9 @@ var SoilTransport = function (sc, sps, cpp) {
 
       soilColumn[i_Layer].vs_SoilNO3 = vq_SoilNO3[i_Layer];
     } // for
+
+
+    NH4_absorption();
 
   };
 
@@ -376,7 +386,39 @@ var SoilTransport = function (sc, sps, cpp) {
     }
 
   //  cout << "vq_LeachingAtBoundary: " << vq_LeachingAtBoundary << endl;
-  }
+  };
+
+  /* Johnson eqs. 5.39 ff. */
+  function NH4_absorption() {
+
+    /* TODO: make C_a_mx depend on clay content */
+    var C_a_mx = 0.0005 /* [kg (N-NH4) kg-1 (soil)] */
+      , alpha = 1000    /* [-] */
+      ;
+
+    for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
+      
+      var layer = soilColumn[i_Layer]
+        , rho_b = layer.vs_SoilBulkDensity() /* [kg (soil) m-3] */
+        , rho_w = 1000 /* [kg (water) m-3] */
+        , m = layer.vs_SoilNH4 + layer.vs_SoilNH4_a /* total NH4 [kg (N-NH4) m-3] */
+        , theta = layer.get_Vs_SoilMoisture_m3()
+          /* a-b-c quadratic function */
+        , a = alpha * theta * rho_w
+        , b = C_a_mx * (alpha * rho_b + theta * rho_w) - alpha * m
+        , c = -m * C_a_mx 
+        ;
+
+      /* [kg (N-NH4) kg (H20)] */
+      var C_s = (-b + sqrt(pow(b, 2) - 4 * a * c)) / (2 * a);
+      /* [kg (N-NH4) m-3] */
+      layer.vs_SoilNH4 = C_s * theta * rho_w;
+      layer.vs_SoilNH4_a = m - layer.vs_SoilNH4;
+
+    }
+
+  };
+
 
   /**
    * @brief Returns Nitrate content for each layer [i]

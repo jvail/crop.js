@@ -2,7 +2,7 @@
 
 var MineralFertilizer = function (name, carbamid, no3, nh4) {
 
-  var _name = (name !== undefined || name === null) ? name.toLowerCase() : ''
+  var _name = (name !== undefined && name !== null) ? name.toLowerCase() : ''
     , _vo_Carbamid = carbamid || 0 // [kg (N) kg-1 (N)]
     , _vo_NO3 = no3 || 0           // [kg (N) kg-1 (N)]
     , _vo_NH4 = nh4 || 0           // [kg (N) kg-1 (N)]
@@ -78,7 +78,7 @@ var MineralFertilizer = function (name, carbamid, no3, nh4) {
 
 var OrganicFertilizer = function (name, carbamid, no3, nh4, dm) {
 
-  this.name = (name !== undefined || name === null) ? name.toLowerCase() : '';
+  this.name = (name !== undefined && name !== null) ? name.toLowerCase() : '';
 
   this.vo_AOM_DryMatterContent = dm || 0.0;       // [kg (DM) kg-1 (FM)]
   this.vo_AOM_NH4Content = nh4 || 0.0;            // [kg (N)  kg-1 (FM)]

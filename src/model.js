@@ -25,7 +25,9 @@ var Model = function (env) {
     , p_accuHeatStress = 0.0
     , p_accuOxygenStress = 0.0
     , _currentCrop = null
+    , isVegPeriod = false /* tracks if veg. period has started/ended */
     ;
+
 
   var run = function (progressCallbacks) {
 
@@ -364,6 +366,21 @@ var Model = function (env) {
       , user_env = centralParameterProvider.userEnvironmentParameters
       ;
 
+    if (!isVegPeriod && stepNo > 4 &&
+      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo) > 5 && 
+      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 1) > 5 && 
+      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 2) > 5 && 
+      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 3) > 5 && 
+      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 4) > 5
+    ) isVegPeriod = true;
+    else if (isVegPeriod && stepNo > 4 &&
+      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo) < 5 && 
+      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 1) < 5 && 
+      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 2) < 5 && 
+      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 3) < 5 && 
+      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 4) < 5
+    ) isVegPeriod = false;
+
     that.vw_AtmosphericCO2Concentration = (_env.atmosphericCO2 === -1 ? user_env.p_AthmosphericCO2 : _env.atmosphericCO2);
     if (int(that.vw_AtmosphericCO2Concentration) === 0)
       that.vw_AtmosphericCO2Concentration = CO2ForDate(year, julday, leapYear);
@@ -472,7 +489,8 @@ var Model = function (env) {
       precip,
       f_s,
       daylength,
-      R_a
+      R_a,
+      isVegPeriod
     );
 
     if (_env.useAutomaticIrrigation) {
