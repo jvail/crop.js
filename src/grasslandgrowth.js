@@ -1016,7 +1016,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         , γ_l = f_γ(T) * 0.05 // TODO: Φ_l * no_boxes / l_live_per_tiller
           /* stem flux parameter TODO: how to better relate γ_s, γ_r to γ_l */
         , γ_s = 0.8 * γ_l // 0.8 is scale factor turn over rate relative to leaves
-        , γ_r = 0.02 * f_γ(T) // root senescense rate
+        , γ_r = 0.02 * f_γ(T) // root senescense rate TODO: f_γ(T)?
           /* dead to litter flux parameter (value from AgPasture) */
         , γ_dead = 0.11
         ;
@@ -1584,7 +1584,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         g_water[l] = 1 - 0.5 * (θ[l] - θ_fc[l]) / (θ_sat[l] - θ_fc[l]);
     }
 
-    for (var i = 0; i < 3; i++) { // run 3 times to compensate for dry layers
+    debug('g_water', g_water);
+
+    for (var i = 0; i < 5; i++) { // run x times to compensate for dry layers
       for (var l = 0; l < vs_NumberOfLayers; l++) {
         for (var s = 0; s < numberOfSpecies; s++) {
 
@@ -1615,6 +1617,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
            mixture[s].vars.Ω_water = 1; /* avoid 0 / 0 = NaN */
         else
           mixture[s].vars.Ω_water = min(1, E_T_sum[s] / E_T_demand[s]);
+      debug('Ω_water', mixture[s].vars.Ω_water);
+      debug('E_T_demand_remaining[s]', E_T_demand_remaining[s]);
       }
     } else {
       for (var s = 0; s < numberOfSpecies; s++)
