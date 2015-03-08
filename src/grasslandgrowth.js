@@ -637,28 +637,16 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           root: species.N_root() / species.C_root()
         };
 
-        /* is any below optimum? */
-        var ordering = [LEAF, SHOOT, ROOT];
-        if (f_N_live.leaf < N_ref_opt) {
-          if (f_N_live.root <= N_ref_opt * 0.5 && f_N_live.stem > N_ref_opt * 0.5) {
-            ordering[1] = ROOT;
-            ordering[2] = SHOOT; // is stem
-          }
-        } else if (f_N_live.root <= N_ref_opt * 0.5 || f_N_live.stem <= N_ref_opt * 0.5) {
-          if (f_N_live.root <= N_ref_opt * 0.5 && f_N_live.stem > N_ref_opt * 0.5) {
-            ordering[0] = ROOT;
-            ordering[1] = LEAF;
-            ordering[2] = SHOOT; // is stem
-          } else if (f_N_live.stem <= N_ref_opt * 0.5) {
-            ordering[0] = SHOOT;
-            ordering[1] = LEAF;
-            ordering[2] = ROOT;
-          } else { /* both at minimum */
-            ordering[0] = SHOOT;
-            ordering[1] = ROOT;
-            ordering[2] = LEAF;
-          }
-        }
+        var ordering = [
+          { organ: LEAF, N: f_N_live.leaf / N_ref_opt },
+          { organ: SHOOT, N: f_N_live.stem / (N_ref_opt * 0.5) }, 
+          { organ: ROOT, N: f_N_live.root / (N_ref_opt * 0.5) } 
+        ];
+
+        /* sort in ascending order by N level */
+        ordering.sort(function (a, b) {
+          return a.N - b.N;
+        });
 
         var N_up_pool = sum(N_up[s]);
 
@@ -671,24 +659,24 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
             , N_ref_opt_organ = 0
             ; 
 
-          if (ordering[organ] === LEAF) {
+          if (ordering[organ].organ === LEAF) {
 
             ρ = ρ_shoot * ρ_l;
-            f_sc = 0.50; // fix stucture fraction [kg (C,structure) kg-1 (C,tissue)]
+            f_sc = 0.60; // fix stucture fraction [kg (C,structure) kg-1 (C,tissue)]
             N_ref_opt_organ = N_ref_opt;
             f_pn = N_ref_max / fN_pn * fC_pn;
           
-          } else if (ordering[organ] === SHOOT) {
+          } else if (ordering[organ].organ === SHOOT) {
             
             ρ = ρ_shoot * ρ_s;
-            f_sc = 0.80; // fix stucture fraction [kg (C,structure) kg-1 (C,tissue)]
+            f_sc = 0.70; // fix stucture fraction [kg (C,structure) kg-1 (C,tissue)]
             N_ref_opt_organ = N_ref_opt * 0.5;
             f_pn = (N_ref_max * 0.5) / fN_pn * fC_pn;
           
-          } else if (ordering[organ] === ROOT) {
+          } else if (ordering[organ].organ === ROOT) {
 
             ρ = ρ_root;
-            f_sc = 0.80; // fix stucture fraction [kg (C,structure) kg-1 (C,tissue)]
+            f_sc = 0.70; // fix stucture fraction [kg (C,structure) kg-1 (C,tissue)]
             N_ref_opt_organ = N_ref_opt * 0.5;
             f_pn = (N_ref_max * 0.5) / fN_pn * fC_pn;
           
@@ -733,7 +721,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           N_assim += N_assimilated;
 
           // update variables
-          if (ordering[organ] === LEAF) {
+          if (ordering[organ].organ === LEAF) {
             vars.Y_leaf = Y;
             vars.G_leaf = C_assimilated;
             var dwt = C_assimilated * (f_sc / fC_sc + f_nc / fC_nc + f_pn / fC_pn);
@@ -742,7 +730,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
             vars.dW_l_fdwt.nc = (C_assimilated * f_nc / fC_nc) / dwt;
             vars.dW_l_fdwt.pn = (C_assimilated * f_pn / fC_pn) / dwt;
 
-          } else if (ordering[organ] === SHOOT) {
+          } else if (ordering[organ].organ === SHOOT) {
             vars.Y_stem = Y;
             vars.G_stem = C_assimilated;
             var dwt = C_assimilated * (f_sc / fC_sc + f_nc / fC_nc + f_pn / fC_pn);
@@ -750,7 +738,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
             vars.dW_s_fdwt.sc = (C_assimilated * f_sc / fC_sc) / dwt;
             vars.dW_s_fdwt.nc = (C_assimilated * f_nc / fC_nc) / dwt;
             vars.dW_s_fdwt.pn = (C_assimilated * f_pn / fC_pn) / dwt;
-          } else if (ordering[organ] === ROOT) {
+          } else if (ordering[organ].organ === ROOT) {
             vars.Y_root = Y;
             vars.G_root = C_assimilated;
             // update organic d.wt composition of new growth to root
@@ -763,10 +751,61 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         } // for each organ
 
         // TODO: dont forget to account for remob and fixation here!
-        species.vars.Ω_N = pc_NitrogenResponseOn ? min(1, N_assim / N_req) : 1;
-        species.vars.N_assim = N_assim;
-        species.vars.N_req = N_req;
+        vars.Ω_N = pc_NitrogenResponseOn ? min(1, N_assim / N_req) : 1;
+        vars.N_assim = N_assim;
+        vars.N_req = N_req;
         vars.G = vars.G_leaf + vars.G_stem + vars.G_root;
+
+        /* additional protein synthesis (not growth) if N_up_pool still > 0 */
+        for (var organ = 0; organ < 3; organ++) {
+        
+          if (N_up_pool > 0) {
+            
+            if (ordering[organ].organ === LEAF && f_N_live.leaf < N_ref_opt) {
+
+              var N_req_add = (N_ref_opt - f_N_live.leaf) * species.C_live_leaf();
+              var N_ass_add = min(N_req_add, N_up_pool);
+              var C_req_add = (N_ass_add / fN_pn * fC_pn) * 1 / Y_pn;
+              if (C_req_add > vars.NC.l) { /* req. C for PN synthesis should not exceed avail. C from NC pool */ 
+                N_ass_add = vars.NC.l * fN_pn * Y_pn / fC_pn;
+                C_req_add = vars.NC.l;
+              }
+              vars.NC.l -= C_req_add;
+              vars.PN.l += N_ass_add / fN_pn * fC_pn;
+              N_up_pool -= N_ass_add;
+              vars.N_assim += N_ass_add;
+
+            } else if (ordering[organ].organ === SHOOT && f_N_live.stem < N_ref_opt * 0.5) {
+
+              var N_req_add = (N_ref_opt * 0.5 - f_N_live.stem) * species.C_live_stem();
+              var N_ass_add = min(N_req_add, N_up_pool);
+              var C_req_add = (N_ass_add / fN_pn * fC_pn) * 1 / Y_pn;
+              if (C_req_add > vars.NC.s) { /* req. C for PN synthesis should not exceed avail. C from NC pool */ 
+                N_ass_add = vars.NC.s * fN_pn * Y_pn / fC_pn;
+                C_req_add = vars.NC.s;
+              }
+              vars.NC.s -= C_req_add;
+              vars.PN.s += N_ass_add / fN_pn * fC_pn;
+              N_up_pool -= N_ass_add;
+              vars.N_assim += N_ass_add;
+            
+            } else if (ordering[organ].organ === ROOT && f_N_live.root < N_ref_opt * 0.5) {
+
+              var N_req_add = (N_ref_opt * 0.5 - f_N_live.root) * species.C_root();
+              var N_ass_add = min(N_req_add, N_up_pool);
+              var C_req_add = (N_ass_add / fN_pn * fC_pn) * 1 / Y_pn;
+              if (C_req_add > vars.NC.r) { /* req. C for PN synthesis should not exceed avail. C from NC pool */ 
+                N_ass_add = vars.NC.r * fN_pn * Y_pn / fC_pn;
+                C_req_add = vars.NC.r;
+              }
+              vars.NC.r -= C_req_add;
+              vars.PN.r += N_ass_add / fN_pn * fC_pn;
+              N_up_pool -= N_ass_add;
+              vars.N_assim += N_ass_add;
+            
+            }
+          }
+        }
 
       } else { // no growth: assimilates are not sufficent for respiratory costs 
 
