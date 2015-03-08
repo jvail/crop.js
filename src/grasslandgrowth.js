@@ -35,36 +35,23 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     , vc_KcFactor = 0.4 // TODO: source?
     ;
 
-
-  var f_r = [] /* root fraction per species and soil layer */
-    , f_r_sum = []  /* root fraction sum per species TODO: find a way to avoid keeping the sum */
-    , W_r = []  /* root kg C m-2 per species and soil layer */
-    , W_r_sum = [] /* root kg C m-2 sum per soil layer */
-    , N_up = [] /* N uptake kg N m-2 per species and soil layer */
-    , N_up_sum = [] /* N uptake kg N m-2 per soil layer */
-    , E_T = [] /* actual transpiration per species and layer */
-    , E_T_sum = []  /* actual transpiration per species */
-    , f_g = 0   /* soil coverage */
-    , isRegrowth = false /* tracks if mixture has been harvested */
-    ;
-
   /* initialize arrays */
   for (var s = 0; s < numberOfSpecies; s++) {
-    f_r[s] = [];
-    W_r[s] = [];
-    N_up[s] = [];
-    E_T[s] = [];
-    f_r_sum[s] = 0;
+    mixture.f_r[s] = [];
+    mixture.W_r[s] = [];
+    mixture.N_up[s] = [];
+    mixture.E_T[s] = [];
+    mixture.f_r_sum[s] = 0;
     for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
-      f_r[s][i_Layer] = 0;
-      W_r[s][i_Layer] = 0;
-      N_up[s][i_Layer] = 0;
-      E_T[s][i_Layer] = 0;
+      mixture.f_r[s][i_Layer] = 0;
+      mixture.W_r[s][i_Layer] = 0;
+      mixture.N_up[s][i_Layer] = 0;
+      mixture.E_T[s][i_Layer] = 0;
     }
   }
   for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
-    W_r_sum[i_Layer] = 0;
-    N_up_sum[i_Layer] = 0;
+    mixture.W_r_sum[i_Layer] = 0;
+    mixture.N_up_sum[i_Layer] = 0;
   }
 
 
@@ -648,7 +635,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           return a.N - b.N;
         });
 
-        var N_up_pool = sum(N_up[s]);
+        var N_up_pool = sum(mixture.N_up[s]);
 
         /* distribute available N uptake till depleted or N requirements met */
         for (var organ = 0; organ < 3; organ++) {
@@ -1159,7 +1146,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       var part = mixture[s].cons.part;
       var vars = mixture[s].vars;
       
-      if (isRegrowth)
+      if (mixture.isRegrowth)
         vars.ρ_l = (1 - part.ρ_l_max) + (2 * part.ρ_l_max - 1) * 1 / (1 + exp(10 * ((vars.GDD / (3 * part.GDD_flower)) - 0.5)));
       else
         vars.ρ_l = (1 - part.ρ_l_max) + (2 * part.ρ_l_max - 1) * 1 / (1 + exp(10 * ((vars.GDD / (2 * part.GDD_flower)) - 0.5)));
@@ -1237,13 +1224,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
     var E_T_pot = vc_RemainingEvapotranspiration;
 
-    /* sort by stress factor in asc. order: make sure a species is not in relative higher stress because it is always
-       the last in mixture that nitrogen and water is allocated to */ 
-    mixture.sort(function (a, b) {
-      // return sqrt(a.vars.Ω_water * a.vars.Ω_N) - sqrt(b.vars.Ω_water * b.vars.Ω_N);
-      return a.vars.Ω_water - b.vars.Ω_water;
-    });
-
     /* set actual transpiration and water limiting factor */
     transpiration(E_T_pot);
 
@@ -1255,16 +1235,16 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     for (var s = 0; s < numberOfSpecies; s++) {
 
       var vars = mixture[s].vars;
-      var N_up_pot = sum(N_up[s]);
+      var N_up_pot = sum(mixture.N_up[s]);
       vars.N_up = vars.N_assim; // TODO vars.N_assim - Fixation
       for (var l = 0; l < vs_NumberOfLayers; l++)
-        N_up[s][l] = vars.N_up * N_up[s][l] / N_up_pot;
+        mixture.N_up[s][l] = vars.N_up * mixture.N_up[s][l] / N_up_pot;
 
 
       // GDD, fixed base temp. at 5
       if (!isVegPeriod) {
         vars.GDD = 0;
-        isRegrowth = false;
+        mixture.isRegrowth = false;
       } else {  
         if (mixture[s].dwt_leaf() / mixture[s].dwt_stem() < 0.5) /* TODO: end of growth cycle? */
           vars.GDD = 0;
@@ -1321,7 +1301,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
   /* 
     set and update variables:
-    f_r root  fration per species and soil layer
+    mixture.f_r root  fration per species and soil layer
     f_r_sum   root fraction sum per species
     W_r       root kg C m-2 per species and soil layer
     W_r_sum   root kg C m-2 sum per soil layer
@@ -1341,34 +1321,34 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       /* Johnson 2008, eq. 4.19b */ 
       species.vars.d_r = 0.05 + (species.cons.d_r_mx - 0.05) * species.vars.k_sum;
 
-      f_r_sum[s] = 0;
+      mixture.f_r_sum[s] = 0;
 
       for (var l = 0; l < vs_NumberOfLayers; l++) {
         /* z [m] upper boundary of layer l */
         var z = vs_LayerThickness * l;
         if (z > species.vars.d_r) {
-          /* since f_r only approaches zero (asymptote, f_r_sum < 1) we stop at root depth d_r and later relate f_r_l to f_r_sum */
-          f_r[s][l] = 0;
+          /* since mixture.f_r only approaches zero (asymptote, f_r_sum < 1) we stop at root depth d_r and later relate f_r_l to f_r_sum */
+          mixture.f_r[s][l] = 0;
           continue;
         }
         /* (4.19c) Johnson (2008) relative root distribution share in layer l. upper minus lower layer boundary */
-        f_r[s][l] = (
+        mixture.f_r[s][l] = (
           (1 / (1 + pow((z / species.cons.d_r_h) * (species.cons.d_r_mx / species.vars.d_r), q_r))) - 
           (1 / (1 + pow(((z + vs_LayerThickness) / species.cons.d_r_h) * (species.cons.d_r_mx / species.vars.d_r), q_r)))
         );
-        f_r_sum[s] += f_r[s][l];
+        mixture.f_r_sum[s] += mixture.f_r[s][l];
       }
 
       /* distribute root C to each soil layer */
       for (var l = 0; l < vs_NumberOfLayers; l++)
-        W_r[s][l] = C_root * f_r[s][l] / f_r_sum[s];
+        mixture.W_r[s][l] = C_root * mixture.f_r[s][l] / mixture.f_r_sum[s];
         
     } // for each species
 
     for (var l = 0; l < vs_NumberOfLayers; l++) {
-      W_r_sum[l] = 0; 
+      mixture.W_r_sum[l] = 0; 
       for (var s = 0; s < numberOfSpecies; s++) {
-        W_r_sum[l] += W_r[s][l]; /* total root mass per layer */
+        mixture.W_r_sum[l] += mixture.W_r[s][l]; /* total root mass per layer */
       }
     }
 
@@ -1401,12 +1381,12 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       /* Johnson 2013, eq. 3.69 [kg (soil) kg-1 (root C)] TODO: error in doc. ? suppose it is per kg (root C) instead per kg (root d.wt) */
       var ξ_N = 200 * dwt2carbon; // convert from dwt to carbon TODO: value? unit? allow per species
       /* total uptake from layer must not exceed layer N */
-      N_up_sum[l] = min((layer.get_SoilNO3() + layer.get_SoilNH4()) * vs_LayerThickness, ξ_N * N * W_r_sum[l]);
+      mixture.N_up_sum[l] = min((layer.get_SoilNO3() + layer.get_SoilNH4()) * vs_LayerThickness, ξ_N * N * mixture.W_r_sum[l]);
     }
 
     for (var l = 0; l < vs_NumberOfLayers; l++) {
       for (var s = 0; s < numberOfSpecies; s++)
-        N_up[s][l] = (W_r_sum[l] === 0) ? 0 : N_up_sum[l] * W_r[s][l] / W_r_sum[l];
+        mixture.N_up[s][l] = (mixture.W_r_sum[l] === 0) ? 0 : mixture.N_up_sum[l] * mixture.W_r[s][l] / mixture.W_r_sum[l];
     }
 
   } // nitrogenUptake
@@ -1512,7 +1492,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     var vc_InterceptionStorageOld = vc_InterceptionStorage;
 
     // Interception in [mm d-1];
-    var vc_Interception = max(0, (2.5 * mixture.h_mx() * f_g) - vc_InterceptionStorage);
+    var vc_Interception = max(0, (2.5 * mixture.h_mx() * mixture.f_g) - vc_InterceptionStorage);
 
     // If no precipitation occurs, vm_Interception = 0
     if (vw_GrossPrecipitation <= 0) {
@@ -1555,16 +1535,16 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       ;
 
     /* fractional ground cover. Johnson 2013, eq. 2.23, TODO: weighted k (0.5)? */
-    f_g = 1 - exp(-0.5 * L_tot);
+    mixture.f_g = 1 - exp(-0.5 * L_tot);
 
     /* distribute E_T_pot to each species */
     for (var s = 0; s < numberOfSpecies; s++) {
-      E_T_demand[s] = f_g * E_T_pot * mixture[s].L() / L_tot;
+      E_T_demand[s] = mixture.f_g * E_T_pot * mixture[s].L() / L_tot;
       E_T_demand_remaining[s] = E_T_demand[s];
 
       /* reset actual transpiration */
       for (var l = 0; l < vs_NumberOfLayers; l++)
-        E_T[s][l] = 0;
+        mixture.E_T[s][l] = 0;
     }
  
     for (var l = 0; l < vs_NumberOfLayers; l++) {
@@ -1584,18 +1564,16 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         g_water[l] = 1 - 0.5 * (θ[l] - θ_fc[l]) / (θ_sat[l] - θ_fc[l]);
     }
 
-    debug('g_water', g_water);
-
     for (var i = 0; i < 5; i++) { // run x times to compensate for dry layers
       for (var l = 0; l < vs_NumberOfLayers; l++) {
         for (var s = 0; s < numberOfSpecies; s++) {
 
-          if (E_T_demand_remaining[s] <= 0 || f_r[s][l] === 0 || θ[l] <= θ_w[l])
+          if (E_T_demand_remaining[s] <= 0 || mixture.f_r[s][l] === 0 || θ[l] <= θ_w[l])
             continue;
 
           /* Johnson 2013/2008, eq. 3.2. */
-          var add = min(θ[l] - θ_w[l], (f_r[s][l] / f_r_sum[s]) * g_water[l] * E_T_demand_remaining[s]);
-          E_T[s][l] += add;
+          var add = min(θ[l] - θ_w[l], (mixture.f_r[s][l] / mixture.f_r_sum[s]) * g_water[l] * E_T_demand_remaining[s]);
+          mixture.E_T[s][l] += add;
           θ[l] -= add; /* update soil water */
           E_T_demand_remaining[s] -= add; /* keep track of remaining E_T demand */
 
@@ -1612,13 +1590,11 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     if (waterDeficitResponseOn) {
       for (var s = 0; s < numberOfSpecies; s++) {
         /* update sum */
-        E_T_sum[s] = sum(E_T[s]);
-        if (E_T_sum[s] === 0)
+        mixture.E_T_sum[s] = sum(mixture.E_T[s]);
+        if (mixture.E_T_sum[s] === 0)
            mixture[s].vars.Ω_water = 1; /* avoid 0 / 0 = NaN */
         else
-          mixture[s].vars.Ω_water = min(1, E_T_sum[s] / E_T_demand[s]);
-      debug('Ω_water', mixture[s].vars.Ω_water);
-      debug('E_T_demand_remaining[s]', E_T_demand_remaining[s]);
+          mixture[s].vars.Ω_water = min(1, mixture.E_T_sum[s] / E_T_demand[s]);
       }
     } else {
       for (var s = 0; s < numberOfSpecies; s++)
@@ -1657,7 +1633,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var get_Transpiration = function (i_Layer) {
     var transpiration = 0;
     for (var i = 0; i < numberOfSpecies; i++) {
-      transpiration += E_T[i][i_Layer];
+      transpiration += mixture.E_T[i][i_Layer];
     };
     return transpiration;
   };
@@ -1682,7 +1658,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var get_NUptakeFromLayer = function (l) {
     var uptake = 0;
     for (var s = 0; s < numberOfSpecies; s++) {
-      uptake += N_up[s][l];
+      uptake += mixture.N_up[s][l];
     }
     return uptake;
   };
@@ -1879,7 +1855,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
 
   var get_SoilCoverage = function () {
-    return f_g;
+    return mixture.f_g;
   };
 
 
@@ -1995,7 +1971,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     var actNUptake = 0;
     for (var s = 0; s < numberOfSpecies; s++) {
       for (var l = 0; l < vs_NumberOfLayers; l++)
-        actNUptake += N_up[s][l];
+        actNUptake += mixture.N_up[s][l];
     }
     return actNUptake * SQM_PER_HA;
     
@@ -2162,7 +2138,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     //   }
     // }
 
-    isRegrowth = true;
+    mixture.isRegrowth = true;
 
     return dm;
 
@@ -2221,7 +2197,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           , PN_dead = vars.PN_dead
           , Λ_litter = vars.Λ_litter
             /* [m-1] due to maxMineralizationDepth vs_NumberOfOrganicLayers might be < root depth TODO: what to do with OM below min. depth? */
-          , scale = f_r[s][l] / f_r_sum[s] / vs_LayerThickness
+          , scale = mixture.f_r[s][l] / mixture.f_r_sum[s] / vs_LayerThickness
           ;
 
         /* include litter */
@@ -2386,7 +2362,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
     var C = 0;
     for (var s = 0; s < numberOfSpecies; s++)
-      C += W_r[s][layerIdx];
+      C += mixture.W_r[s][layerIdx];
     return C;
 
   };

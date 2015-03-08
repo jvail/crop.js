@@ -89,7 +89,8 @@ var Grass = function (seedDate, harvestDates, species) {
       δ_pn          [kg (d.wt) kg (d.wt)]       PN digestibility as a function of CP [kg (CP) kg (d.wt)]
     */
     this.cons = {
-        h_m: 0.5
+        index: 0
+      , h_m: 0.5
       , L_half: 2.0
       , σ: 20.0
       , fAsh_leaf: 0.03
@@ -1434,10 +1435,22 @@ var Grass = function (seedDate, harvestDates, species) {
     
     };
 
+    /* mixture variables */
+
+    mixture.f_r = []; /* root fraction per species and soil layer */
+    mixture.f_r_sum = [];  /* root fraction sum per species TODO: find a way to avoid keeping the sum */
+    mixture.W_r = [];  /* root kg C m-2 per species and soil layer */
+    mixture.W_r_sum = []; /* root kg C m-2 sum per soil layer */
+    mixture.N_up = []; /* N uptake kg N m-2 per species and soil layer */
+    mixture.N_up_sum = []; /* N uptake kg N m-2 per soil layer */
+    mixture.E_T = []; /* actual transpiration per species and layer */
+    mixture.E_T_sum = [];  /* actual transpiration per species */
+    mixture.f_g = 0;   /* soil coverage */
+    mixture.isRegrowth = false; /* tracks if mixture has been harvested */
+
     return mixture;
 
-  }; // Mixture end 
-
+  }; // Mixture end
 
   /* initialization of Species & Mixture */
   var spec = [], dm = [];
@@ -1449,7 +1462,7 @@ var Grass = function (seedDate, harvestDates, species) {
         constants: species[s].constants
       })
     );
-    dm.push(species[s].dryMatter); 
+    dm.push(species[s].dryMatter);
   
   }
 
