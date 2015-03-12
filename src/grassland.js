@@ -18,6 +18,10 @@
     ],
     DM: [] inital fraction of total dry matter
   }
+
+  TODO: 
+    - add coverage param (calc. from inital dm share) to scale lai in height function
+    - include ash (OM vs DM)
 */
 
 var Grass = function (seedDate, harvestDates, species) {
@@ -53,100 +57,59 @@ var Grass = function (seedDate, harvestDates, species) {
     this.isC4 = false;
     this.type = 'generic grass'; // generic
 
-    /* 
-      generic grass constants
+    this.cons = {               // generic grass constants
+        index: 0                // [#]                         index in mixture array at initialization (stored to restore orig. sorting)
+      , h_m: 0.5                // [m]                         maximum height 
+      , L_half: 2.0             // [m2 (leaf) m-2 (ground)]    leaf area at half h_m
+      , σ: 20.0                 // [m2 (leaf) kg-1 (DM)]       specific leaf area 
+      , d_r_h: 0.15             // [m]                         depth at 50% root mass
+      , d_r_mx: 0.4             // [m]                         maximum root depth
+      , δ_ndf_live_l_1: 0.8     // [kg kg-1]                   NDF digestibility live leaf 1
+      , δ_ndf_live_l_2: 0.5     // [kg kg-1]                   NDF digestibility live leaf 2
+      , δ_ndf_live_l_3: 0.3     // [kg kg-1]                   NDF digestibility live leaf 3
+      , δ_ndf_dead_l: 0.2       // [kg kg-1]                   NDF digestibility dead leaf
+      , δ_ndf_live_s_1: 0.7     // [kg kg-1]                   NDF digestibility live stem 1
+      , δ_ndf_live_s_2: 0.4     // [kg kg-1]                   NDF digestibility live stem 2
+      , δ_ndf_live_s_3: 0.3     // [kg kg-1]                   NDF digestibility live stem 3
+      , δ_ndf_dead_s: 0.2       // [kg kg-1]                   NDF digestibility live leaf
+      , δ_nfc: 1                // [kg kg-1]                   NFC digestibility
 
-      h_m           [m]                         maximum height
-      L_half        [m2 (leaf) m-2 (ground)]    leaf area at half h_mx
-      σ             [m2 (leaf) kg-1 (d.wt)]     specific leaf area
-      N_ref         [kg (N) kg-1 (d.wt)]        reference (optimum) N concentration
-      d_r_h         [m]                         depth at 50% root mass
-      d_r_mx        [m]                         maximum root depth
-      τ_veg         [days]                      total no. days in vegetative phase TODO: days since what? 
+      , photo: {                // photosynthesis
+            T_ref: 20           // [°C]                        reference temperature
+          , T_mn: 3             // [°C]                        minimum temperature 
+          , T_opt_Pm_amb: 23    // [°C]                        optimum temperature
+          , ξ: 0.8              // [-]                         non‐rectangular hyperbola curvatur parameter
+          , α_amb_15: 0.05      // [mol (CO2) mol-1 (photons)] photosythetic efficiency α at ambient CO2 (C_amb_ref) and 15 °C
+          , k: 0.5              // [-]                         leaf extinction coefficient
+          , P_m_ref: 16         // [μmol (CO2) m-2 (leaf) s-1] reference value for P_m
+          , λ: 1.2              // []                          CO2 response parameter
+          , f_C_m: 1.49         // []                          CO2 response parameter
+          , γ_Pm: 10            // []                          CO2 & T response parameter
+          , λ_α: 0.02           // [°C]                        CO2 & T response parameter
+          , γ_α: 6              // [°C]                        CO2 & T response parameter
+        }
+      , resp: {                 // respiration
+            m_ref: 0.025        // maintenance coeficient at reference temperature
+          , T_ref: 20
+          , T_m_mn: 3
+          , λ_N_up: 0.6         // [kg (C) kg-1 (N)]          N uptake respiration coefficent
+          , λ_N_fix: 6          // [kg (C) kg-1 (N)]          N fixation respiration coefficent
+        }
+      , part: {                 // partitioning
 
-      photosynthesis
-      T_ref         [°C]                        reference temperature 
-      T_mn          [°C]                        minimum temperature 
-      T_opt_Pm_amb  [°C]                        optimum temperature
-      ξ             [-]                         non‐rectangular hyperbola curvatur parameter
-      α_amb_15      [mol (CO2) mol-1 (photons)] photosythetic efficiency α at ambient CO2 (C_amb_ref) and 15 °C
-      k             [-]                         leaf extinction coefficient
-      m             [-]                         leaf transmisson coefficient (unused)
-      P_m_ref       [μmol (CO2) m-2 (leaf) s-1] reference value for P_m
-      λ             []                          CO2 response parameter
-      f_C_m         []                          CO2 response parameter
-      γ_Pm          []                          CO2 & T response parameter
-      λ_α           [°C]                        CO2 & T response parameter
-      γ_α           [°C]                        CO2 & T response parameter
-
-      partitioning
-      ρ_shoot_ref   [-]                         reference shoot partitioning fraction
-      ρ_l           [-]                         fraction partitioned to leaf
-
-      digestibility
-      δ_ndf_x       [kg (d.wt) kg (d.wt)]       organ and age specific NDF digestibility
-      δ_nc          [kg (d.wt) kg (d.wt)]       NDSC digestibility
-      δ_pn          [kg (d.wt) kg (d.wt)]       PN digestibility as a function of CP [kg (CP) kg (d.wt)]
-    */
-    this.cons = {
-        index: 0
-      , h_m: 0.5
-      , L_half: 2.0
-      , σ: 20.0
+            ρ_shoot_ref: 0.75   // [-]                        reference shoot partitioning fraction
+          , ρ_l_max: 0.8        // [-]                        fraction partitioned to leaf
+          , GDD_flower: 500     // [C° d]                     growing degree days till flowering
+        }
+       /* TODO: remove or rename: */
+      , N_leaf: { /* [kg (N) kg-1 (C)] */
+        opt: 0.04 / 0.45,       // 
+        max: 0.045 / 0.45,      // [kg (N) kg-1 (C)] AgPasture: 0.05 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
+        ref: 0.04 / 0.45
+       }
+      , τ_veg: 200
       , fAsh_leaf: 0.03
       , fAsh_stem: 0.05
-      , N_ref: 0.04
-      , d_r_h: 0.10
-      , d_r_mx: 0.4
-      , τ_veg: 200
-      , photo: {
-            T_ref: this.isC4 ? 25 : 20
-          , T_mn: this.isC4 ? 12 : 3
-          , T_opt_Pm_amb: this.isC4 ? 35 : 23
-          , ξ: 0.8
-          , k: this.isLegume ? 0.8 : 0.5
-          , m: 0.0
-          , α_amb_15: 0.05
-          , P_m_ref: this.isC4 ? 22 : 16
-          , λ: this.isC4 ? 1.05 : 1.2
-          , f_C_m: this.isC4 ? 1.1 : 1.49
-          , γ_Pm: 10
-          , λ_α: 0.02 
-          , γ_α: 6
-        }
-      , resp: {
-            m_ref: 0.025  // maintenance coeficient at reference temperature
-          , T_ref: this.isC4 ? 25 : 20
-          , T_m_mn: this.isC4 ? 12 : 3
-          , λ_N_up: 0.6                 // [kg (C) kg-1 (N)] N uptake respiration coefficent
-          , λ_N_fix: 6                  // [kg (C) kg-1 (N)] N fixation respiration coefficent
-        }
-      , part: {
-            ρ_shoot_ref: 0.75  // SGS
-          , ρ_l_max: 0.8
-          , GDD_flower: 500
-        }
-        /* NDF digestibility per age class */
-      , δ_ndf_l_1: 0.8
-      , δ_ndf_l_2: 0.7
-      , δ_ndf_l_3: 0.6
-      , δ_ndf_l_dead: 0.2
-      , δ_ndf_s_1: 0.7
-      , δ_ndf_s_2: 0.6
-      , δ_ndf_s_3: 0.5
-      , δ_ndf_s_dead: 0.2
-        /* NDSC digestibility per age class */
-      , δ_nc: 0.97
-        /* reference composition of new tissue dry matter, fractions */ 
-      , dW_l_fdwt_ref: { sc: 0.50, nc: 0.22, pn: 0.25, ah: 0.03 }
-      , dW_s_fdwt_ref: { sc: 0.63, nc: 0.18, pn: 0.13, ah: 0.05 }
-      , dW_r_fdwt_ref: { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 }
-      , N_leaf: { /* [kg (N) kg-1 (C)] */
-        opt: 0.04 / 0.45,    // 
-        max: 0.05 / 0.45,    //[kg (N) kg-1 (C)] AgPasture: 0.05 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
-        min: 0.012 / 0.45,    //[kg (N) kg-1 (C)] AgPasture: 0.012 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
-        ref: 0.04 / 0.45    //[kg (N) kg-1 (C)] TODO: source?
-       }
     };
 
     /*
@@ -211,6 +174,7 @@ var Grass = function (seedDate, harvestDates, species) {
       , N_assim: 0
       , N_req: 0
       , N_remob: 0
+      , N_add: 0
       , N_req_opt: 0
       , ρ_shoot: 0.7
       , ρ_root: 0.3 
@@ -295,30 +259,6 @@ var Grass = function (seedDate, harvestDates, species) {
         this.cons.part.ρ_shoot_ref = 0.71;  // Topp (2004)
         this.cons.part.ρ_l = 0.33; // Topp (2004)
 
-        /* NDF digestibility per age class */
-        this.cons.δ_ndf_l_1 = 0.7;
-        this.cons.δ_ndf_l_2 = 0.6;
-        this.cons.δ_ndf_l_3 = 0.5;
-        this.cons.δ_ndf_l_dead = 0.2;
-        this.cons.δ_ndf_s_1 = 0.5;
-        this.cons.δ_ndf_s_2 = 0.4;
-        this.cons.δ_ndf_s_3 = 0.3;
-        this.cons.δ_ndf_s_dead = 0.2;
-
-        /* NDSC digestibility per age class */
-        this.cons.δ_nc = 1.00;
-        
-        /* reference composition of new tissue dry matter, fractions */ 
-        this.cons.dW_l_fdwt_ref = { sc: 0.27, nc: 0.18, pn: 0.26, ah: 0.11 };
-        this.cons.dW_s_fdwt_ref = { sc: 0.63, nc: 0.18, pn: 0.26, ah: 0.05 };
-        this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.26, ah: 0.03 };
-
-        /* leaf nitrogen TODO: remove? */
-        this.cons.N_leaf.opt = 0.04 / 0.45;
-        this.cons.N_leaf.max = 0.05 / 0.45;
-        this.cons.N_leaf.min = 0.012 / 0.45;
-        this.cons.N_leaf.ref = 0.04 / 0.45;
-
         break;
       case 'red clover':
 
@@ -350,30 +290,6 @@ var Grass = function (seedDate, harvestDates, species) {
         this.cons.part.ρ_shoot_ref = 0.71;  // Topp (2004)
         this.cons.part.ρ_l = 0.55; // Topp (2004)
 
-        /* NDF digestibility per age class */
-        this.cons.δ_ndf_l_1 = 0.7;
-        this.cons.δ_ndf_l_2 = 0.6;
-        this.cons.δ_ndf_l_3 = 0.5;
-        this.cons.δ_ndf_l_dead = 0.2;
-        this.cons.δ_ndf_s_1 = 0.5;
-        this.cons.δ_ndf_s_2 = 0.4;
-        this.cons.δ_ndf_s_3 = 0.3;
-        this.cons.δ_ndf_s_dead = 0.2;
-
-        /* NDSC digestibility per age class */
-        this.cons.δ_nc = 1.00;
-        
-        /* reference composition of new tissue dry matter, fractions */ 
-        this.cons.dW_l_fdwt_ref = { sc: 0.50, nc: 0.22, pn: 0.25, ah: 0.03 };
-        this.cons.dW_s_fdwt_ref = { sc: 0.63, nc: 0.18, pn: 0.13, ah: 0.05 };
-        this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 };
-
-        /* leaf nitrogen TODO: remove? */
-        this.cons.N_leaf.opt = 0.04 / 0.45;
-        this.cons.N_leaf.max = 0.05 / 0.45;
-        this.cons.N_leaf.min = 0.012 / 0.45;
-        this.cons.N_leaf.ref = 0.04 / 0.45;
-
         break;
       case 'ryegrass':
 
@@ -404,30 +320,6 @@ var Grass = function (seedDate, harvestDates, species) {
         /* partitioning */
         this.cons.part.ρ_shoot_ref = 0.8;
         this.cons.part.ρ_l = 0.7;
-
-        /* NDF digestibility per age class */
-        this.cons.δ_ndf_l_1 = 0.8;
-        this.cons.δ_ndf_l_2 = 0.7;
-        this.cons.δ_ndf_l_3 = 0.6;
-        this.cons.δ_ndf_l_dead = 0.2;
-        this.cons.δ_ndf_s_1 = 0.6;
-        this.cons.δ_ndf_s_2 = 0.5;
-        this.cons.δ_ndf_s_3 = 0.4;
-        this.cons.δ_ndf_s_dead = 0.2;
-
-        /* NDSC digestibility per age class */
-        this.cons.δ_nc = 1.00;
-        
-        /* reference composition of new tissue dry matter, fractions */ 
-        this.cons.dW_l_fdwt_ref = { sc: 0.50, nc: 0.22, pn: 0.25, ah: 0.03 };
-        this.cons.dW_s_fdwt_ref = { sc: 0.63, nc: 0.18, pn: 0.13, ah: 0.05 };
-        this.cons.dW_r_fdwt_ref = { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 };
-
-        /* leaf nitrogen TODO: remove? */
-        this.cons.N_leaf.opt = 0.04 / 0.45;
-        this.cons.N_leaf.max = 0.05 / 0.45;
-        this.cons.N_leaf.min = 0.012 / 0.45;
-        this.cons.N_leaf.ref = 0.04 / 0.45;
 
         break;
       }
@@ -471,75 +363,104 @@ var Grass = function (seedDate, harvestDates, species) {
 
     };  
 
-    /* total shoot digestibility including dead tissue */
-    this.δ_shoot = function () {
+    /* shoot digestibility [kg (OM) kg-1 (OM)] */
+    this.OMD_shoot = function () {
 
       var cons = that.cons
         , vars = that.vars
         , SC = that.vars.SC
-        , δ_nc = cons.δ_nc
-        , δ_pn = this.δ_pn(this.fdwt_pn() * 1000) // kg to grams
+        , NC = that.vars.NC
+        , PN = that.vars.PN
+        , δ_pn = that.δ_pn(this.fdwt_pn() * 1000) // kg to grams
         ;
 
-      /* total NDF d.wt */
-      var dwt_sc = (
-        SC.live_l_1 + SC.live_l_2 + SC.live_l_3 + SC.dead_l +
-        SC.live_s_1 + SC.live_s_2 + SC.live_s_3 + SC.dead_s
-      ) / fC_sc;
+      var NDF_live_l_1 = SC.live_l_1 / fC_sc;
+      var NDF_live_l_2 = SC.live_l_2 / fC_sc;
+      var NDF_live_l_3 = SC.live_l_3 / fC_sc;
+      var NDF_dead_l = SC.dead_l / fC_sc;
+      
+      var NDF_live_s_1 = SC.live_s_1 / fC_sc;
+      var NDF_live_s_2 = SC.live_s_2 / fC_sc;
+      var NDF_live_s_3 = SC.live_s_3 / fC_sc;
+      var NDF_dead_s = SC.dead_s / fC_sc;
 
-      /* total NFC d.wt */
-      var dwt_nc = (vars.NC.l + vars.NC.s + vars.NC_dead.l + vars.NC_dead.s) / fC_nc;
+      var NFC = (NC.l + NC.s + vars.NC_dead.l + vars.NC_dead.s) / fC_nc;
 
-      /* total protein d.wt */
-      var dwt_pn = (vars.PN.l + vars.PN.s + vars.PN_dead.l + vars.PN_dead.s) / fC_pn;
+      var CP = (PN.l + PN.s + vars.PN_dead.l + vars.PN_dead.s) / fC_pn;
 
-      var dwt = dwt_sc + dwt_nc + dwt_pn;
-
-      var δ_sc = (
-        (cons.δ_ndf_l_1 * (SC.live_l_1 / fC_sc / dwt_sc)) +
-        (cons.δ_ndf_l_2 * (SC.live_l_2 / fC_sc / dwt_sc)) +
-        (cons.δ_ndf_l_3 * (SC.live_l_3 / fC_sc / dwt_sc)) +
-        (cons.δ_ndf_l_dead * (SC.dead_l / fC_sc / dwt_sc)) +
-        (cons.δ_ndf_s_1 * (SC.live_s_1 / fC_sc / dwt_sc)) +
-        (cons.δ_ndf_s_2 * (SC.live_s_2 / fC_sc / dwt_sc)) +
-        (cons.δ_ndf_s_3 * (SC.live_s_3 / fC_sc / dwt_sc)) +
-        (cons.δ_ndf_s_dead * (SC.dead_s / fC_sc / dwt_sc))
+      /* digestible NDF [kg m-2] */
+      var DNDF = (
+        cons.δ_ndf_live_l_1 * NDF_live_l_1 +
+        cons.δ_ndf_live_l_2 * NDF_live_l_2 +
+        cons.δ_ndf_live_l_3 * NDF_live_l_3 +
+        cons.δ_ndf_dead_l * NDF_dead_l +
+        cons.δ_ndf_live_s_1 * NDF_live_s_1 + 
+        cons.δ_ndf_live_s_2 * NDF_live_s_2 + 
+        cons.δ_ndf_live_s_3 * NDF_live_s_3 + 
+        cons.δ_ndf_dead_s * NDF_dead_s
       );
 
+      /* digestible NFC  [kg m-2] */
+      var DNFC = cons.δ_nfc * NFC;
+
+      /*  digestible CP [kg m-2]  */
+      var DCP = δ_pn * CP;
+
       return (
-        (δ_sc * dwt_sc / dwt) + 
-        (δ_nc * dwt_nc / dwt) + 
-        (δ_pn * dwt_pn / dwt)
+        (DNDF + DNFC + DCP) / 
+        (
+          NDF_live_l_1 + NDF_live_l_2 + NDF_live_l_3 + NDF_dead_l + 
+          NDF_live_s_1 + NDF_live_s_2 + NDF_live_s_3 + NDF_dead_s + 
+          NFC + CP
+        )
       );
 
     };
 
 
-    /* NDFD leaf */
+    /* NDFD leaf [kg (NDF) kg-1 (NDF)] */
     this.NDFD_leaf = function () {
 
       var cons = that.cons
         , SC = that.vars.SC
         ;
 
-      return (
-        (cons.δ_ndf_l_1 * SC.live_l_1 + cons.δ_ndf_l_2 * SC.live_l_2 + cons.δ_ndf_l_3 * SC.live_l_3 + cons.δ_ndf_l_dead * SC.dead_l) / 
-        (SC.live_l_1 + SC.live_l_2 + SC.live_l_3 + SC.dead_l)
+      var NDF_live_l_1 = SC.live_l_1 / fC_sc;
+      var NDF_live_l_2 = SC.live_l_2 / fC_sc;
+      var NDF_live_l_3 = SC.live_l_3 / fC_sc;
+      var NDF_dead_l = SC.dead_l / fC_sc;
+
+      var DNDF = (
+        cons.δ_ndf_live_l_1 * NDF_live_l_1 +
+        cons.δ_ndf_live_l_2 * NDF_live_l_2 +
+        cons.δ_ndf_live_l_3 * NDF_live_l_3 +
+        cons.δ_ndf_dead_l * NDF_dead_l
       );
+
+      return DNDF / (NDF_live_l_1 + NDF_live_l_2 + NDF_live_l_3 + NDF_dead_l);
 
     };
 
-    /* NDFD stem */
+    /* NDFD stem [kg (NDF) kg-1 (NDF)] */
     this.NDFD_stem = function () {
 
       var cons = that.cons
         , SC = that.vars.SC
         ;
 
-      return (
-        (cons.δ_ndf_s_1 * SC.live_s_1 + cons.δ_ndf_s_2 * SC.live_s_2 + cons.δ_ndf_s_3 * SC.live_s_3 + cons.δ_ndf_s_dead * SC.dead_s) / 
-        (SC.live_s_1 + SC.live_s_2 + SC.live_s_3 + SC.dead_s)
+      var NDF_live_s_1 = SC.live_s_1 / fC_sc;
+      var NDF_live_s_2 = SC.live_s_2 / fC_sc;
+      var NDF_live_s_3 = SC.live_s_3 / fC_sc;
+      var NDF_dead_s = SC.dead_s / fC_sc;
+
+      var DNDF = (
+        cons.δ_ndf_live_s_1 * NDF_live_s_1 + 
+        cons.δ_ndf_live_s_2 * NDF_live_s_2 + 
+        cons.δ_ndf_live_s_3 * NDF_live_s_3 + 
+        cons.δ_ndf_dead_s * NDF_dead_s
       );
+
+      return DNDF / (NDF_live_s_1 + NDF_live_s_2 + NDF_live_s_3 + NDF_dead_s);
 
     };
 
@@ -597,6 +518,15 @@ var Grass = function (seedDate, harvestDates, species) {
       var vars = that.vars;
 
       return 1e3 * ((vars.PN.s + vars.PN_dead.s) / fC_pn) / that.dwt_stem();
+
+    };
+
+    /* CP shoot [g (CP) kg-1 (DM)] */
+    this.CP_shoot = function () {
+
+      var vars = that.vars;
+
+      return 1e3 * ((vars.PN.l + vars.PN_dead.l + vars.PN.s + vars.PN_dead.s) / fC_pn) / (that.dwt_leaf() + that.dwt_stem());
 
     };
 
@@ -722,14 +652,6 @@ var Grass = function (seedDate, harvestDates, species) {
     this.N_live_stem = function () {
 
       return that.vars.PN.s * fN_pn / fC_pn;
-
-    };
-
-
-    /* reference nitrogen content [kg (N) kg-1 (C)] */
-    this.f_N_ref = function () {
-
-        return that.cons.N_ref / that.F_C();
 
     };
 
@@ -976,19 +898,6 @@ var Grass = function (seedDate, harvestDates, species) {
 
       return (that.N_live_shoot() + that.N_root()) / (that.C_live_shoot() + that.C_root());
     
-    };
-
-
-    /* optimum N requirement for new tissue [kg (N) m-2] */
-    this.N_req_opt = function () {
-
-      // TODO: we dont know at this point how P_g is patitioned.... what to do?
-      var N_req_opt = that.vars.P_g_day === 0 ? 0 : that.cons.N_leaf.opt * that.vars.P_g_day;
-
-      return N_req_opt;
-
-      // return max(0, (that.f_N_ref() * (that.C_live_shoot() + that.C_root())) - (that.N_live_shoot() + that.N_root()));
-
     };
 
   }; // Species end
@@ -1463,6 +1372,8 @@ var Grass = function (seedDate, harvestDates, species) {
       })
     );
     dm.push(species[s].dryMatter);
+
+    spec[s].cons.index = s;
   
   }
 

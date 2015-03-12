@@ -880,6 +880,10 @@ var Model = function (env) {
     return p_accuOxygenStress; 
   };
 
+  var getIsVegPeriod = function () {
+    return Number(isVegPeriod); 
+  };
+
   return {
     run: run,
     getCentralParameterProvider: getCentralParameterProvider,
@@ -948,7 +952,8 @@ var Model = function (env) {
     getAccumulatedNStress: getAccumulatedNStress,
     getAccumulatedWaterStress: getAccumulatedWaterStress,
     getAccumulatedHeatStress: getAccumulatedHeatStress,
-    getAccumulatedOxygenStress: getAccumulatedOxygenStress
+    getAccumulatedOxygenStress: getAccumulatedOxygenStress,
+    getIsVegPeriod: getIsVegPeriod
   };
 
 };

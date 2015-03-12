@@ -35,7 +35,6 @@ var SoilTransport = function (sc, sps, cpp) {
     vq_SoilMoisture[i] = 0.2;
   }    
 
-  logger(MSG.INFO, "N deposition: " + vs_NDeposition);
   var vs_LeachingDepth = centralParameterProvider.userEnvironmentParameters.p_LeachingDepth;
   var vq_TimeStep = centralParameterProvider.userEnvironmentParameters.p_timeStep;
 
@@ -97,7 +96,6 @@ var SoilTransport = function (sc, sps, cpp) {
 
       soilColumn[i_Layer].vs_SoilNO3 = vq_SoilNO3[i_Layer];
     } // for
-
 
     NH4_absorption();
 
@@ -384,13 +382,14 @@ var SoilTransport = function (sc, sps, cpp) {
   function NH4_absorption() {
 
     /* TODO: make C_a_mx depend on clay content */
-    var C_a_mx = 0.0005 /* [kg (N-NH4) kg-1 (soil)] */
+    var C_a_mx_ref = C_a_mx = 0.0005 /* [kg (N-NH4) kg-1 (soil)] */
       , alpha = 1000    /* [-] */
       ;
 
     for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
-      
+    
       var layer = soilColumn[i_Layer]
+        // , C_a_mx = C_a_mx_ref * (layer.vs_SoilClayContent > 0.3 ? 1 : layer.vs_SoilClayContent / 0.3)
         , rho_b = layer.vs_SoilBulkDensity() /* [kg (soil) m-3] */
         , rho_w = 1000 /* [kg (water) m-3] */
         , m = layer.vs_SoilNH4 + layer.vs_SoilNH4_a /* total NH4 [kg (N-NH4) m-3] */

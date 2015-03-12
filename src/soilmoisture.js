@@ -746,7 +746,6 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
      * da muss was dran gemacht werden */
     pm_MaximumEvaporationImpactDepth = sm_params.pm_MaximumEvaporationImpactDepth; // Parameterdatei
 
-
     // If a crop grows, ETp is taken from crop module
     if (vc_DevelopmentalStage > 0) {
       // Reference evapotranspiration is only grabbed here for consistent
@@ -800,8 +799,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
 
         for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
 
-          vm_EReducer_1 = get_EReducer_1(i_Layer, vc_PercentageSoilCoverage,
-      vm_PotentialEvapotranspiration);
+          vm_EReducer_1 = get_EReducer_1(i_Layer, vc_PercentageSoilCoverage, vm_PotentialEvapotranspiration);
 
 
           if (i_Layer >= pm_MaximumEvaporationImpactDepth) {
@@ -810,14 +808,13 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
           } else {
             // 2nd factor to reduce actual evapotranspiration by
             // MaximumEvaporationImpactDepth and EvaporationZeta
-            vm_EReducer_2 = get_DeprivationFactor(i_Layer + 1, pm_MaximumEvaporationImpactDepth,
-          pm_EvaporationZeta, vm_LayerThickness[i_Layer]);
+            vm_EReducer_2 = get_DeprivationFactor(i_Layer + 1, pm_MaximumEvaporationImpactDepth, pm_EvaporationZeta, vm_LayerThickness[i_Layer]);
           }
 
           if (i_Layer > 0) {
             if (vm_SoilMoisture[i_Layer] < vm_SoilMoisture[i_Layer - 1]) {
-      // 3rd factor to consider if above layer contains more water than
-      // the adjacent layer below, evaporation will be significantly reduced
+              // 3rd factor to consider if above layer contains more water than
+              // the adjacent layer below, evaporation will be significantly reduced
               vm_EReducer_3 = 0.1;
             } else {
               vm_EReducer_3 = 1.0;
@@ -825,6 +822,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
           } else {
             vm_EReducer_3 = 1.0;
           }
+
           // EReducer. factor to reduce evaporation
           vm_EReducer = vm_EReducer_1 * vm_EReducer_2 * vm_EReducer_3;
 
@@ -833,12 +831,10 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
 
             //Interpolation between [0,1]
             if (vc_PercentageSoilCoverage >= 0.0 && vc_PercentageSoilCoverage < 1.0) {
-              vm_Evaporation[i_Layer] = ((1.0 - vc_PercentageSoilCoverage) * vm_EReducer)
-                  * vm_PotentialEvapotranspiration;
+              vm_Evaporation[i_Layer] = ((1.0 - vc_PercentageSoilCoverage) * vm_EReducer) * vm_PotentialEvapotranspiration;
             } else {
-              if (vc_PercentageSoilCoverage >= 1.0) {
+              if (vc_PercentageSoilCoverage >= 1.0)
                 vm_Evaporation[i_Layer] = 0.0;
-              }
             }
 
             if (vm_SnowDepth > 0.0)
@@ -850,9 +846,8 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
 
             // Transpiration is capped in case potential ET after surface
             // and interception evaporation has occurred on same day
-            if (vm_EvaporationFromSurface) {
+            if (vm_EvaporationFromSurface)
               vm_Transpiration[i_Layer] = vc_PercentageSoilCoverage * vm_EReducer * vm_PotentialEvapotranspiration;
-            }
 
           } else {
             // no vegetation present
@@ -869,20 +864,20 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
           vm_SoilMoisture[i_Layer] -= (vm_Evapotranspiration[i_Layer] / 1000.0 / vm_LayerThickness[i_Layer]);
 
           //  Generelle Begrenzung des Evaporationsentzuges
-          if (vm_SoilMoisture[i_Layer] < 0.01) {
+          if (vm_SoilMoisture[i_Layer] < 0.01)
             vm_SoilMoisture[i_Layer] = 0.01;
-          }
 
           vm_ActualTranspiration += vm_Transpiration[i_Layer];
           vm_ActualEvaporation += vm_Evaporation[i_Layer];
         } // for
       } // vm_PotentialEvapotranspiration > 0
     } // vm_PotentialEvapotranspiration > 0.0
+
     vm_ActualEvapotranspiration = vm_ActualTranspiration + vm_ActualEvaporation + vc_EvaporatedFromIntercept + vm_EvaporatedFromSurface;
 
-    if (crop) {
+    if (crop)
       crop.accumulateEvapotranspiration(vm_ActualEvapotranspiration);
-    }
+
   };
 
   var ReferenceEvapotranspiration = function (
