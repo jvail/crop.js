@@ -98,7 +98,7 @@ var Grass = function (seedDate, harvestDates, species) {
       , part: {                 // partitioning
 
             ρ_shoot_ref: 0.75   // [-]                        reference shoot partitioning fraction
-          , ρ_l_max: 0.8        // [-]                        fraction partitioned to leaf
+          , ρ_l_max: 0.7        // [-]                        fraction partitioned to leaf
           , GDD_flower: 500     // [C° d]                     growing degree days till flowering
         }
        /* TODO: remove or rename: */
@@ -108,8 +108,11 @@ var Grass = function (seedDate, harvestDates, species) {
         ref: 0.04 / 0.45
        }
       , τ_veg: 200
-      , fAsh_leaf: 0.03
-      , fAsh_stem: 0.05
+      , fAsh_dm_l_ref: 0.09     // [kg (ash) kg-1 (DM)]       reference ash content leaf
+      , fAsh_dm_s_ref: 0.04     // [kg (ash) kg-1 (DM)]       reference ash content stem
+      , fAsh_dm_r_ref: 0.04     // [kg (ash) kg-1 (DM)]       reference ash content root
+      , fH2O_fm_l_ref: 0.80     // [kg (H20) kg-1 (FM)]       reference water content leaf
+      , fH2O_fm_s_ref: 0.70     // [kg (H20) kg-1 (FM)]       reference water content stem
     };
 
     /*
@@ -178,10 +181,10 @@ var Grass = function (seedDate, harvestDates, species) {
       , N_req_opt: 0
       , ρ_shoot: 0.7
       , ρ_root: 0.3 
-        /* d.wt composition of new tissue, fractions d.wt */ 
-      , dW_l_fdwt: { sc: 0.54, nc: 0.22, pn: 0.19, ah: 0.03 }
-      , dW_s_fdwt: { sc: 0.63, nc: 0.18, pn: 0.13, ah: 0.05 }
-      , dW_r_fdwt: { sc: 0.67, nc: 0.20, pn: 0.10, ah: 0.03 }
+        /* OM composition of new tissue, fractions OM */ 
+      , G_l_fC_om: { sc: 0.0, nc: 0.0, pn: 0.0 }
+      , G_s_fC_om: { sc: 0.0, nc: 0.0, pn: 0.0 }
+      , G_r_fC_om: { sc: 0.0, nc: 0.0, pn: 0.0 }
         /* structural carbon hydrate pools kg (C) m-2 */
       , SC: {
             live_l_1: 0.0
@@ -217,6 +220,7 @@ var Grass = function (seedDate, harvestDates, species) {
       , PN_dead: { l: 0.0, s: 0.0, r: 0.0 }
         /* daily protein growth pool kg (C) m-2 */
       , dPN: { l: 0.0, s: 0.0, r: 0.0 }
+      , AH:  { l: 0.0, s: 0.0, r: 0.0 }
         /* total litter; from senecenced leaf and stem */
       , Λ_litter: { sc: 0.0, pn: 0.0, nc: 0.0 }
         /* total senecenced root */ 
@@ -237,8 +241,6 @@ var Grass = function (seedDate, harvestDates, species) {
         this.cons.h_m = 0.5;
         this.cons.L_half = 2.0;
         this.cons.σ = 36.8; // Topp (2004)
-        this.cons.fAsh_leaf = 0.03;
-        this.cons.fAsh_stem = 0.05;
 
         /* photosysthesis */
         this.cons.photo.T_ref = 20;
@@ -268,8 +270,6 @@ var Grass = function (seedDate, harvestDates, species) {
         this.cons.h_m = 0.3;
         this.cons.L_half = 2.0;
         this.cons.σ = 24.0; // Topp (2004)
-        this.cons.fAsh_leaf = 0.03;
-        this.cons.fAsh_stem = 0.05;
 
         /* photosysthesis */
         this.cons.photo.T_ref = 25; // Topp (2004)
@@ -299,8 +299,6 @@ var Grass = function (seedDate, harvestDates, species) {
         this.cons.h_m = 0.5;
         this.cons.L_half = 2.0;
         this.cons.σ = 25.8; // Topp (2004)
-        this.cons.fAsh_leaf = 0.03;
-        this.cons.fAsh_stem = 0.05;
 
         /* photosysthesis */
         this.cons.photo.T_ref = 20;
@@ -527,6 +525,34 @@ var Grass = function (seedDate, harvestDates, species) {
       var vars = that.vars;
 
       return 1e3 * ((vars.PN.l + vars.PN_dead.l + vars.PN.s + vars.PN_dead.s) / fC_pn) / (that.dwt_leaf() + that.dwt_stem());
+
+    };
+
+    /* ASH leaf [g (ASH) kg-1 (DM)] */
+    this.ASH_leaf = function () {
+
+      var vars = that.vars;
+
+      return 1e3 * vars.AH.l / (that.dwt_leaf() + vars.AH.l);
+
+    };
+
+
+    /* ASH stem [g (ASH) kg-1 (DM)] */
+    this.ASH_stem = function () {
+
+      var vars = that.vars;
+
+      return 1e3 * vars.AH.s / (that.dwt_stem() + vars.AH.s);
+
+    };
+
+    /* ASH shoot [g (ASH) kg-1 (DM)] */
+    this.ASH_shoot = function () {
+
+      var vars = that.vars;
+
+      return 1e3 * (vars.AH.l + vars.AH.s) / (that.dwt_leaf() + vars.AH.l + that.dwt_stem() + vars.AH.s);
 
     };
 
@@ -776,7 +802,6 @@ var Grass = function (seedDate, harvestDates, species) {
     };
 
 
-
     /* dwt_stem [kg m-2] */
     this.dwt_live_stem = function () {
 
@@ -944,6 +969,8 @@ var Grass = function (seedDate, harvestDates, species) {
       DM_root = 1000 * 1e-4 // kg ha-1 to kg m-2
 
 
+
+
     // iterate over species and initialize pools
     for (var s = 0, ps = species.length; s < ps; s++) {
 
@@ -954,9 +981,10 @@ var Grass = function (seedDate, harvestDates, species) {
         , SC = species.vars.SC
         , NC = species.vars.NC
         , PN = species.vars.PN
+        , AH = species.vars.AH
         ;
         
-      /* initialize carbon pools */
+      /* initialize carbon pools TODO: OM vs DM: include ash in calc. */
 
       /* leaf */
       SC.live_l_1 = leaf_share * (DM_shoot * DM[s] / noPools) * 0.50 * fC_sc;
@@ -975,6 +1003,8 @@ var Grass = function (seedDate, harvestDates, species) {
       NC.l += leaf_share * (DM_shoot * DM[s] / noPools) * 0.00 * fC_sc;
       PN.l += leaf_share * (DM_shoot * DM[s] / noPools) * 0.00 * fC_sc;
 
+      AH.l = leaf_share * (DM_shoot * DM[s]) * species.cons.fAsh_dm_l_ref;
+
       /* stem */
       SC.live_s_1 = stem_share * (DM_shoot * DM[s] / noPools) * 0.70 * fC_sc;
       NC.s += stem_share * (DM_shoot * DM[s] / noPools) * 0.15 * fC_nc;
@@ -992,9 +1022,13 @@ var Grass = function (seedDate, harvestDates, species) {
       NC.s += stem_share * (DM_shoot * DM[s] / noPools) * 0.00 * fC_sc;
       PN.s += stem_share * (DM_shoot * DM[s] / noPools) * 0.00 * fC_sc;
 
+      AH.s = stem_share * (DM_shoot * DM[s]) * species.cons.fAsh_dm_s_ref;
+
+      /* root */
       SC.r = DM_root * DM[s] * 0.80 * fC_sc;
       NC.r += DM_root * DM[s] * 0.10 * fC_sc;
       PN.r += DM_root * DM[s] * 0.10 * fC_sc;
+      AH.r = DM_root * DM[s] * species.cons.fAsh_dm_r_ref;
 
     }
 
@@ -1047,6 +1081,21 @@ var Grass = function (seedDate, harvestDates, species) {
       }
 
       return dwt_shoot;
+
+    };
+
+    mixture.dm_shoot = function () {
+
+      var dm_shoot = 0;
+
+      for (var s = 0, ps = this.length; s < ps; s++) {
+        dm_shoot += (
+          this[s].dwt_live_leaf() + this[s].dwt_dead_leaf() + this[s].vars.AH.l + 
+          this[s].dwt_live_stem() + this[s].dwt_dead_stem() + this[s].vars.AH.s
+        );
+      }
+
+      return dm_shoot;
 
     };
 
