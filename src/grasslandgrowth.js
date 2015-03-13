@@ -943,6 +943,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         , PN_dead = vars.PN_dead
         , dPN = vars.dPN
         , AH = vars.AH
+        , dAH = vars.dAH
         , Λ_r = vars.Λ_r
         , Λ_litter = vars.Λ_litter
           /* C fractions of new tissue already adjusted for nitrogen availability */
@@ -1012,7 +1013,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
       NC_dead.l += 0.2 * γ_l * NC.l * live_2_dead_l_flux - γ_dead * NC_dead.l;
       NC_dead.s += 0.2 * γ_s * NC.s * live_2_dead_s_flux- γ_dead * NC_dead.s;
-      NC_dead.r += 0.2 * γ_r * NC.r;
+      Λ_r.nc += 0.2 * γ_r * NC.r;
 
       var fN_remob_l = (species.N_live_leaf() / species.C_live_leaf() < species.cons.N_leaf.max) ? 0.5 : 0;
       var fN_remob_s = (species.N_live_stem() / species.C_live_stem() < species.cons.N_leaf.max * 0.5) ? 0.5 : 0;
@@ -1030,7 +1031,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
       PN_dead.l += (1 - fN_remob_l) * γ_l * PN.l * live_2_dead_l_flux - γ_dead * PN_dead.l;
       PN_dead.s += (1 - fN_remob_s) * γ_s * PN.s * live_2_dead_s_flux - γ_dead * PN_dead.s;
-      PN_dead.r += (1 - fN_remob_r) * γ_r * PN.r;
+      Λ_r.sc += (1 - fN_remob_r) * γ_r * PN.r;
 
       /* update C pools with dSC, dPN, dNC */
 
@@ -1062,13 +1063,13 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
       // logger(MSG.INFO, { SC: SC, NC: NC, PN: PN });
 
-      var dAH_l = sqrt(vars.Ω_water) * cons.fAsh_dm_l_ref / (1 - cons.fAsh_dm_l_ref) * om_l;
-      var dAH_s = sqrt(vars.Ω_water) * cons.fAsh_dm_s_ref / (1 - cons.fAsh_dm_s_ref) * om_s;
-      var dAH_r = sqrt(vars.Ω_water) * cons.fAsh_dm_r_ref / (1 - cons.fAsh_dm_r_ref) * om_r;
+      dAH.l = sqrt(vars.Ω_water) * cons.fAsh_dm_l_ref / (1 - cons.fAsh_dm_l_ref) * om_l;
+      dAH.s = sqrt(vars.Ω_water) * cons.fAsh_dm_s_ref / (1 - cons.fAsh_dm_s_ref) * om_s;
+      dAH.r = sqrt(vars.Ω_water) * cons.fAsh_dm_r_ref / (1 - cons.fAsh_dm_r_ref) * om_r;
 
-      AH.l += dAH_l - γ_dead * AH.l * SC.dead_l / (SC.live_l_1 + SC.live_l_2 + SC.live_l_3);
-      AH.s += dAH_s - γ_dead * AH.s * SC.dead_s / (SC.live_s_1 + SC.live_s_2 + SC.live_s_3);
-      AH.r += dAH_r - γ_r * AH.r;
+      AH.l += dAH.l - γ_dead * AH.l * SC.dead_l / (SC.live_l_1 + SC.live_l_2 + SC.live_l_3);
+      AH.s += dAH.s - γ_dead * AH.s * SC.dead_s / (SC.live_s_1 + SC.live_s_2 + SC.live_s_3);
+      AH.r += dAH.r - γ_r * AH.r;
     
     }
 
@@ -2146,8 +2147,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         var species = mixture[s] 
           , vars = species.vars 
           , Λ_r = vars.Λ_r
-          , NC_dead = vars.NC_dead
-          , PN_dead = vars.PN_dead
           , Λ_litter = vars.Λ_litter
             /* [m-1] due to maxMineralizationDepth vs_NumberOfOrganicLayers might be < root depth TODO: what to do with OM below min. depth? */
           , scale = mixture.f_r[s][l] / mixture.f_r_sum[s] / vs_LayerThickness
@@ -2162,8 +2161,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           Λ_litter.pn *= 1 - f_litter;
         }
 
-        aom.vo_AOM_Slow += (Λ_r.sc + NC_dead.r + PN_dead.r) * scale;
-        N += PN_dead.r / fC_pn * fN_pn * scale;
+        aom.vo_AOM_Slow += (Λ_r.sc + Λ_r.nc + Λ_r.pn) * scale;
+        N += Λ_r.pn / fC_pn * fN_pn * scale;
 
       }
 
@@ -2175,7 +2174,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     // reset Λ_r
     for (var s = 0; s < numberOfSpecies; s++) {
       var Λ_r = mixture[s].vars.Λ_r;
-      Λ_r.sc = NC_dead.r = PN_dead.r = 0;
+      Λ_r.sc = Λ_r.nc = Λ_r.pn = 0;
     }
 
     return AOM;

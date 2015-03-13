@@ -217,10 +217,11 @@ var Grass = function (seedDate, harvestDates, species) {
       , dNC: { l: 0.0, s: 0.0, r: 0.0 }
         /* protein pool kg (C) m-2 */
       , PN: { l: 0.0, s: 0.0, r: 0.0 }
-      , PN_dead: { l: 0.0, s: 0.0, r: 0.0 }
+      , PN_dead: { l: 0.0, s: 0.0 }
         /* daily protein growth pool kg (C) m-2 */
       , dPN: { l: 0.0, s: 0.0, r: 0.0 }
       , AH:  { l: 0.0, s: 0.0, r: 0.0 }
+      , dAH:  { l: 0.0, s: 0.0, r: 0.0 }
         /* total litter; from senecenced leaf and stem */
       , Λ_litter: { sc: 0.0, pn: 0.0, nc: 0.0 }
         /* total senecenced root */ 
@@ -558,16 +559,17 @@ var Grass = function (seedDate, harvestDates, species) {
 
     /* 
       CF shoot [g (CF) kg-1 (DM)] 
-      regressions based on feed table data from Finland (MTT) and France (Feedipedia) and data from an Austrian feed laboratory (Rosenau).
-      legumes N = 31, R² = 0.73, grass N = 46, R² = 0.78
+      regressions based on feed table data from Finland (MTT) and France (Feedipedia) and data from an Austrian feed
+      laboratory (Rosenau). legumes N = 31, R² = 0.73, grass N = 46, R² = 0.78
     */
     this.CF_shoot= function () {
 
       var SC = that.vars.SC;
-      var NDF = (
-        1e3 * 
-        ((SC.live_l_1 + SC.live_l_2 + SC.live_l_3 + SC.dead_l + SC.live_s_1 + SC.live_s_2 + SC.live_s_3 + SC.dead_s) / fC_sc) /
-        that.dwt_shoot()
+      var NDF = 1e3 * ( 
+        (
+          (SC.live_l_1 + SC.live_l_2 + SC.live_l_3 + SC.dead_l + SC.live_s_1 + SC.live_s_2 + SC.live_s_3 + SC.dead_s) / 
+          fC_sc
+        ) / that.dwt_shoot()
       );
 
       if (that.isLegume)
