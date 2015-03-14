@@ -241,8 +241,20 @@ var Grass = function (seedDate, harvestDates, species) {
           , dead_s: 0.0
           , r: 0.0 
         }
-      , AH:  { l: 0.0, s: 0.0, r: 0.0 }
-      , dAH:  { l: 0.0, s: 0.0, r: 0.0 }
+      , AH: { 
+            l: 0.0
+          , dead_l: 0.0
+          , s: 0.0
+          , dead_s: 0.0
+          , r: 0.0 
+        }
+      , dAH: { 
+            l: 0.0
+          , dead_l: 0.0
+          , s: 0.0
+          , dead_s: 0.0
+          , r: 0.0 
+        }
         /* litter from senecenced leaf and stem [kg (C) m-2] */
       , Λ_litter: { sc: 0.0, pn: 0.0, nc: 0.0 }
         /* senecenced root [kg (C) m-2] */ 
@@ -250,7 +262,7 @@ var Grass = function (seedDate, harvestDates, species) {
     };
 
 
-    /* initialze constants with pre-defined values by type; defaults to rye grass */
+    /* initialze constants with pre-defined values by type; defaults to generic grass */
     if (options && options.type) {
     
       switch (options.type) {
