@@ -679,7 +679,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
             /* TODO: find a better implementation as such that a re-calculation of f_pn is not necessary.
               The idea here is that if N is limited the sc and nc fractions are increased (f_sc += 0.8 * (f_pn_old - f_pn)).
               It is unclear if this is a good representation of the underlying physiology but the result is satisfying in terms
-              of typical observations in pastures during summer: high growth rates -> unsufficient N uptake -> lower protein content -> 
+              of typical observations in pastures during summer: high growth rates -> insufficient N uptake -> lower protein content -> 
               higher nc and ndf content */ 
 
             // for legumes assume a fall back to a minimum of N.opt instead of N.max and satisfy missing N form fixation
