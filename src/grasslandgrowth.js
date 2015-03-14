@@ -676,6 +676,11 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
             ;
 
           if (N_assimilated > N_up_pool)  {
+            /* TODO: find a better implementation as such that a re-calculation of f_pn is not necessary.
+              The idea here is that if N is limited the sc and nc fractions are increased (f_sc += 0.8 * (f_pn_old - f_pn)).
+              It is unclear if this is a good representation of the underlying physiology but the result is satisfying in terms
+              of typical observations in pastures during summer: high growth rates -> unsufficient N uptake -> lower protein content -> 
+              higher nc and ndf content */ 
 
             // for legumes assume a fall back to a minimum of N.opt instead of N.max and satisfy missing N form fixation
             // TODO: move legumes to the end of mixture array
@@ -934,13 +939,11 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         ;
 
       /* growth dynamics */
-      var dSC = vars.dSC
-        , SC = vars.SC
+      var SC = vars.SC
+        , dSC = vars.dSC
         , NC = vars.NC
         , dNC = vars.dNC
-        , NC_dead = vars.NC_dead
         , PN = vars.PN
-        , PN_dead = vars.PN_dead
         , dPN = vars.dPN
         , AH = vars.AH
         , dAH = vars.dAH
@@ -967,12 +970,25 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         , γ_dead = 0.11
         ;
 
-      /* assimilated carbon to leaf, stem and root converted to protein carbon */
-      dPN.l = G_l * G_l_fC_om.pn; 
-      dPN.s = G_s * G_s_fC_om.pn; 
+      /* no remob if N concentration already exceeds maximum */
+      var fN_remob_l = (species.N_live_leaf() / species.C_live_leaf() < cons.N_leaf.max) ? 0.5 : 0;
+      var fN_remob_s = (species.N_live_stem() / species.C_live_stem() < cons.N_leaf.max * 0.5) ? 0.5 : 0;
+      var fN_remob_r = (species.N_root() / species.C_root() < cons.N_leaf.max * 0.5) ? 0.5 : 0;
+
+      var live_2_dead_l = γ_l * SC.live_l_3 / (SC.live_l_1 + SC.live_l_2);
+      var live_2_dead_s = γ_s * SC.live_s_3 / (SC.live_s_1 + SC.live_s_2);
+
+      /* assimilated protein carbon to leaf, stem and root: new growth flux minus (flux to dead minus remobilization) 
+          assume flux in pn and nc to dead is proportional to sc pool flux: γ_l * SC.live_l_3 / (SC.live_l_1 + SC.live_l_2) */
+      dPN.l = G_l * G_l_fC_om.pn - (PN.l * live_2_dead_l * (1 - fN_remob_l)); 
+      dPN.dead_l = (PN.l * live_2_dead_l * (1 - fN_remob_l)) - (γ_dead * PN.dead_l);
+
+      dPN.s = G_s * G_s_fC_om.pn - (PN.s * live_2_dead_s * (1 - fN_remob_s)); ; 
+      dPN.dead_s = (PN.s * live_2_dead_s * (1 - fN_remob_s)) - (γ_dead * PN.dead_s);
+      
       dPN.r = G_r * G_r_fC_om.pn;
 
-      /* assimilated carbon to leaf, stem and root converted to non-structural carbon */
+      /* assimilated non-structural carbon to leaf, stem and root */
       dNC.l = G_l * G_l_fC_om.nc; 
       dNC.s = G_s * G_s_fC_om.nc; 
       dNC.r = G_r * G_r_fC_om.nc;
@@ -1000,8 +1016,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
       /* (4.18m) input to litter. Johnson (2005/2008) TODO: here it includes root, add own pool? */
       Λ_litter.sc += γ_dead * (SC.dead_l + SC.dead_s);
-      Λ_litter.nc += γ_dead * (NC_dead.l + NC_dead.s);
-      Λ_litter.pn += γ_dead * (PN_dead.l + PN_dead.s);
+      Λ_litter.nc += γ_dead * (NC.dead_l + NC.dead_s);
+      Λ_litter.pn += γ_dead * (PN.dead_l + PN.dead_s);
 
       /* TODO: this is just a test: flux of pn and nc to litter pools (assume 80% remob in NC and 50% in PN) */
       var live_2_dead_l_flux = SC.live_l_3 / (SC.live_l_1 + SC.live_l_2);
@@ -1011,26 +1027,26 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       dNC.s -= 0.2 * γ_s * NC.s * live_2_dead_s_flux;
       dNC.r -= 0.2 * γ_r * NC.r;
 
-      NC_dead.l += 0.2 * γ_l * NC.l * live_2_dead_l_flux - γ_dead * NC_dead.l;
-      NC_dead.s += 0.2 * γ_s * NC.s * live_2_dead_s_flux- γ_dead * NC_dead.s;
+      NC.dead_l += 0.2 * γ_l * NC.l * live_2_dead_l_flux - γ_dead * NC.dead_l;
+      NC.dead_s += 0.2 * γ_s * NC.s * live_2_dead_s_flux- γ_dead * NC.dead_s;
       Λ_r.nc += 0.2 * γ_r * NC.r;
 
-      var fN_remob_l = (species.N_live_leaf() / species.C_live_leaf() < species.cons.N_leaf.max) ? 0.5 : 0;
-      var fN_remob_s = (species.N_live_stem() / species.C_live_stem() < species.cons.N_leaf.max * 0.5) ? 0.5 : 0;
-      var fN_remob_r = (species.N_root() / species.C_root() < species.cons.N_leaf.max * 0.5) ? 0.5 : 0;
 
-      dPN.l -= (1 - fN_remob_l) * γ_l * PN.l * live_2_dead_l_flux;
-      dPN.s -= (1 - fN_remob_s) * γ_s * PN.s * live_2_dead_s_flux;
+
+      // dPN.l -= (1 - fN_remob_l) * γ_l * PN.l * live_2_dead_l_flux;
+      // dPN.s -= (1 - fN_remob_s) * γ_s * PN.s * live_2_dead_s_flux;
       dPN.r -= (1 - fN_remob_r) * γ_r * PN.r;
 
       vars.N_remob = (
-        fN_remob_l * γ_l * PN.l * live_2_dead_l_flux +
-        fN_remob_s * γ_s * PN.s * live_2_dead_s_flux +
+        fN_remob_l * (PN.l * live_2_dead_l) + 
+        // fN_remob_l * γ_l * PN.l * live_2_dead_l_flux +
+        fN_remob_s * (PN.s * live_2_dead_s) + 
+        // fN_remob_s * γ_s * PN.s * live_2_dead_s_flux +
         fN_remob_r * γ_r * PN.r
       ) / fC_pn * fN_pn;
 
-      PN_dead.l += (1 - fN_remob_l) * γ_l * PN.l * live_2_dead_l_flux - γ_dead * PN_dead.l;
-      PN_dead.s += (1 - fN_remob_s) * γ_s * PN.s * live_2_dead_s_flux - γ_dead * PN_dead.s;
+      PN.dead_l += dPN.dead_l;//(1 - fN_remob_l) * γ_l * PN.l * live_2_dead_l_flux - γ_dead * PN.dead_l;
+      PN.dead_s += dPN.dead_s;//(1 - fN_remob_s) * γ_s * PN.s * live_2_dead_s_flux - γ_dead * PN.dead_s;
       Λ_r.sc += (1 - fN_remob_r) * γ_r * PN.r;
 
       /* update C pools with dSC, dPN, dNC */

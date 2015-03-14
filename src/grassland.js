@@ -181,11 +181,11 @@ var Grass = function (seedDate, harvestDates, species) {
       , N_req_opt: 0
       , ρ_shoot: 0.7
       , ρ_root: 0.3 
-        /* OM composition of new tissue, fractions OM */ 
+        /* composition of new tissue, fractions [kg (C) kg-1 (C)] */ 
       , G_l_fC_om: { sc: 0.0, nc: 0.0, pn: 0.0 }
       , G_s_fC_om: { sc: 0.0, nc: 0.0, pn: 0.0 }
       , G_r_fC_om: { sc: 0.0, nc: 0.0, pn: 0.0 }
-        /* structural carbon hydrate pools kg (C) m-2 */
+        /* structural carbon hydrate pools [kg (C) m-2] */
       , SC: {
             live_l_1: 0.0
           , live_l_2: 0.0
@@ -197,7 +197,7 @@ var Grass = function (seedDate, harvestDates, species) {
           , dead_s:   0.0
           , r:        0.0
         }
-        /* daily structural carbon hydrate growth pool kg (C) m-2 */
+        /* daily structural carbon hydrate growth pool [kg (C) m-2] */
       , dSC: {
             live_l_1: 0.0
           , live_l_2: 0.0
@@ -209,22 +209,43 @@ var Grass = function (seedDate, harvestDates, species) {
           , dead_s:   0.0
           , r:        0.0
         }
-        // TODO: are those pools only for live tissue?
-        /* non-structural carbon hydrate pool kg (C) m-2 */
-      , NC: { l: 0.0, s: 0.0, r: 0.0 }
-      , NC_dead: { l: 0.0, s: 0.0, r: 0.0 }
-        /* daily non-structural carbon hydrate growth pool kg (C) m-2 */
-      , dNC: { l: 0.0, s: 0.0, r: 0.0 }
+        /* non-structural carbon hydrate pool [kg (C) m-2] */
+      , NC: { 
+            l: 0.0
+          , dead_l: 0.0
+          , s: 0.0
+          , dead_s: 0.0
+          , r: 0.0 
+        }
+        /* daily non-structural carbon hydrate growth pool [kg (C) m-2] */
+      , dNC: { 
+            l: 0.0
+          , dead_l: 0.0
+          , s: 0.0
+          , dead_s: 0.0
+          , r: 0.0 
+        }
         /* protein pool kg (C) m-2 */
-      , PN: { l: 0.0, s: 0.0, r: 0.0 }
-      , PN_dead: { l: 0.0, s: 0.0 }
-        /* daily protein growth pool kg (C) m-2 */
-      , dPN: { l: 0.0, s: 0.0, r: 0.0 }
+      , PN: { 
+            l: 0.0
+          , dead_l: 0.0
+          , s: 0.0
+          , dead_s: 0.0
+          , r: 0.0 
+        }
+        /* daily protein growth pool [kg (C) m-2] */
+      , dPN: { 
+            l: 0.0
+          , dead_l: 0.0
+          , s: 0.0
+          , dead_s: 0.0
+          , r: 0.0 
+        }
       , AH:  { l: 0.0, s: 0.0, r: 0.0 }
       , dAH:  { l: 0.0, s: 0.0, r: 0.0 }
-        /* total litter; from senecenced leaf and stem */
+        /* litter from senecenced leaf and stem [kg (C) m-2] */
       , Λ_litter: { sc: 0.0, pn: 0.0, nc: 0.0 }
-        /* total senecenced root */ 
+        /* senecenced root [kg (C) m-2] */ 
       , Λ_r: { sc: 0, pn: 0, nc: 0.0 }
     };
 
@@ -346,7 +367,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var PN = that.vars.PN;
 
-      return ((PN.l + PN.s + that.vars.PN_dead.l + that.vars.PN_dead.s) / fC_pn) / that.dwt_shoot();
+      return ((PN.l + PN.s + that.vars.PN.dead_l + that.vars.PN.dead_s) / fC_pn) / that.dwt_shoot();
 
     };
 
@@ -383,9 +404,9 @@ var Grass = function (seedDate, harvestDates, species) {
       var NDF_live_s_3 = SC.live_s_3 / fC_sc;
       var NDF_dead_s = SC.dead_s / fC_sc;
 
-      var NFC = (NC.l + NC.s + vars.NC_dead.l + vars.NC_dead.s) / fC_nc;
+      var NFC = (NC.l + NC.s + vars.NC.dead_l + vars.NC.dead_s) / fC_nc;
 
-      var CP = (PN.l + PN.s + vars.PN_dead.l + vars.PN_dead.s) / fC_pn;
+      var CP = (PN.l + PN.s + vars.PN.dead_l + vars.PN.dead_s) / fC_pn;
 
       /* digestible NDF [kg m-2] */
       var DNDF = (
@@ -487,7 +508,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * ((vars.NC.l + vars.NC_dead.l) / fC_nc) / that.dwt_leaf();
+      return 1e3 * ((vars.NC.l + vars.NC.dead_l) / fC_nc) / that.dwt_leaf();
 
     };
 
@@ -497,7 +518,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * ((vars.NC.s + vars.NC_dead.s) / fC_nc) / that.dwt_stem();
+      return 1e3 * ((vars.NC.s + vars.NC.dead_s) / fC_nc) / that.dwt_stem();
 
     };
 
@@ -506,7 +527,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * ((vars.PN.l + vars.PN_dead.l) / fC_pn) / that.dwt_leaf();
+      return 1e3 * ((vars.PN.l + vars.PN.dead_l) / fC_pn) / that.dwt_leaf();
 
     };
 
@@ -516,7 +537,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * ((vars.PN.s + vars.PN_dead.s) / fC_pn) / that.dwt_stem();
+      return 1e3 * ((vars.PN.s + vars.PN.dead_s) / fC_pn) / that.dwt_stem();
 
     };
 
@@ -525,7 +546,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * ((vars.PN.l + vars.PN_dead.l + vars.PN.s + vars.PN_dead.s) / fC_pn) / (that.dwt_leaf() + that.dwt_stem());
+      return 1e3 * ((vars.PN.l + vars.PN.dead_l + vars.PN.s + vars.PN.dead_s) / fC_pn) / (that.dwt_leaf() + that.dwt_stem());
 
     };
 
@@ -786,8 +807,8 @@ var Grass = function (seedDate, harvestDates, species) {
       return (
         /* convert leaf kg C to kg d.wt incl. ashes TODO: ashes */
         (SC.live_l_1 + SC.live_l_2 + SC.live_l_3 + SC.dead_l) / fC_sc + 
-        (NC.l + NC_dead.l) / fC_nc +
-        (PN.l + PN_dead.l) / fC_pn
+        (NC.l + NC.dead_l) / fC_nc +
+        (PN.l + PN.dead_l) / fC_pn
       );  
 
     };
@@ -797,8 +818,8 @@ var Grass = function (seedDate, harvestDates, species) {
 
       return (
         that.vars.SC.dead_l / fC_sc + 
-        that.vars.PN_dead.l / fC_pn + 
-        that.vars.NC_dead.l / fC_nc
+        that.vars.PN.dead_l / fC_pn + 
+        that.vars.NC.dead_l / fC_nc
       ); 
 
     };
@@ -834,8 +855,8 @@ var Grass = function (seedDate, harvestDates, species) {
       return (
         /* convert stem kg C to kg d.wt incl. ashes TODO: ashes */
         (SC.live_s_1 + SC.live_s_2 + SC.live_s_3 + SC.dead_s) / fC_sc + 
-        (NC.s + NC_dead.s) / fC_nc +
-        (PN.s + PN_dead.s) / fC_pn
+        (NC.s + NC.dead_s) / fC_nc +
+        (PN.s + PN.dead_s) / fC_pn
       ); 
 
     };
@@ -845,8 +866,8 @@ var Grass = function (seedDate, harvestDates, species) {
 
       return (
         that.vars.SC.dead_s / fC_sc + 
-        that.vars.PN_dead.s / fC_pn + 
-        that.vars.NC_dead.s / fC_nc
+        that.vars.PN.dead_s / fC_pn + 
+        that.vars.NC.dead_s / fC_nc
       ); 
 
     };
