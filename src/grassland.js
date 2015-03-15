@@ -55,9 +55,9 @@ var Grass = function (seedDate, harvestDates, species) {
     /* defaults */
     this.isLegume = false;
     this.isC4 = false;
-    this.type = 'generic grass'; // generic
+    this.type = 'generic grass';
 
-    this.cons = {               // generic grass constants
+    this.cons = {               //                             generic grass constants
         index: 0                // [#]                         index in mixture array at initialization (stored to restore orig. sorting)
       , h_m: 0.5                // [m]                         maximum height 
       , L_half: 2.0             // [m2 (leaf) m-2 (ground)]    leaf area at half h_m
@@ -96,16 +96,15 @@ var Grass = function (seedDate, harvestDates, species) {
           , λ_N_fix: 6          // [kg (C) kg-1 (N)]          N fixation respiration coefficent
         }
       , part: {                 // partitioning
-
             ρ_shoot_ref: 0.75   // [-]                        reference shoot partitioning fraction
           , ρ_l_max: 0.7        // [-]                        fraction partitioned to leaf
           , GDD_flower: 500     // [C° d]                     growing degree days till flowering
         }
        /* TODO: remove or rename: */
-      , N_leaf: { /* [kg (N) kg-1 (C)] */
-        opt: 0.04 / 0.45,       // 
-        max: 0.045 / 0.45,      // [kg (N) kg-1 (C)] AgPasture: 0.05 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
-        ref: 0.04 / 0.45
+      , N_leaf: {
+            opt: 0.04 / 0.45
+          , max: 0.045 / 0.45   // [kg (N) kg-1 (C)] AgPasture: 0.05 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
+          , ref: 0.04 / 0.45
        }
       , τ_veg: 200
       , fAsh_dm_l_ref: 0.09     // [kg (ash) kg-1 (DM)]       reference ash content leaf
@@ -115,78 +114,51 @@ var Grass = function (seedDate, harvestDates, species) {
       , fH2O_fm_s_ref: 0.70     // [kg (H20) kg-1 (FM)]       reference water content stem
     };
 
-    /*
-      variables (only those that are temporarily stored during calculations)
+    this.vars = {               //                    variables
+        GDD: 0                  // [°C day]           growing degree days
+      , Ω_N: 1.0                // [0-1]              growth limiting factor nitrogen (1 = no stress)
+      , Ω_water: 1.0            // [0-1]              growth limiting factor water (1 = no stress)
+      , P_g_day: 0.0            // [kg (C) m-2]       daily canopy gross photosynthesis
+      , R_m: 0.0                // [kg (C) m-2]       daily maintenance respiration
+      , R_N: 0                  // [kg (C) m-2]       daily N uptake cost
+      , G: 0.0                  // [kg (C) m-2]       daily net growth rate
+      , G_leaf: 0               // [kg (C) m-2]       daily leaf growth
+      , G_stem: 0               // [kg (C) m-2]       daily stem growth
+      , G_root: 0               // [kg (C) m-2]       daily root growth
+      , Y: 0.75                 // [-]                total growth efficiency
+      , Y_leaf: 0.75            // [-]                leaf efficiency
+      , Y_stem: 0.75            // [-]                stem growth efficiency
+      , Y_root: 0.75            // [-]                root growth efficiency
+      , d_r: 1.0                // [m]                root depth
+      , τ: 0                    // [days]             no. of days in pheno. phase (e.g. vegetative) TODO: remove?
+      , k_sum: 0                // [-]                pheno. phase developement (0-1)
+      , N_up: 0                 // [kg (N) m-2]       daily N uptake
+      , N_fix: 0                // [kg (N) m-2]       daily N fixation
+      , N_avail: 0              // [kg (N) m-2]       daily N available
+      , N_assim: 0              // [kg (N) m-2]       daily N assimilated
+      , N_req: 0                // [kg (N) m-2]       daily N required
+      , N_remob: 0              // [kg (N) m-2]       daily N remobilized from senecenced tissue
+      , N_add: 0                // [kg (N) m-2]       daily N radditionaly assimilated due to over supply (N_avail > N_req)
+      , ρ_shoot: 0.7            // [kg (C) kg-1 (C)]  growth fraction partitioned to shoot
+      , ρ_root: 0.3             // [kg (C) kg-1 (C)]  growth fraction partitioned to root
+      , ρ_l: 0.7                // [kg (C) kg-1 (C)]  growth shoot fraction partitioned to leaf
 
-      Ω_N     [0-1]                       limiting factor nitrogen (1 = no stress)
-      Ω_water [0-1]                       limiting factor water (1 = no stress)
-
-      P_g_day [kg (C) m-2 d-1]            daily canopy gross photosynthesis in response to irradiance
-      G       [kg (C) m-2 d-1]            daily net growth rate
-
-      Y       [-]                         total growth efficiency
-      Y_leaf  [-]                         leaf growth efficiency
-      Y_stem  [-]                         stem growth efficiency
-      Y_root  [-]                         root growth efficiency
-
-      d_r     [m]                         root depth
-      τ       [days]                      no. of days in pheno. phase (e.g. vegetative)
-      k_sum   [-]                         pheno. phase development (0-1)
-
-      dW_x_fdwt (leaf, stem, root)
-      sc      [kg (d.wt) kg (d.wt)]       fraction structural carbon hydrates in new tissue
-      nc      [kg (d.wt) kg (d.wt)]       fraction non-structural carbon hydrates in new tissue
-      pn      [kg (d.wt) kg (d.wt)]       fraction protein in new tissue
-      ah      [kg (d.wt) kg (d.wt)]       fraction ashes in new tissue
-      
-      SC      [kg (C) m-2]                total structural carbon hydrates (cellulose, hemicellulose, lignin)
-      dSC     [kg (C) m-2 d-1]            daily structural carbon hydrates growth
-      NC      [kg (C) m-2]                total (per organ) non-structural carbon hydrates (starch, sugars, fat)
-      dNC     [kg (C) m-2 d-1]            daily (per organ) non-structural carbon hydrates growth
-      PN      [kg (C) m-2]                total (per organ) protein carbon
-      dPN     [kg (C) m-2 d-]             daily (per organ) protein carbon growth
-
-      Λ_litter, Λ_r
-      sc      [kg (C) m-2]                structural carbon hydrates
-      nc      [kg (C) m-2]                non-structural carbon hydrates
-      pn      [kg (C) m-2]                protein carbon
-
-    */
-    this.vars = {
-        GDD: 0
-      , ρ_l: 0.7
-      , Ω_N: 1.0
-      , Ω_water: 1.0 
-      , P_g_day: 0.0
-      , R_m: 0.0
-      , R_N: 0
-      , G: 0.0
-      , G_leaf: 0 // growth to leaf [kg (C) m-2]
-      , G_stem: 0
-      , G_root: 0
-      , Y: 0.75
-      , Y_leaf: 0.75
-      , Y_stem: 0.75
-      , Y_root: 0.75
-      , d_r: 1.0
-      , τ: 0
-      , k_sum: 0
-      , N_up: 0
-      , N_fix: 0
-      , N_avail: 0
-      , N_assim: 0
-      , N_req: 0
-      , N_remob: 0
-      , N_add: 0
-      , N_req_opt: 0
-      , ρ_shoot: 0.7
-      , ρ_root: 0.3 
-        /* composition of new tissue, fractions [kg (C) kg-1 (C)] */ 
-      , G_l_fC_om: { sc: 0.0, nc: 0.0, pn: 0.0 }
-      , G_s_fC_om: { sc: 0.0, nc: 0.0, pn: 0.0 }
-      , G_r_fC_om: { sc: 0.0, nc: 0.0, pn: 0.0 }
-        /* structural carbon hydrate pools [kg (C) m-2] */
-      , SC: {
+      , G_l_fC_om: {            // [kg (C) kg-1 (C)]  composition of new leaf tissue, fractions 
+            sc: 0.0
+          , nc: 0.0
+          , pn: 0.0 
+        }
+      , G_s_fC_om: {            // [kg (C) kg-1 (C)]  composition of new stem tissue, fractions 
+            sc: 0.0
+          , nc: 0.0
+          , pn: 0.0 
+        }
+      , G_r_fC_om: {            // [kg (C) kg-1 (C)]  composition of new root tissue, fractions 
+            sc: 0.0
+          , nc: 0.0
+          , pn: 0.0 
+        }
+      , SC: {                    // [kg (C) m-2]      structural carbon hydrate pools 
             live_l_1: 0.0
           , live_l_2: 0.0
           , live_l_3: 0.0
@@ -197,8 +169,8 @@ var Grass = function (seedDate, harvestDates, species) {
           , dead_s:   0.0
           , r:        0.0
         }
-        /* daily structural carbon hydrate growth pool [kg (C) m-2] */
-      , dSC: {
+                        
+      , dSC: {                   // [kg (C) m-2]      daily structural carbon hydrate growth pool
             live_l_1: 0.0
           , live_l_2: 0.0
           , live_l_3: 0.0
@@ -209,56 +181,59 @@ var Grass = function (seedDate, harvestDates, species) {
           , dead_s:   0.0
           , r:        0.0
         }
-        /* non-structural carbon hydrate pool [kg (C) m-2] */
-      , NC: { 
+        /*  */
+      , NC: {                   // [kg (C) m-2]       non-structural carbon hydrate pool  
             l: 0.0
           , dead_l: 0.0
           , s: 0.0
           , dead_s: 0.0
           , r: 0.0 
         }
-        /* daily non-structural carbon hydrate growth pool [kg (C) m-2] */
-      , dNC: { 
+      , dNC: {                  // [kg (C) m-2]       daily non-structural carbon hydrate growth pool 
             l: 0.0
           , dead_l: 0.0
           , s: 0.0
           , dead_s: 0.0
           , r: 0.0 
         }
-        /* protein pool kg (C) m-2 */
-      , PN: { 
+      , PN: {                   // [kg (C) m-2]       protein pool 
             l: 0.0
           , dead_l: 0.0
           , s: 0.0
           , dead_s: 0.0
           , r: 0.0 
         }
-        /* daily protein growth pool [kg (C) m-2] */
-      , dPN: { 
+      , dPN: {                  // [kg (C) m-2]       daily protein growth pool 
             l: 0.0
           , dead_l: 0.0
           , s: 0.0
           , dead_s: 0.0
           , r: 0.0 
         }
-      , AH: { 
+      , AH: {                   // [kg (ash) m-2]      ash pool 
             l: 0.0
           , dead_l: 0.0
           , s: 0.0
           , dead_s: 0.0
           , r: 0.0 
         }
-      , dAH: { 
+      , dAH: {                  // [kg (ash) m-2]     daily ash growth pool 
             l: 0.0
           , dead_l: 0.0
           , s: 0.0
           , dead_s: 0.0
           , r: 0.0 
         }
-        /* litter from senecenced leaf and stem [kg (C) m-2] */
-      , Λ_litter: { sc: 0.0, pn: 0.0, nc: 0.0 }
-        /* senecenced root [kg (C) m-2] */ 
-      , Λ_r: { sc: 0, pn: 0, nc: 0.0 }
+      , Λ_litter: {             // [kg (C) m-2]       litter from senecenced leaf and stem 
+            sc: 0.0
+          , pn: 0.0
+          , nc: 0.0 
+        } 
+      , Λ_r: {                  // [kg (C) m-2]       senecenced root 
+            sc: 0
+          , pn: 0
+          , nc: 0.0 
+        }
     };
 
 
@@ -374,20 +349,21 @@ var Grass = function (seedDate, harvestDates, species) {
     }
 
 
-    /* shoot protein fraction [kg (protein) kg-1 (d.wt)] */
-    this.fdwt_pn = function () {
+    /* shoot protein fraction [kg (protein) kg-1 (DM)] */
+    this.fOM_pn = function () {
 
       var PN = that.vars.PN;
 
-      return ((PN.l + PN.s + that.vars.PN.dead_l + that.vars.PN.dead_s) / fC_pn) / that.dwt_shoot();
+      return ((PN.l + PN.s + PN.dead_l + PN.dead_s) / fC_pn) / that.DM_shoot();
 
     };
 
 
     /* 
       protein digestibility Van Niekerk (1967) 
+      TODO: check units (DM or OM?)
       
-      pn  [g (crude protein) kg-1 (d.wt)]
+      pn  [g (CP) kg-1 (DM)]
     */
     this.δ_pn = function (pn) { 
 
@@ -403,7 +379,7 @@ var Grass = function (seedDate, harvestDates, species) {
         , SC = that.vars.SC
         , NC = that.vars.NC
         , PN = that.vars.PN
-        , δ_pn = that.δ_pn(this.fdwt_pn() * 1000) // kg to grams
+        , δ_pn = that.δ_pn(this.fOM_pn() * 1e3) // kg to grams
         ;
 
       var NDF_live_l_1 = SC.live_l_1 / fC_sc;
@@ -501,7 +477,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var SC = that.vars.SC;
 
-      return 1e3 * ((SC.live_l_1 + SC.live_l_2 + SC.live_l_3 + SC.dead_l) / fC_sc) / that.dwt_leaf();
+      return 1e3 * ((SC.live_l_1 + SC.live_l_2 + SC.live_l_3 + SC.dead_l) / fC_sc) / that.DM_leaf();
 
     };
 
@@ -511,7 +487,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var SC = that.vars.SC;
 
-      return 1e3 * ((SC.live_s_1 + SC.live_s_2 + SC.live_s_3 + SC.dead_s) / fC_sc) / that.dwt_stem();
+      return 1e3 * ((SC.live_s_1 + SC.live_s_2 + SC.live_s_3 + SC.dead_s) / fC_sc) / that.DM_stem();
 
     };
 
@@ -520,7 +496,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * ((vars.NC.l + vars.NC.dead_l) / fC_nc) / that.dwt_leaf();
+      return 1e3 * ((vars.NC.l + vars.NC.dead_l) / fC_nc) / that.DM_leaf();
 
     };
 
@@ -530,7 +506,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * ((vars.NC.s + vars.NC.dead_s) / fC_nc) / that.dwt_stem();
+      return 1e3 * ((vars.NC.s + vars.NC.dead_s) / fC_nc) / that.DM_stem();
 
     };
 
@@ -539,7 +515,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * ((vars.PN.l + vars.PN.dead_l) / fC_pn) / that.dwt_leaf();
+      return 1e3 * ((vars.PN.l + vars.PN.dead_l) / fC_pn) / that.DM_leaf();
 
     };
 
@@ -549,7 +525,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * ((vars.PN.s + vars.PN.dead_s) / fC_pn) / that.dwt_stem();
+      return 1e3 * ((vars.PN.s + vars.PN.dead_s) / fC_pn) / that.DM_stem();
 
     };
 
@@ -558,7 +534,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * ((vars.PN.l + vars.PN.dead_l + vars.PN.s + vars.PN.dead_s) / fC_pn) / (that.dwt_leaf() + that.dwt_stem());
+      return 1e3 * ((vars.PN.l + vars.PN.dead_l + vars.PN.s + vars.PN.dead_s) / fC_pn) / (that.DM_leaf() + that.DM_stem());
 
     };
 
@@ -567,7 +543,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * vars.AH.l / (that.dwt_leaf() + vars.AH.l);
+      return 1e3 * vars.AH.l / (that.DM_leaf() + vars.AH.l);
 
     };
 
@@ -577,7 +553,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * vars.AH.s / (that.dwt_stem() + vars.AH.s);
+      return 1e3 * vars.AH.s / (that.DM_stem() + vars.AH.s);
 
     };
 
@@ -586,7 +562,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var vars = that.vars;
 
-      return 1e3 * (vars.AH.l + vars.AH.s) / (that.dwt_leaf() + vars.AH.l + that.dwt_stem() + vars.AH.s);
+      return 1e3 * (vars.AH.l + vars.AH.s) / (that.DM_leaf() + vars.AH.l + that.DM_stem() + vars.AH.s);
 
     };
 
@@ -602,7 +578,7 @@ var Grass = function (seedDate, harvestDates, species) {
         (
           (SC.live_l_1 + SC.live_l_2 + SC.live_l_3 + SC.dead_l + SC.live_s_1 + SC.live_s_2 + SC.live_s_3 + SC.dead_s) / 
           fC_sc
-        ) / that.dwt_shoot()
+        ) / that.DM_shoot()
       );
 
       if (that.isLegume)
@@ -717,183 +693,201 @@ var Grass = function (seedDate, harvestDates, species) {
     };
 
 
-    this.dW_dwt_leaf = function () {
+    this.dDM_leaf = function () {
 
-      var dSC = that.vars.dSC
-        , dNC = that.vars.dNC
-        , dPN = that.vars.dPN
+      var vars = that.vars 
+        , dSC = vars.dSC
+        , dNC = vars.dNC
+        , dPN = vars.dPN
+        , dAH = vars.dAH
         ;
 
       return (
-        /* convert leaf kg C to kg d.wt incl. ashes TODO: ashes */
         (dSC.live_l_1 + dSC.live_l_2 + dSC.live_l_3 + dSC.dead_l) / fC_sc + 
-        dNC.l / fC_nc + 
-        dPN.l / fC_pn
+        (dNC.l + dNC.dead_l) / fC_nc + 
+        (dPN.l + dPN.dead_l) / fC_pn +
+        dAH.l
       ); 
 
     };
 
 
-    this.dW_dwt_stem = function () {
+    this.dDM_stem = function () {
 
-      var dSC = that.vars.dSC
-        , dNC = that.vars.dNC
-        , dPN = that.vars.dPN
+      var vars = that.vars 
+        , dSC = vars.dSC
+        , dNC = vars.dNC
+        , dPN = vars.dPN
+        , dAH = vars.dAH
         ;
 
       return (
-        /* convert stem kg C to kg d.wt incl. ashes TODO: ashes */
         (dSC.live_s_1 + dSC.live_s_2 + dSC.live_s_3 + dSC.dead_s) / fC_sc + 
-        dNC.s / fC_nc + 
-        dPN.s / fC_pn
+        (dNC.s + dNC.dead_s) / fC_nc + 
+        (dPN.s + dPN.dead_s) / fC_pn +
+        dAH.s
       ); 
 
     };
 
 
-    this.dW_dwt_root = function () {
+    this.dDM_root = function () {
 
-      var dSC = that.vars.dSC
-        , dNC = that.vars.dNC
-        , dPN = that.vars.dPN
+      var vars = that.vars 
+        , dSC = vars.dSC
+        , dNC = vars.dNC
+        , dPN = vars.dPN
+        , dAH = vars.dAH
         ;
 
-        /* convert root kg C to kg d.wt incl. ashes TODO: ashes */
-      return dSC.r / fC_sc + dNC.r / fC_nc + dPN.r / fC_pn;
+      return dSC.r / fC_sc + dNC.r / fC_nc + dPN.r / fC_pn + dAH.r;
 
     };
 
 
-    this.dW_dwt_shoot = function () {
+    this.dDM_shoot = function () {
 
-      return that.dW_dwt_leaf() + that.dW_dwt_stem();
-
-    };
-
-    this.W_dwt_litter = function () {
-
-      var Λ_litter = that.vars.Λ_litter;
-
-      return Λ_litter.sc / fC_sc + Λ_litter.pn / fC_pn;
+      return that.dDM_leaf() + that.dDM_stem();
 
     };
 
 
-    this.dwt_shoot = function () {
+    this.DM_shoot = function () {
 
-      return (
-        that.dwt_live_leaf() + that.dwt_dead_leaf() +
-        that.dwt_live_stem() + that.dwt_dead_stem()
-      );
+      return that.DM_leaf() + that.DM_stem();
 
     };
 
 
-    /* dwt live leaf [kg (leaf) m-2] */
-    this.dwt_live_leaf = function () {
+    /* live leaf [kg (DM) m-2] */
+    this.DM_live_leaf = function () {
 
-      var SC = that.vars.SC
-        , NC = that.vars.NC
-        , PN = that.vars.PN
+      var vars = that.vars
+        , SC = vars.SC
+        , NC = vars.NC
+        , PN = vars.PN
+        , AH = vars.AH
         ;
 
       return (
-        /* convert leaf kg C to kg d.wt incl. ashes TODO: ashes */
         (SC.live_l_1 + SC.live_l_2 + SC.live_l_3) / fC_sc + 
         NC.l / fC_nc + 
-        PN.l / fC_pn
+        PN.l / fC_pn +
+        AH.l
       );  
 
     };
 
 
-    this.dwt_leaf = function () {
+    this.DM_leaf = function () {
 
-      var SC = that.vars.SC
-        , NC = that.vars.NC
-        , PN = that.vars.PN
-        , PN_dead = that.vars.PN_dead
-        , NC_dead = that.vars.NC_dead
+      var vars = that.vars
+        , SC = vars.SC
+        , NC = vars.NC
+        , PN = vars.PN
+        , AH = vars.AH
         ;
 
       return (
-        /* convert leaf kg C to kg d.wt incl. ashes TODO: ashes */
         (SC.live_l_1 + SC.live_l_2 + SC.live_l_3 + SC.dead_l) / fC_sc + 
         (NC.l + NC.dead_l) / fC_nc +
-        (PN.l + PN.dead_l) / fC_pn
+        (PN.l + PN.dead_l) / fC_pn +
+        AH.l + AH.dead_l
       );  
 
     };
 
 
-    this.dwt_dead_leaf = function () {
+    this.DM_dead_leaf = function () {
+
+      var vars = that.vars
+        , SC = vars.SC
+        , NC = vars.NC
+        , PN = vars.PN
+        , AH = vars.AH
+        ;
 
       return (
-        that.vars.SC.dead_l / fC_sc + 
-        that.vars.PN.dead_l / fC_pn + 
-        that.vars.NC.dead_l / fC_nc
-      ); 
+        SC.dead_l / fC_sc + 
+        NC.dead_l / fC_nc +
+        PN.dead_l / fC_pn +
+        AH.dead_l
+      );  
 
     };
 
 
-    /* dwt_stem [kg m-2] */
-    this.dwt_live_stem = function () {
+    this.DM_live_stem = function () {
 
-      var SC = that.vars.SC
-        , NC = that.vars.NC
-        , PN = that.vars.PN
+      var vars = that.vars
+        , SC = vars.SC
+        , NC = vars.NC
+        , PN = vars.PN
+        , AH = vars.AH
         ;
 
       return (
-        /* convert leaf kg C to kg d.wt incl. ashes TODO: ashes */
         (SC.live_s_1 + SC.live_s_2 + SC.live_s_3) / fC_sc + 
         NC.s / fC_nc + 
-        PN.s / fC_pn
+        PN.s / fC_pn +
+        AH.s
       );   
 
     };
 
 
-    this.dwt_stem = function () {
+    this.DM_stem = function () {
 
-      var SC = that.vars.SC
-        , NC = that.vars.NC
-        , PN = that.vars.PN
-        , PN_dead = that.vars.PN_dead
-        , NC_dead = that.vars.NC_dead
+      var vars = that.vars
+        , SC = vars.SC
+        , NC = vars.NC
+        , PN = vars.PN
+        , AH = vars.AH
         ;
 
       return (
-        /* convert stem kg C to kg d.wt incl. ashes TODO: ashes */
         (SC.live_s_1 + SC.live_s_2 + SC.live_s_3 + SC.dead_s) / fC_sc + 
         (NC.s + NC.dead_s) / fC_nc +
-        (PN.s + PN.dead_s) / fC_pn
+        (PN.s + PN.dead_s) / fC_pn +
+        AH.s + AH.dead_s
       ); 
 
     };
 
 
-    this.dwt_dead_stem = function () {
+    this.DM_dead_stem = function () {
+
+      var vars = that.vars
+        , SC = vars.SC
+        , NC = vars.NC
+        , PN = vars.PN
+        , AH = vars.AH
+        ;
 
       return (
-        that.vars.SC.dead_s / fC_sc + 
-        that.vars.PN.dead_s / fC_pn + 
-        that.vars.NC.dead_s / fC_nc
+        SC.dead_s / fC_sc + 
+        NC.dead_s / fC_nc +
+        PN.dead_s / fC_pn +
+        AH.dead_s
       ); 
 
     };
 
 
-    /* dwt_root [kg m-2] */
-    this.dwt_root = function () {
+    this.DM_root = function () {
 
-      var vars = that.vars;
+      var vars = that.vars
+        , SC = vars.SC
+        , NC = vars.NC
+        , PN = vars.PN
+        , AH = vars.AH
+        ;
 
       return (
-        vars.SC.r / fC_sc +
-        vars.NC.r / fC_nc +
-        vars.PN.r / fC_pn
+        SC.r / fC_sc +
+        NC.r / fC_nc +
+        PN.r / fC_pn +
+        AH.r
       );
 
     };
@@ -902,10 +896,10 @@ var Grass = function (seedDate, harvestDates, species) {
     /* (3.83) L [m2 (leaf) m-2 (ground) leaf area (CO2 dependence not included (3.84)) */
     this.L = function () {
 
-      return that.cons.σ * that.dwt_live_leaf();
+      return that.cons.σ * that.DM_live_leaf();
       // test: SLA depends on N concentration: Plant Ecology By Ernst-Detlef Schulze, Erwin Beck, Klaus Müller-Hohenstein p. 359
       // Schulze. 1994. The influence of N2-fixation on the carbon balance of leguminous plants
-      // return (that.cons.σ + ((that.N_live_leaf() / that.dwt_live_leaf()) - that.cons.N_leaf.ref)) * that.dwt_live_leaf();
+      // return (that.cons.σ + ((that.N_live_leaf() / that.DM_live_leaf()) - that.cons.N_leaf.ref)) * that.DM_live_leaf();
 
     };
 
@@ -928,15 +922,6 @@ var Grass = function (seedDate, harvestDates, species) {
 
     };
 
-    /* carbon fraction of dwt */
-    this.F_C = function () {
-
-      return (
-        (that.C_live_shoot() + that.C_root()) / 
-        (that.dwt_live_leaf() + that.dwt_live_stem() + that.dwt_root())
-      );
-
-    };
 
     /* f_N_live_leaf  [kg (N) kg-1 (C)] */
     this.f_N_live_leaf = function () {
@@ -1068,147 +1053,116 @@ var Grass = function (seedDate, harvestDates, species) {
     }
 
 
-    mixture.N_req_opt = function () {
+    mixture.DM_dead_shoot = function () {
 
-      var N_req_opt = 0;
+      var DM_dead_shoot = 0;
 
       for (var s = 0, ps = this.length; s < ps; s++)
-        N_req_opt += this[s].N_req_opt();
+        DM_dead_shoot += this[s].DM_dead_leaf() + this[s].DM_dead_stem();
 
-      return N_req_opt;     
+      return DM_dead_shoot;
 
     };
 
 
-    mixture.dwt_dead_shoot = function () {
+    mixture.DM_live_shoot = function () {
 
-      var dwt_dead_shoot = 0;
-
-      for (var s = 0, ps = this.length; s < ps; s++)
-        dwt_dead_shoot += this[s].dwt_dead_leaf() + this[s].dwt_dead_stem();
-
-      return dwt_dead_shoot;
-
-    };
-
-
-    mixture.dwt_live_shoot = function () {
-
-      var dwt_live_shoot = 0;
+      var DM_live_shoot = 0;
 
       for (var s = 0, ps = this.length; s < ps; s++)
-        dwt_live_shoot += this[s].dwt_live_leaf() + this[s].dwt_live_stem()
+        DM_live_shoot += this[s].DM_live_leaf() + this[s].DM_live_stem()
 
-      return dwt_live_shoot;
+      return DM_live_shoot;
 
     };
     
 
-    mixture.dwt_shoot = function () {
+    mixture.DM_shoot = function () {
 
-      var dwt_shoot = 0;
-
-      for (var s = 0, ps = this.length; s < ps; s++) {
-        dwt_shoot += (
-          this[s].dwt_live_leaf() + this[s].dwt_dead_leaf() +
-          this[s].dwt_live_stem() + this[s].dwt_dead_stem()
-        );
-      }
-
-      return dwt_shoot;
-
-    };
-
-    mixture.dm_shoot = function () {
-
-      var dm_shoot = 0;
-
-      for (var s = 0, ps = this.length; s < ps; s++) {
-        dm_shoot += (
-          this[s].dwt_live_leaf() + this[s].dwt_dead_leaf() + this[s].vars.AH.l + 
-          this[s].dwt_live_stem() + this[s].dwt_dead_stem() + this[s].vars.AH.s
-        );
-      }
-
-      return dm_shoot;
-
-    };
-
-
-    /* total leaf d.wt [kg m-2] */
-    mixture.dwt_leaf = function () {
-
-      var dwt_leaf = 0;
+      var DM_shoot = 0;
 
       for (var s = 0, ps = this.length; s < ps; s++)
-        dwt_leaf += this[s].dwt_leaf()
+        DM_shoot += this[s].DM_leaf() + this[s].DM_stem();
 
-      return dwt_leaf;
+      return DM_shoot;
 
     };
 
 
-    /* total stem d.wt [kg m-2] */
-    mixture.dwt_stem = function () {
+    /* total leaf DM [kg m-2] */
+    mixture.DM_leaf = function () {
 
-      var dwt_stem = 0;
+      var DM_leaf = 0;
 
       for (var s = 0, ps = this.length; s < ps; s++)
-        dwt_stem += this[s].dwt_stem()
+        DM_leaf += this[s].DM_leaf()
 
-      return dwt_stem;
+      return DM_leaf;
 
     };
 
 
-    /* total root d.wt [kg m-2] */
-    mixture.dwt_root = function () {
+    /* total stem DM [kg m-2] */
+    mixture.DM_stem = function () {
 
-      var dwt_root = 0;
+      var DM_stem = 0;
 
       for (var s = 0, ps = this.length; s < ps; s++)
-        dwt_root += this[s].dwt_root()
+        DM_stem += this[s].DM_stem()
 
-      return dwt_root;
-
-    };
-
-
-    /* total leaf daily growth d.wt [kg m-2] */
-    mixture.dW_dwt_leaf = function () {
-
-      var dW_dwt_leaf = 0;
-
-      for (var p = 0, ps = this.length; p < ps; p++)
-        dW_dwt_leaf += this[p].dW_dwt_leaf();
-
-      return dW_dwt_leaf;
+      return DM_stem;
 
     };
 
 
-    /* total stem daily growth d.wt [kg m-2] */
-    mixture.dW_dwt_stem = function () {
+    /* total root DM [kg m-2] */
+    mixture.DM_root = function () {
 
-      var dW_dwt_stem = 0;
+      var DM_root = 0;
 
-      for (var p = 0, ps = this.length; p < ps; p++)
-        dW_dwt_stem += this[p].dW_dwt_stem();
+      for (var s = 0, ps = this.length; s < ps; s++)
+        DM_root += this[s].DM_root()
 
-      return dW_dwt_stem;
+      return DM_root;
 
     };
 
 
-    /* total root daily growth d.wt [kg m-2] */
-    mixture.dW_dwt_root = function () {
+    /* total leaf daily growth [kg (DM) m-2] */
+    mixture.dDM_leaf = function () {
 
-      var dW_dwt_root = 0;
+      var dDM_leaf = 0;
 
       for (var p = 0, ps = this.length; p < ps; p++)
-        dW_dwt_root += this[p].dW_dwt_root();
+        dDM_leaf += this[p].dDM_leaf();
 
-      return dW_dwt_root;
+      return dDM_leaf;
+
+    };
+
+
+    /* total stem daily growth DM [kg m-2] */
+    mixture.dDM_stem = function () {
+
+      var dDM_stem = 0;
+
+      for (var p = 0, ps = this.length; p < ps; p++)
+        dDM_stem += this[p].dDM_stem();
+
+      return dDM_stem;
+
+    };
+
+
+    /* total root daily growth DM [kg m-2] */
+    mixture.dDM_root = function () {
+
+      var dDM_root = 0;
+
+      for (var p = 0, ps = this.length; p < ps; p++)
+        dDM_root += this[p].dDM_root();
+
+      return dDM_root;
 
     };
 
@@ -1243,53 +1197,53 @@ var Grass = function (seedDate, harvestDates, species) {
     };
 
 
-    /* f_N_live_leaf_dwt [kg (N) kg-1 (OM) m-2] */
-    mixture.f_N_live_leaf_dwt = function () {
+    /* f_N_live_leaf_DM [kg (N) kg-1 (OM) m-2] */
+    mixture.f_N_live_leaf_DM = function () {
 
       var N_live_leaf = 0
-        , dwt_live_leaf = 0
+        , DM_live_leaf = 0
         ;
 
       for (var s = 0, ps = this.length; s < ps; s++) {
         N_live_leaf += this[s].N_live_leaf();
-        dwt_live_leaf += this[s].dwt_live_leaf();
+        DM_live_leaf += this[s].DM_live_leaf();
       }
 
-      return N_live_leaf / dwt_live_leaf;
+      return N_live_leaf / DM_live_leaf;
 
     };
 
 
-    /* f_N_live_stem_dwt [kg (N) kg-1 (OM) m-2] */
-    mixture.f_N_live_stem_dwt = function () {
+    /* f_N_live_stem_DM [kg (N) kg-1 (OM) m-2] */
+    mixture.f_N_live_stem_DM = function () {
 
       var N_live_stem = 0
-        , dwt_live_stem = 0
+        , DM_live_stem = 0
         ;
 
       for (var s = 0, ps = this.length; s < ps; s++) {
         N_live_stem += this[s].N_live_stem();
-        dwt_live_stem += this[s].dwt_live_stem();
+        DM_live_stem += this[s].DM_live_stem();
       }
 
-      return N_live_stem / dwt_live_stem;
+      return N_live_stem / DM_live_stem;
 
     };
 
 
-    /* f_N_root_dwt [kg (N) kg-1 (OM) m-2] */
-    mixture.f_N_root_dwt = function () {
+    /* f_N_root_DM [kg (N) kg-1 (OM) m-2] */
+    mixture.f_N_root_DM = function () {
 
       var N_root = 0
-        , dwt_root = 0
+        , DM_root = 0
         ;
 
       for (var s = 0, ps = this.length; s < ps; s++) {
         N_root += this[s].N_root();
-        dwt_root += this[s].dwt_root();
+        DM_root += this[s].DM_root();
       }
 
-      return N_root / dwt_root;
+      return N_root / DM_root;
 
     };
 

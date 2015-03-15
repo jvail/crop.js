@@ -558,7 +558,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         , C_total = species.C_live_shoot() + species.C_root()
         , N_avail = species.vars.N_avail
         , isC4 = species.isC4
-        , F_C = species.F_C()
         ;
 
       // vars.R_m = R_m(T, species.N_live_shoot() / species.C_live_shoot(), cons.N_leaf.ref, C_total);
@@ -919,6 +918,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     TODO: 
       - include influence of defoliation (4.21c) 
       - trampling by animals (4.16m)
+      - dead dAH
   */
   function partitioning(T) {
 
@@ -1222,7 +1222,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         vars.GDD = 0;
         mixture.isRegrowth = false;
       } else {  
-        if (mixture[s].dwt_leaf() / mixture[s].dwt_stem() < 0.5) /* TODO: end of growth cycle? */
+        if (mixture[s].DM_leaf() / mixture[s].DM_stem() < 0.5) /* TODO: end of growth cycle? */
           vars.GDD = 0;
         else
           vars.GDD += max(0, T - 5);
@@ -1290,14 +1290,14 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       }
     }
 
-    // var dwt_root = mixture.dwt_root() /* [kg (d.wt) m-2] */
+    // var DM_root = mixture.DM_root() /* [kg (d.wt) m-2] */
     //   , C_root = mixture.C_root()      [kg (C) m-2] 
     //   , pc_SpecificRootLength = 300   /* [m kg-1 (d.wt)] is identical for all crops in MONICA db */
     //   ;
 
     /* set root density: workaround to use MONICAS water uptake routines */
     // for (var l = 0; l < vs_NumberOfLayers; l++)
-    //   vc_RootDensity[l] = (1 / vs_LayerThickness) * pc_SpecificRootLength * W_r_sum[l] * dwt_root / C_root;
+    //   vc_RootDensity[l] = (1 / vs_LayerThickness) * pc_SpecificRootLength * W_r_sum[l] * DM_root / C_root;
 
   };
 
@@ -1571,13 +1571,13 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var get_OrganGrowthIncrement = function (i_Organ) {
     
     if (i_Organ === ROOT)
-      return mixture.dW_dwt_root() * SQM_PER_HA;
+      return mixture.dDM_root() * SQM_PER_HA;
 
     if (i_Organ === SHOOT)
-      return mixture.dW_dwt_stem() * SQM_PER_HA;
+      return mixture.dDM_stem() * SQM_PER_HA;
 
     if (i_Organ === LEAF)
-      return mixture.dW_dwt_leaf() * SQM_PER_HA;
+      return mixture.dDM_leaf() * SQM_PER_HA;
     
     return 0;
 
@@ -1596,13 +1596,13 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var get_OrganBiomass = function (i_Organ) {
 
     if (i_Organ === ROOT)
-      return mixture.dwt_root() * SQM_PER_HA;
+      return mixture.DM_root() * SQM_PER_HA;
 
     if (i_Organ === SHOOT)
-      return mixture.dwt_stem() * SQM_PER_HA;
+      return mixture.DM_stem() * SQM_PER_HA;
 
     if (i_Organ === LEAF)
-      return mixture.dwt_leaf() * SQM_PER_HA;
+      return mixture.DM_leaf() * SQM_PER_HA;
     
     return 0;
 
@@ -1834,10 +1834,10 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
 
   var get_TranspirationDeficit = function () {
-    var dm_total = mixture.dwt_root() + mixture.dwt_stem() + mixture.dwt_leaf();
+    var dm_total = mixture.DM_root() + mixture.DM_stem() + mixture.DM_leaf();
     var stress = 0;
     for (var i = 0; i < numberOfSpecies; i++)
-      stress += mixture[i].vars.Ω_water * (mixture[i].dwt_root() + mixture[i].dwt_stem() + mixture[i].dwt_leaf()) / dm_total;
+      stress += mixture[i].vars.Ω_water * (mixture[i].DM_root() + mixture[i].DM_stem() + mixture[i].DM_leaf()) / dm_total;
     /* TODO: normalize (0-1) */
     return stress;
   };
@@ -1851,10 +1851,10 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var get_CropNRedux = function () {
     if (numberOfSpecies === 1)
       return mixture[0].vars.Ω_N;
-    var dm_total = mixture.dwt_root() + mixture.dwt_stem() + mixture.dwt_leaf();
+    var dm_total = mixture.DM_root() + mixture.DM_stem() + mixture.DM_leaf();
     var stress = 0;
     for (var i = 0; i < numberOfSpecies; i++)
-      stress += mixture[i].vars.Ω_N * (mixture[i].dwt_root() + mixture[i].dwt_stem() + mixture[i].dwt_leaf()) / dm_total;
+      stress += mixture[i].vars.Ω_N * (mixture[i].DM_root() + mixture[i].DM_stem() + mixture[i].DM_leaf()) / dm_total;
     /* TODO: normalize (0-1) */
     return stress;
   };
@@ -1881,7 +1881,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
 
   var get_AbovegroundBiomass = function () {
-    return mixture.dwt_shoot();
+    return mixture.DM_shoot();
   };
 
 
@@ -1958,7 +1958,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
 
   var get_totalBiomass = function () { 
-    return mixture.dwt_shoot() + mixture.dwt_root(); 
+    return mixture.DM_shoot() + mixture.DM_root(); 
   };
 
   // new interface
@@ -1992,8 +1992,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   };
 
   /* [kg (dwt) ha-1] */
-  var get_dwt_dead_shoot = function () {
-    return mixture.dwt_dead_shoot() * SQM_PER_HA;
+  var get_DM_dead_shoot = function () {
+    return mixture.DM_dead_shoot() * SQM_PER_HA;
   };
 
   /* [kg (N) kg-1 (C)] */
@@ -2002,18 +2002,18 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   };
 
   /* [kg (N) kg-1 (OM)] */
-  var f_N_live_leaf_dwt = function () {
-    return mixture.f_N_live_leaf_dwt();
+  var f_N_live_leaf_DM = function () {
+    return mixture.f_N_live_leaf_DM();
   };
 
   /* [kg (N) kg-1 (OM)] */
-  var f_N_live_stem_dwt = function () {
-    return mixture.f_N_live_stem_dwt();
+  var f_N_live_stem_DM = function () {
+    return mixture.f_N_live_stem_DM();
   };
 
   /* [kg (N) kg-1 (OM)] */
-  var f_N_root_dwt = function () {
-    return mixture.f_N_root_dwt();
+  var f_N_root_DM = function () {
+    return mixture.f_N_root_DM();
   };
 
   /* 
@@ -2024,7 +2024,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     var dm = [];
     // default residual 0.1 [kg (DM) ha-1] ~ 1 [t ha-1]
     var dm_shoot_residual = residual || 0.1;
-    var dm_shoot = mixture.dwt_shoot();
+    var dm_shoot = mixture.DM_shoot();
     for (var s = 0; s < numberOfSpecies; s++) {
       if (dm_shoot <= dm_shoot_residual) {
         dm[s] = 0;
@@ -2040,8 +2040,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           ;
 
         dm[s] = SQM_PER_HA * (
-          species.dwt_leaf() * (1 - f_keep) +
-          species.dwt_stem() * (1 - f_keep)/* +
+          species.DM_leaf() * (1 - f_keep) +
+          species.DM_stem() * (1 - f_keep)/* +
           AH.l * (1 - f_keep) +
           AH.s * (1 - f_keep)*/
         );
@@ -2079,8 +2079,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     //   var h = species.h();
     //   /* we keep a minimum of 1 % if height = 0 */
     //   var f_keep = 1 - ((h === 0) ? 0.01 : max(0.01, (h - height) / h));
-    //   var leaf_dwt = species.dwt_leaf() * (1 - f_keep); 
-    //   var stem_dwt = species.dwt_stem() * (1 - f_keep);
+    //   var leaf_DM = species.DM_leaf() * (1 - f_keep); 
+    //   var stem_DM = species.DM_stem() * (1 - f_keep);
     //   // update pools
     //   vars.SC.live_l_1 *= f_keep;
     //   vars.SC.live_l_2 *= f_keep; 
@@ -2096,12 +2096,12 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     //   vars.PN.l *= f_keep;
     //   vars.PN.s *= f_keep;
 
-    //   dm[s] = (leaf_dwt + stem_dwt) * SQM_PER_HA; 
+    //   dm[s] = (leaf_DM + stem_DM) * SQM_PER_HA; 
       
     //   if (DEBUG) {
     //     debug('f_keep', f_keep);
-    //     debug('leaf_dwt', leaf_dwt);
-    //     debug('stem_dwt', stem_dwt);
+    //     debug('leaf_DM', leaf_DM);
+    //     debug('stem_DM', stem_DM);
     //   }
     // }
 
@@ -2126,10 +2126,10 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var Ω_water = function () {
     if (numberOfSpecies === 1)
       return mixture[0].vars.Ω_water;
-    var dm_total = mixture.dwt_root() + mixture.dwt_stem() + mixture.dwt_leaf();
+    var dm_total = mixture.DM_root() + mixture.DM_stem() + mixture.DM_leaf();
     var stress = 0;
     for (var i = 0; i < numberOfSpecies; i++)
-      stress += mixture[i].vars.Ω_water * (mixture[i].dwt_root() + mixture[i].dwt_stem() + mixture[i].dwt_leaf()) / dm_total;
+      stress += mixture[i].vars.Ω_water * (mixture[i].DM_root() + mixture[i].DM_stem() + mixture[i].DM_leaf()) / dm_total;
     /* TODO: normalize (0-1) */
     return stress;
   };
@@ -2252,9 +2252,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var NDFD_leaf = function () {
 
     var NDFD = 0;
-    var dm_leaf = mixture.dwt_leaf();
+    var dm_leaf = mixture.DM_leaf();
     for (var s = 0; s < numberOfSpecies; s++)
-      NDFD += mixture[s].dwt_leaf() / dm_leaf * mixture[s].NDFD_leaf();
+      NDFD += mixture[s].DM_leaf() / dm_leaf * mixture[s].NDFD_leaf();
 
     return NDFD;
 
@@ -2263,9 +2263,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var NDFD_stem = function () {
 
     var NDFD = 0;
-    var dm_stem = mixture.dwt_stem();
+    var dm_stem = mixture.DM_stem();
     for (var s = 0; s < numberOfSpecies; s++)
-      NDFD += mixture[s].dwt_stem() / dm_stem * mixture[s].NDFD_stem();
+      NDFD += mixture[s].DM_stem() / dm_stem * mixture[s].NDFD_stem();
 
     return NDFD;
 
@@ -2274,9 +2274,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var NDF_leaf = function () {
 
     var NDF = 0;
-    var dm_leaf = mixture.dwt_leaf();
+    var dm_leaf = mixture.DM_leaf();
     for (var s = 0; s < numberOfSpecies; s++)
-      NDF += mixture[s].dwt_leaf() / dm_leaf * mixture[s].NDF_leaf();
+      NDF += mixture[s].DM_leaf() / dm_leaf * mixture[s].NDF_leaf();
 
     return NDF;
 
@@ -2285,9 +2285,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var NDF_stem = function () {
 
     var NDF = 0;
-    var dm_stem = mixture.dwt_stem();
+    var dm_stem = mixture.DM_stem();
     for (var s = 0; s < numberOfSpecies; s++)
-      NDF += mixture[s].dwt_stem() / dm_stem * mixture[s].NDF_stem();
+      NDF += mixture[s].DM_stem() / dm_stem * mixture[s].NDF_stem();
 
     return NDF;
 
@@ -2296,9 +2296,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var NFC_leaf = function () {
 
     var NFC = 0;
-    var dm_leaf = mixture.dwt_leaf();
+    var dm_leaf = mixture.DM_leaf();
     for (var s = 0; s < numberOfSpecies; s++)
-      NFC += mixture[s].dwt_leaf() / dm_leaf * mixture[s].NFC_leaf();
+      NFC += mixture[s].DM_leaf() / dm_leaf * mixture[s].NFC_leaf();
 
     return NFC;
 
@@ -2307,9 +2307,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var NFC_stem = function () {
 
     var NFC = 0;
-    var dm_stem = mixture.dwt_stem();
+    var dm_stem = mixture.DM_stem();
     for (var s = 0; s < numberOfSpecies; s++)
-      NFC += mixture[s].dwt_stem() / dm_stem * mixture[s].NFC_stem();
+      NFC += mixture[s].DM_stem() / dm_stem * mixture[s].NFC_stem();
 
     return NFC;
 
@@ -2318,9 +2318,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var CP_leaf = function () {
 
     var CP = 0;
-    var dm_leaf = mixture.dwt_leaf();
+    var dm_leaf = mixture.DM_leaf();
     for (var s = 0; s < numberOfSpecies; s++)
-      CP += mixture[s].dwt_leaf() / dm_leaf * mixture[s].CP_leaf();
+      CP += mixture[s].DM_leaf() / dm_leaf * mixture[s].CP_leaf();
 
     return CP;
 
@@ -2329,9 +2329,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var CP_stem = function () {
 
     var CP = 0;
-    var dm_stem = mixture.dwt_stem();
+    var dm_stem = mixture.DM_stem();
     for (var s = 0; s < numberOfSpecies; s++)
-      CP += mixture[s].dwt_stem() / dm_stem * mixture[s].CP_stem();
+      CP += mixture[s].DM_stem() / dm_stem * mixture[s].CP_stem();
 
     return CP;
 
@@ -2340,9 +2340,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var CP_shoot = function () {
 
     var CP = 0;
-    var dm_shoot = mixture.dwt_shoot();
+    var dm_shoot = mixture.DM_shoot();
     for (var s = 0; s < numberOfSpecies; s++)
-      CP += mixture[s].dwt_shoot() / dm_shoot * mixture[s].CP_shoot();
+      CP += mixture[s].DM_shoot() / dm_shoot * mixture[s].CP_shoot();
 
     return CP;
 
@@ -2351,9 +2351,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var ASH_leaf = function () {
 
     var ASH = 0;
-    var dm_leaf = mixture.dwt_leaf();
+    var dm_leaf = mixture.DM_leaf();
     for (var s = 0; s < numberOfSpecies; s++)
-      ASH += mixture[s].dwt_leaf() / dm_leaf * mixture[s].ASH_leaf();
+      ASH += mixture[s].DM_leaf() / dm_leaf * mixture[s].ASH_leaf();
 
     return ASH;
 
@@ -2362,9 +2362,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var ASH_stem = function () {
 
     var ASH = 0;
-    var dm_stem = mixture.dwt_stem();
+    var dm_stem = mixture.DM_stem();
     for (var s = 0; s < numberOfSpecies; s++)
-      ASH += mixture[s].dwt_stem() / dm_stem * mixture[s].ASH_stem();
+      ASH += mixture[s].DM_stem() / dm_stem * mixture[s].ASH_stem();
 
     return ASH;
 
@@ -2373,9 +2373,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var ASH_shoot = function () {
 
     var ASH = 0;
-    var dm_shoot = mixture.dwt_shoot();
+    var dm_shoot = mixture.DM_shoot();
     for (var s = 0; s < numberOfSpecies; s++)
-      ASH += mixture[s].dwt_shoot() / dm_shoot * mixture[s].ASH_shoot();
+      ASH += mixture[s].DM_shoot() / dm_shoot * mixture[s].ASH_shoot();
 
     return ASH;
 
@@ -2384,9 +2384,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var CF_shoot = function () {
 
     var CF = 0;
-    var dm_shoot = mixture.dwt_shoot();
+    var dm_shoot = mixture.DM_shoot();
     for (var s = 0; s < numberOfSpecies; s++)
-      CF += mixture[s].dwt_shoot() / dm_shoot * mixture[s].CF_shoot();
+      CF += mixture[s].DM_shoot() / dm_shoot * mixture[s].CF_shoot();
 
     return CF;
 
@@ -2436,8 +2436,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
     var leaf_dm = 0, stem_dm = 0;
     for (var s = 0; s < numberOfSpecies; s++) {
-      leaf_dm += mixture[s].dwt_leaf();
-      stem_dm += mixture[s].dwt_stem();
+      leaf_dm += mixture[s].DM_leaf();
+      stem_dm += mixture[s].DM_stem();
     }
 
     return leaf_dm / stem_dm;
@@ -2465,11 +2465,11 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     , get_P_g: get_P_g
     , get_G: get_G
     , get_R_m: get_R_m
-    , get_dwt_dead_shoot: get_dwt_dead_shoot
+    , get_DM_dead_shoot: get_DM_dead_shoot
     , get_f_N_live_leaf: get_f_N_live_leaf
-    , f_N_live_leaf_dwt: f_N_live_leaf_dwt
-    , f_N_live_stem_dwt: f_N_live_stem_dwt
-    , f_N_root_dwt: f_N_root_dwt
+    , f_N_live_leaf_DM: f_N_live_leaf_DM
+    , f_N_live_stem_DM: f_N_live_stem_DM
+    , f_N_root_DM: f_N_root_DM
     , removal_dm: removal_dm
     , height: height
     , LAI: LAI
