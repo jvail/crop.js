@@ -2022,7 +2022,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   var removal_dm = function (residual) {
 
     var dm = [];
-    // default residual 0.1 [kg (DM) ha-1] ~ 1 [t ha-1]
+    // default residual 0.1 [kg (DM) m-2] ~ 1 [t ha-1]
     var dm_shoot_residual = residual || 0.1;
     var dm_shoot = mixture.DM_shoot();
     for (var s = 0; s < numberOfSpecies; s++) {
@@ -2055,13 +2055,19 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         SC.live_s_2 *= f_keep; 
         SC.live_s_3 *= f_keep; 
         SC.dead_s   *= f_keep;
-        // TODO: add dead PN&NC pools
+
         NC.l *= f_keep;
+        NC.dead_l *= f_keep;
         NC.s *= f_keep;
+        NC.dead_s *= f_keep;
         PN.l *= f_keep;
+        PN.dead_l *= f_keep;
         PN.s *= f_keep;
+        PN.dead_s *= f_keep;
         AH.l *= f_keep;
+        AH.dead_l *= f_keep;
         AH.s *= f_keep;
+        AH.dead_s *= f_keep;
 
       }
 
