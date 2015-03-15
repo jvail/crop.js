@@ -1241,8 +1241,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     set and update variables:
     mixture.f_r root  fration per species and soil layer
     f_r_sum   root fraction sum per species
-    W_r       root kg C m-2 per species and soil layer
-    W_r_sum   root kg C m-2 sum per soil layer
+    W_r       root kg DM m-2 per species and soil layer
+    W_r_sum   root kg DM m-2 sum per soil layer
   */
   function rootDistribution() {
 
@@ -1255,7 +1255,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       /* TODO: move k_sum calc. somewhere else */
       species.vars.τ++;
       species.vars.k_sum = min(1, species.vars.τ / species.cons.τ_veg);
-      var C_root = species.C_root();
+      var DM_root = species.DM_root();
       /* Johnson 2008, eq. 4.19b */ 
       species.vars.d_r = 0.05 + (species.cons.d_r_mx - 0.05) * species.vars.k_sum;
 
@@ -1277,9 +1277,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         mixture.f_r_sum[s] += mixture.f_r[s][l];
       }
 
-      /* distribute root C to each soil layer */
+      /* distribute root DM to each soil layer */
       for (var l = 0; l < vs_NumberOfLayers; l++)
-        mixture.W_r[s][l] = C_root * mixture.f_r[s][l] / mixture.f_r_sum[s];
+        mixture.W_r[s][l] = DM_root * mixture.f_r[s][l] / mixture.f_r_sum[s];
         
     } // for each species
 
@@ -1310,14 +1310,14 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   function nitrogenUptake() {
 
     var d_r_mx = mixture.d_r_mx(); // max. root depth [m]
-    var dwt2carbon = 1 / 0.45; // TODO: calculate real conversion per species
+    // var dwt2carbon = 1 / 0.45; // TODO: calculate real conversion per species
 
     for (var l = 0; l < vs_NumberOfLayers; l++) {
       var layer = soilColumn[l];
       /* kg (N) m-3 / kg (soil) m-3 = kg (N) kg-1 (soil) */
       var N = (layer.get_SoilNO3() + layer.get_SoilNH4()) / layer.vs_SoilBulkDensity();
       /* Johnson 2013, eq. 3.69 [kg (soil) kg-1 (root C)] TODO: error in doc. ? suppose it is per kg (root C) instead per kg (root d.wt) */
-      var ξ_N = 200 * dwt2carbon; // convert from dwt to carbon TODO: value? unit? allow per species
+      var ξ_N = 200; //* dwt2carbon; // convert from dwt to carbon TODO: value? unit? allow per species
       /* total uptake from layer must not exceed layer N */
       mixture.N_up_sum[l] = min((layer.get_SoilNO3() + layer.get_SoilNH4()) * vs_LayerThickness, ξ_N * N * mixture.W_r_sum[l]);
     }
@@ -2450,18 +2450,18 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
   };
 
-  var layer_root_C = function (layerIdx) {
+  var layer_root_DM = function (layerIdx) {
 
-    var C = 0;
+    var DM = 0;
     for (var s = 0; s < numberOfSpecies; s++)
-      C += mixture.W_r[s][layerIdx];
-    return C;
+      DM += mixture.W_r[s][layerIdx];
+    return DM;
 
   };
 
   return {
       step: step
-    , layer_root_C: layer_root_C
+    , layer_root_DM: layer_root_DM
     , get_P_g: get_P_g
     , get_G: get_G
     , get_R_m: get_R_m

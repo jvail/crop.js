@@ -1386,8 +1386,8 @@ var Grass = function (seedDate, harvestDates, species) {
 
     mixture.f_r = []; /* root fraction per species and soil layer */
     mixture.f_r_sum = [];  /* root fraction sum per species TODO: find a way to avoid keeping the sum */
-    mixture.W_r = [];  /* root kg C m-2 per species and soil layer */
-    mixture.W_r_sum = []; /* root kg C m-2 sum per soil layer */
+    mixture.W_r = [];  /* root kg DM m-2 per species and soil layer */
+    mixture.W_r_sum = []; /* root kg DM m-2 sum per soil layer */
     mixture.N_up = []; /* N uptake kg N m-2 per species and soil layer */
     mixture.N_up_sum = []; /* N uptake kg N m-2 per soil layer */
     mixture.E_T = []; /* actual transpiration per species and layer */
