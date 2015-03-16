@@ -89,16 +89,16 @@ var Grass = function (seedDate, harvestDates, species) {
           , γ_α: 6              // [°C]                        CO2 & T response parameter
         }
       , resp: {                 // respiration
-            m_ref: 0.025        // maintenance coeficient at reference temperature
+            m_ref: 0.025        // [day-1]                     maintenance coeficient at reference temperature
           , T_ref: 20
           , T_m_mn: 3
-          , λ_N_up: 0.6         // [kg (C) kg-1 (N)]          N uptake respiration coefficent
-          , λ_N_fix: 6          // [kg (C) kg-1 (N)]          N fixation respiration coefficent
+          , λ_N_up: 0.6         // [kg (C) kg-1 (N)]           N uptake respiration coefficent
+          , λ_N_fix: 6          // [kg (C) kg-1 (N)]           N fixation respiration coefficent
         }
       , part: {                 // partitioning
-            ρ_shoot_ref: 0.75   // [-]                        reference shoot partitioning fraction
-          , ρ_l_max: 0.7        // [-]                        fraction partitioned to leaf
-          , GDD_flower: 500     // [C° d]                     growing degree days till flowering
+            ρ_shoot_ref: 0.75   // [-]                         reference shoot partitioning fraction
+          , ρ_l_max: 0.7        // [-]                         fraction partitioned to leaf
+          , GDD_flower: 500     // [C° d]                      growing degree days till flowering
         }
        /* TODO: remove or rename: */
       , N_leaf: {
@@ -896,7 +896,7 @@ var Grass = function (seedDate, harvestDates, species) {
     /* (3.83) L [m2 (leaf) m-2 (ground) leaf area (CO2 dependence not included (3.84)) */
     this.L = function () {
 
-      return that.cons.σ * that.DM_live_leaf();
+      return that.cons.σ * that.DM_leaf();
       // test: SLA depends on N concentration: Plant Ecology By Ernst-Detlef Schulze, Erwin Beck, Klaus Müller-Hohenstein p. 359
       // Schulze. 1994. The influence of N2-fixation on the carbon balance of leguminous plants
       // return (that.cons.σ + ((that.N_live_leaf() / that.DM_live_leaf()) - that.cons.N_leaf.ref)) * that.DM_live_leaf();
@@ -905,11 +905,11 @@ var Grass = function (seedDate, harvestDates, species) {
 
 
     /* (3.101) h [m] height relationship between canopy height and leaf area */
-    this.h = function () {
+    this.h_ = function () {
 
       var h = 0
         , cons = that.cons
-        , L = that.L() // TODO: ?
+        , L = that.L() // TODO: scale with initial coverage?
         , h_m = cons.h_m
         , L_half = cons.L_half
         , ξ = 0.9 // fixed curvatur parameter
@@ -917,6 +917,23 @@ var Grass = function (seedDate, harvestDates, species) {
         ;
 
       h = 1 / (2 * ξ) * (α * L + h_m - sqrt(pow(α * L  + h_m, 2) - 4 * α * ξ * h_m * L)); 
+    
+      return h;
+
+    };
+
+    /* */
+    this.h = function () {
+
+      var h = 0
+        , cons = that.cons
+        , L = that.L() // TODO: ?
+        , h_m = cons.h_m
+        , L_5 = 1 // LAI at 5 cm height
+        , a = log((100 * h_m - 1) / (20 * h_m - 1)) / L_5 // curvatur parameter
+        ;
+
+      h = (0.01 * h_m) / (0.01 + (h_m - 0.01) * exp(-a * L));
     
       return h;
 

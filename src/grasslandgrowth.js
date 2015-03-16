@@ -570,7 +570,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         ;
       vars.R_m = R_m(T, N_live_leaf / C_live_leaf, cons.N_leaf.ref, C_live_leaf);
       vars.R_m += R_m(T, N_live_stem / C_live_stem, cons.N_leaf.ref * 0.5, C_live_stem);
-      vars.R_m += R_m(T, N_root / C_root, cons.N_leaf.ref * 0.5, C_root);
+      // vars.R_m += R_m(T, N_root / C_root, cons.N_leaf.ref * 0.5, C_root); // TODO: root maint. resp.?
 
       vars.R_N = R_N(species.vars.N_up, species.vars.N_fix);
       
@@ -2117,6 +2117,125 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
   };
 
+
+  /* 
+    array   [kg [DM] ha-1] 
+  */
+  var removal_by_height = function (h_residues) {
+
+    var dm = [];
+
+    for (var s = 0; s < numberOfSpecies; s++) {
+
+      var species = mixture[s];
+      var h = species.h();
+        debug('h <= h_residues', h <= h_residues);
+
+      if (h <= h_residues) {
+
+        dm[s] = 0;
+      
+      } else {
+
+        var vars = species.vars
+          , cons = species.cons
+          , SC = vars.SC
+          , NC = vars.NC
+          , PN = vars.PN
+          , AH = vars.AH
+          , h_m = cons.h_m
+          // , ξ = 0.9 // fixed curvatur parameter
+          // , L_half = cons.L_half
+          // , α = h_m * (2 - ξ) / (2 * L_half)
+          // , L_at_h = (h_residues * (h_residues * ξ - h_m)) / (α * (h_residues - h_m))
+          , L_5 = 1 // LAI at 5 cm height
+          , a = log((100 * h_m - 1) / (20 * h_m - 1)) / L_5 // curvatur parameter
+          , L_at_h_residues = log((h_residues - 100 * h_residues * h_m) / (h_residues - h_m)) / a
+          , L = species.L()
+          , f_keep_l = (species.DM_leaf() - ((L - L_at_h_residues) / cons.σ)) / species.DM_leaf()
+          , f_keep_s = h_residues / h 
+          , DM_yield_l = species.DM_leaf() * (1 - f_keep_l)
+          , DM_yield_s = species.DM_stem() * (1 - f_keep_s)
+          ;
+
+            debug('h', h);
+            debug('h_residues', h_residues);
+            debug('f_keep_l', f_keep_l);
+            debug('f_keep_s', f_keep_s);
+            debug('L_at_h_residues', L_at_h_residues);
+        dm[s] = SQM_PER_HA * (DM_yield_l + DM_yield_s);
+
+        // update pools
+        SC.live_l_1 *= f_keep_l;
+        SC.live_l_2 *= f_keep_l; 
+        SC.live_l_3 *= f_keep_l; 
+        SC.dead_l   *= f_keep_l;   
+        SC.live_s_1 *= f_keep_s; 
+        SC.live_s_2 *= f_keep_s; 
+        SC.live_s_3 *= f_keep_s; 
+        SC.dead_s   *= f_keep_s;
+
+        NC.l      *= f_keep_l;
+        NC.dead_l *= f_keep_l;
+        NC.s      *= f_keep_s;
+        NC.dead_s *= f_keep_s;
+        PN.l      *= f_keep_l;
+        PN.dead_l *= f_keep_l;
+        PN.s      *= f_keep_s;
+        PN.dead_s *= f_keep_s;
+        AH.l      *= f_keep_l;
+        AH.dead_l *= f_keep_l;
+        AH.s      *= f_keep_s;
+        AH.dead_s *= f_keep_s;
+
+        mixture[s].vars.GDD = 0;
+      }
+
+    }
+
+    // cut by height does not work very well with current height(LAI) implementation
+    // for (var s = 0; s < numberOfSpecies; s++) {
+    //   var species = mixture[s];
+    //   var vars = species.vars;
+    //   var SC = vars.SC;
+    //   var NC = vars.NC;
+    //   var PN = vars.PN;
+    //   var h = species.h();
+    //   /* we keep a minimum of 1 % if height = 0 */
+    //   var f_keep = 1 - ((h === 0) ? 0.01 : max(0.01, (h - height) / h));
+    //   var leaf_DM = species.DM_leaf() * (1 - f_keep); 
+    //   var stem_DM = species.DM_stem() * (1 - f_keep);
+    //   // update pools
+    //   vars.SC.live_l_1 *= f_keep;
+    //   vars.SC.live_l_2 *= f_keep; 
+    //   vars.SC.live_l_3 *= f_keep; 
+    //   vars.SC.dead_l   *= f_keep;   
+    //   vars.SC.live_s_1 *= f_keep; 
+    //   vars.SC.live_s_2 *= f_keep; 
+    //   vars.SC.live_s_3 *= f_keep; 
+    //   vars.SC.dead_s   *= f_keep;
+    //   // TODO: add dead PN&NC pools
+    //   vars.NC.l *= f_keep;
+    //   vars.NC.s *= f_keep;
+    //   vars.PN.l *= f_keep;
+    //   vars.PN.s *= f_keep;
+
+    //   dm[s] = (leaf_DM + stem_DM) * SQM_PER_HA; 
+      
+    //   if (DEBUG) {
+    //     debug('f_keep', f_keep);
+    //     debug('leaf_DM', leaf_DM);
+    //     debug('stem_DM', stem_DM);
+    //   }
+    // }
+
+    mixture.isRegrowth = true;
+
+    return dm;
+
+  };
+
+
   /* [m] */
   var height = function () {
     return mixture.h_mx();
@@ -2477,6 +2596,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     , f_N_live_stem_DM: f_N_live_stem_DM
     , f_N_root_DM: f_N_root_DM
     , removal_dm: removal_dm
+    , removal_by_height: removal_by_height
     , height: height
     , LAI: LAI
     , N_ass_add: N_ass_add
