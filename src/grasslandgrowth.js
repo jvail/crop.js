@@ -57,7 +57,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     T_mx  [C°]  maximum daily temperature
   */
   
-  function heighAndLowTempStress(T, T_mn, T_mx) {
+  function highAndLowTempStress(T, T_mn, T_mx) {
     
     for (var s = 0; s < numberOfSpecies; s++) {
 
@@ -112,7 +112,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
     }
 
-  } // heighAndLowTempStress
+  } // highAndLowTempStress
 
 
   /*
@@ -1224,7 +1224,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     transpiration(E_T_pot);
     
     /* set high and low temperature limiting factors */
-    heighAndLowTempStress(T, T_mn, T_mx);
+    highAndLowTempStress(T, T_mn, T_mx);
 
     /* set species.vars.P_g_day */
     grossPhotosynthesis(T, T_mn, T_mx, PPF, τ, C_amb, f_s);
