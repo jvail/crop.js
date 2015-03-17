@@ -80,6 +80,8 @@ var GeneralParameters = function () {
   this.ps_MaxMineralisationDepth = 0.4;
   this.pc_NitrogenResponseOn = true;
   this.pc_WaterDeficitResponseOn = true;
+  this.pc_LowTemperatureStressResponseOn = false;
+  this.pc_HighTemperatureStressResponseOn = true;
   this.pc_EmergenceFloodingControlOn = false;
   this.pc_EmergenceMoistureControlOn = false;
 

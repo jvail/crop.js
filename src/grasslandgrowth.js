@@ -21,6 +21,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     , vc_accumulatedETa = 0
     , pc_NitrogenResponseOn = gps.pc_NitrogenResponseOn
     , waterDeficitResponseOn = gps.pc_WaterDeficitResponseOn
+    , lowTemperatureStressResponseOn = gps.pc_LowTemperatureStressResponseOn
+    , highTemperatureStressResponseOn = gps.pc_HighTemperatureStressResponseOn
     , vc_NetPrecipitation = 0
     , vc_InterceptionStorage = 0
     , vc_ReferenceEvapotranspiration = 0
@@ -73,41 +75,45 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         ;
 
       /* low temp. stress and recovery */
-      if (T_mn < T_mn_high) {
-      
-        if (T_mn <= T_mn_low)
-          ξ_T_low = 0;
-        else
-          ξ_T_low = (T_mn - T_mn_low) / (T_mn_high - T_mn_low);
+      if (lowTemperatureStressResponseOn) {
+        if (T_mn < T_mn_high) {
+        
+          if (T_mn <= T_mn_low)
+            ξ_T_low = 0;
+          else
+            ξ_T_low = (T_mn - T_mn_low) / (T_mn_high - T_mn_low);
 
-        vars.τ_T_low *= ξ_T_low;
-      
-      } else {
+          vars.τ_T_low *= ξ_T_low;
+        
+        } else {
 
-        vars.ζ_T_low += T / cons.T_sum_low;
-        vars.τ_T_low = min(1, vars.τ_T_low + vars.ζ_T_low);
-        if (vars.τ_T_low === 1) // full recovery
-          vars.ζ_T_low = 0;
-      
+          vars.ζ_T_low += T / cons.T_sum_low;
+          vars.τ_T_low = min(1, vars.τ_T_low + vars.ζ_T_low);
+          if (vars.τ_T_low === 1) // full recovery
+            vars.ζ_T_low = 0;
+        
+        }
       }
 
       /* heigh temp. stress and recovery */
-      if (T_mx > T_mx_low) {
-      
-        if (T_mx >= T_mx_high)
-          ξ_T_high = 0;
-        else
-          ξ_T_high = (T_mx - T_mx_low) / (T_mx_high - T_mx_low);
+      if (highTemperatureStressResponseOn) {
+        if (T_mx > T_mx_low) {
+        
+          if (T_mx >= T_mx_high)
+            ξ_T_high = 0;
+          else
+            ξ_T_high = (T_mx - T_mx_low) / (T_mx_high - T_mx_low);
 
-        vars.τ_T_high *= ξ_T_high;
-      
-      } else {
+          vars.τ_T_high *= ξ_T_high;
+        
+        } else {
 
-        vars.ζ_T_high += max(0, 25 - T) / cons.T_sum_high;
-        vars.τ_T_high = min(1, vars.τ_T_high + vars.ζ_T_high);
-        if (vars.τ_T_high === 1) // full recovery
-          vars.ζ_T_high = 0;
-      
+          vars.ζ_T_high += max(0, 25 - T) / cons.T_sum_high;
+          vars.τ_T_high = min(1, vars.τ_T_high + vars.ζ_T_high);
+          if (vars.τ_T_high === 1) // full recovery
+            vars.ζ_T_high = 0;
+        
+        }
       }
 
     }
@@ -2269,13 +2275,23 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
   };
 
   /* [0-1] */
-  var Ω_water = function (idx) {    
+  var GLF_water = function (idx) {    
     return (idx === undefined) ? mixture.Ω_water() : mixture[idx].vars.Ω_water;
   };
 
   /* [0-1] */
-  var Ω_N = function (idx) {    
+  var GLF_nitrogen = function (idx) {    
     return (idx === undefined) ? mixture.Ω_N() : mixture[idx].vars.Ω_N;
+  };
+
+  /* [0-1] */
+  var GLF_lowTemperature = function (idx) {    
+    return (idx === undefined) ? mixture.τ_T_low() : mixture[idx].vars.τ_T_low;
+  };
+
+  /* [0-1] */
+  var GLF_highTemperature = function (idx) {    
+    return (idx === undefined) ? mixture.τ_T_high() : mixture[idx].vars.τ_T_high;
   };
 
   /* [kg ha-1] */
@@ -2665,8 +2681,10 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     , ASH_stem: ASH_stem
     , ASH_shoot: ASH_shoot
     , CF_shoot: CF_shoot
-    , Ω_water: Ω_water
-    , Ω_N: Ω_N
+    , GLF_water: GLF_water
+    , GLF_nitrogen: GLF_nitrogen
+    , GLF_lowTemperature: GLF_lowTemperature
+    , GLF_highTemperature: GLF_highTemperature
     , senescencedTissue: senescencedTissue
     , accumulateEvapotranspiration: accumulateEvapotranspiration
     , isDying: get_isDying

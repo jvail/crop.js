@@ -1415,6 +1415,18 @@ var Grass = function (seedDate, harvestDates, species) {
     
     };
 
+    mixture.τ_T_low = function () {
+
+      return this.avg('τ_T_low');
+    
+    };
+
+    mixture.τ_T_high = function () {
+
+      return this.avg('τ_T_high');
+    
+    };
+
     mixture.avg = function (prop, parent) {
 
       return this.reduce(function (a, b) {

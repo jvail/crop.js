@@ -58,6 +58,8 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
     parameterProvider.userEnvironmentParameters.p_UseSecondaryYields = getValue(simInput.switches, 'useSecondaryYieldOn', parameterProvider.userEnvironmentParameters.p_UseSecondaryYields);
     generalParameters.pc_NitrogenResponseOn = getValue(simInput.switches, 'nitrogenResponseOn', generalParameters.pc_NitrogenResponseOn);
     generalParameters.pc_WaterDeficitResponseOn = getValue(simInput.switches, 'waterDeficitResponseOn', generalParameters.pc_WaterDeficitResponseOn);
+    generalParameters.pc_WaterDeficitResponseOn = getValue(simInput.switches, 'lowTemperatureStressResponseOn', generalParameters.pc_LowTemperatureStressResponseOn);
+    generalParameters.pc_WaterDeficitResponseOn = getValue(simInput.switches, 'highTemperatureStressResponseOn', generalParameters.pc_HighTemperatureStressResponseOn);
     generalParameters.pc_EmergenceMoistureControlOn = getValue(simInput.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
     generalParameters.pc_EmergenceFloodingControlOn = getValue(simInput.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
 
