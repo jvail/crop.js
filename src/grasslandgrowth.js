@@ -2,7 +2,7 @@
   grassland:
 
   TODO:
-    - add ash (OM and DM)
+    - fix P_g. There is a difference in P_g and P_g_mix. why?
 */
 
 var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes additional grassland param
@@ -130,14 +130,10 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     } else {
 
       P_g_day = P_g(I_mx, I_mn, T_I_mx, T_I_mn, f_s, C_amb, L_scale);
+      // P_g_day = P_g_mix(I_mx, I_mn, T_I_mx, T_I_mn, f_s, C_amb);
 
-      /* iterate over mixture array */
-      for (var s = 0; s < numberOfSpecies; s++) {
-
-        /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) Ω_water missing in Johnson (2013) */
-        mixture[s].vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day[s] * mixture[s].vars.Ω_water * sqrt(mixture[s].vars.Ω_N);
-
-      }
+      /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) Ω_water missing in Johnson (2013) */
+      mixture[0].vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day[0] * mixture[0].vars.Ω_water * sqrt(mixture[0].vars.Ω_N);
 
     }
 
@@ -423,6 +419,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
       /* iterate over leaf area layers */
       for (var i = 1; i <= n_L; i++) {
+
 
         /* include species s in integeration if s has occured in layer i */
         for (var s = 0; s < numberOfSpecies; s++) {
@@ -2235,28 +2232,39 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
   };
 
-
   /* [m] */
-  var height = function () {
-    return mixture.h_mx();
+  var height = function (idx) {
+    return (idx === undefined) ? mixture.h_mx() : mixture[idx].h();
   };
 
   /* [m2 m-2] */
-  var LAI = function () {
-    return mixture.L_tot();
+  var LAI = function (idx) {
+    return (idx === undefined) ? mixture.L_tot() : mixture[idx].L();
   };
 
+  /* [0-1] */
+  var Ω_water = function (idx) {    
+    return (idx === undefined) ? mixture.Ω_water() : mixture[idx].vars.Ω_water;
+  };
 
   /* [0-1] */
-  var Ω_water = function () {
-    if (numberOfSpecies === 1)
-      return mixture[0].vars.Ω_water;
-    var dm_total = mixture.DM_root() + mixture.DM_stem() + mixture.DM_leaf();
-    var stress = 0;
-    for (var i = 0; i < numberOfSpecies; i++)
-      stress += mixture[i].vars.Ω_water * (mixture[i].DM_root() + mixture[i].DM_stem() + mixture[i].DM_leaf()) / dm_total;
-    /* TODO: normalize (0-1) */
-    return stress;
+  var Ω_N = function (idx) {    
+    return (idx === undefined) ? mixture.Ω_N() : mixture[idx].vars.Ω_N;
+  };
+
+  /* [kg ha-1] */
+  var DM_leaf = function (idx) {    
+    return ((idx === undefined) ? mixture.DM_leaf() : mixture[idx].DM_leaf()) * SQM_PER_HA;
+  };
+
+  /* [kg ha-1] */
+  var DM_stem = function (idx) {    
+    return ((idx === undefined) ? mixture.DM_stem() : mixture[idx].DM_stem()) * SQM_PER_HA;
+  };
+
+  /* [kg ha-1] */
+  var DM_root = function (idx) {    
+    return ((idx === undefined) ? mixture.DM_root() : mixture[idx].DM_root()) * SQM_PER_HA;
   };
 
 
@@ -2605,6 +2613,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     , N_remob: N_remob
     , leaf_stem_ratio: leaf_stem_ratio
     , ρ_l: ρ_l
+    , DM_leaf: DM_leaf
+    , DM_stem: DM_stem
+    , DM_root: DM_root
     , ASH_l: ASH_l
     , SC_live_l_1: SC_live_l_1
     , SC_live_l_2: SC_live_l_2
@@ -2629,6 +2640,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     , ASH_shoot: ASH_shoot
     , CF_shoot: CF_shoot
     , Ω_water: Ω_water
+    , Ω_N: Ω_N
     , senescencedTissue: senescencedTissue
     , accumulateEvapotranspiration: accumulateEvapotranspiration
     , isDying: get_isDying

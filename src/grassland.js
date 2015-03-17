@@ -20,8 +20,6 @@
   }
 
   TODO: 
-    - add coverage param (calc. from inital dm share) to scale lai in height function
-    - include ash (OM vs DM)
 */
 
 var Grass = function (seedDate, harvestDates, species) {
@@ -59,6 +57,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
     this.cons = {               //                             generic grass constants
         index: 0                // [#]                         index in mixture array at initialization (stored to restore orig. sorting)
+      , f_cover: 1              // [m2 m-2]                    coverage (scales height to a full m2)
       , h_m: 0.5                // [m]                         maximum height 
       , L_half: 2.0             // [m2 (leaf) m-2 (ground)]    leaf area at half h_m
       , σ: 20.0                 // [m2 (leaf) kg-1 (DM)]       specific leaf area 
@@ -909,7 +908,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var h = 0
         , cons = that.cons
-        , L = that.L() // TODO: scale with initial coverage?
+        , L = that.L() * 1 / cons.f_cover // scale to a full m2
         , h_m = cons.h_m
         , L_half = cons.L_half
         , ξ = 0.9 // fixed curvatur parameter
@@ -927,7 +926,7 @@ var Grass = function (seedDate, harvestDates, species) {
 
       var h = 0
         , cons = that.cons
-        , L = that.L() // TODO: ?
+        , L = that.L() * 1 / cons.f_cover // scale to a full m2
         , h_m = cons.h_m
         , L_5 = 1 // LAI at 5 cm height
         , a = log((100 * h_m - 1) / (20 * h_m - 1)) / L_5 // curvatur parameter
@@ -978,9 +977,6 @@ var Grass = function (seedDate, harvestDates, species) {
     /* pass array of species or single species */
     var mixture = Array.isArray(species) ? species : [species];
 
-    /* store root share of each species in each layer in mixture objects in order to calculate N and water uptake */
-    mixture.root_sh = new Array(species.length);
-
     var noPools = 4
       , leaf_share = 0.7
       , stem_share = 1 - leaf_share
@@ -996,7 +992,10 @@ var Grass = function (seedDate, harvestDates, species) {
         DM[s] = 1 / ps;
     }
 
-    mixture.homogeneity = config.hasOwnProperty('homogeneity') ? config.homogeneity : 0.75;
+    if (mixture.length > 1)
+      mixture.homogeneity = config.hasOwnProperty('homogeneity') ? config.homogeneity : 0.75;
+    else
+      mixture.homogeneity = 1;
 
     /*Vergleich der Biomasseproduktion bei Schnittnutzung und Kurzrasenweide
       unter biologischen Bedingungen im ostalpinen Raum*/;
@@ -1005,14 +1004,8 @@ var Grass = function (seedDate, harvestDates, species) {
     if (config && config.DM_root) 
       DM_root = 1000 * 1e-4 // kg ha-1 to kg m-2
 
-
-
-
     // iterate over species and initialize pools
     for (var s = 0, ps = species.length; s < ps; s++) {
-
-      /* initialize array to store share in each soil layer */
-      mixture.root_sh[s] = [];
 
       var species = mixture[s] 
         , SC = species.vars.SC
@@ -1020,6 +1013,9 @@ var Grass = function (seedDate, harvestDates, species) {
         , PN = species.vars.PN
         , AH = species.vars.AH
         ;
+
+      /* assume coverge equals initial DM share */
+      species.cons.f_cover = DM[s];
         
       /* initialize carbon pools TODO: OM vs DM: include ash in calc. */
 
@@ -1397,6 +1393,34 @@ var Grass = function (seedDate, harvestDates, species) {
       
       return k_e_i;
     
+    };
+
+    mixture.Ω_water = function () {
+
+      return this.avg('Ω_water');
+    
+    };
+
+    mixture.Ω_N = function () {
+
+      return this.avg('Ω_N');
+    
+    };
+
+    mixture.avg = function (prop, parent) {
+
+      return this.reduce(function (a, b) {
+        return a + (parent === undefined ? b.vars[prop] : b.vars[parent][prop]); 
+      }, 0) / this.length;
+
+    };
+
+    mixture.sum = function (prop, parent) {
+
+      return this.reduce(function (a, b) {
+        return a + (parent === undefined ? b.vars[prop] : b.vars[parent][prop]); 
+      }, 0);
+
     };
 
     /* mixture variables */
