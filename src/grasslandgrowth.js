@@ -50,6 +50,72 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
 
   /*
+    (3.58ff) cumulative low temperature stress function 
+
+    T     [C°]  mean daily temperature
+    T_mn  [C°]  minimum daily temperature
+    T_mx  [C°]  maximum daily temperature
+  */
+  
+  function heighAndLowTempStress(T, T_mn, T_mx) {
+    
+    for (var s = 0; s < numberOfSpecies; s++) {
+
+      var species = mixture[s]
+        , vars = species.vars
+        , cons = species.cons
+        , T_mn_high = cons.T_mn_high
+        , T_mn_low = cons.T_mn_low
+        , T_mx_high = cons.T_mx_high
+        , T_mx_low = cons.T_mx_low
+        , ξ_T_low = 1.0               // [0-1]  low temperature stress coefficient      
+        , ξ_T_high= 1.0               // [0-1]  low temperature stress coefficient     
+        ;
+
+      /* low temp. stress and recovery */
+      if (T_mn < T_mn_high) {
+      
+        if (T_mn <= T_mn_low)
+          ξ_T_low = 0;
+        else
+          ξ_T_low = (T_mn - T_mn_low) / (T_mn_high - T_mn_low);
+
+        vars.τ_T_low *= ξ_T_low;
+      
+      } else {
+
+        vars.ζ_T_low += T / cons.T_sum_low;
+        vars.τ_T_low = min(1, vars.τ_T_low + vars.ζ_T_low);
+        if (vars.τ_T_low === 1) // full recovery
+          vars.ζ_T_low = 0;
+      
+      }
+
+      /* heigh temp. stress and recovery */
+      if (T_mx > T_mx_low) {
+      
+        if (T_mx >= T_mx_high)
+          ξ_T_high = 0;
+        else
+          ξ_T_high = (T_mx - T_mx_low) / (T_mx_high - T_mx_low);
+
+        vars.τ_T_high *= ξ_T_high;
+      
+      } else {
+
+        vars.ζ_T_high += max(0, 25 - T) / cons.T_sum_high;
+        vars.τ_T_high = min(1, vars.τ_T_high + vars.ζ_T_high);
+        if (vars.τ_T_high === 1) // full recovery
+          vars.ζ_T_high = 0;
+      
+      }
+
+    }
+
+  } // heighAndLowTempStress
+
+
+  /*
     Daily canopy gross photosynthesis in response to irradiance
     
     P_g_day       [kg (C) m-2 d-1]  gross photosynthesis
@@ -61,9 +127,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     τ             [s]               daylength
     C_amb         [μmol mol-1]      CO2 concentration
     f_s           [-]               fraction direct solar radiation
-
-    TODO: 
-      - influence of temp. extremes on photosynthesis (3.58 ff)
   */  
   function grossPhotosynthesis(T, T_mn, T_mx, PPF, τ, C_amb, f_s) {
 
@@ -120,10 +183,14 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       /* iterate over mixture array */
       for (var s = 0; s < numberOfSpecies; s++) {
 
+        var vars = mixture[s].vars
+          , GLF = vars.Ω_water * sqrt(vars.Ω_N) * vars.τ_T_low * vars.τ_T_high // combined growth limiting factors
+          ;
+
         /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) mixture[s].vars.Ω_water * sqrt(mixture[s].vars.Ω_N) missing in Johnson (2013) */
-        mixture[s].vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day_mix[s] * mixture[s].vars.Ω_water * sqrt(mixture[s].vars.Ω_N) * mixture.homogeneity;
+        mixture[s].vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day_mix[s] * GLF * mixture.homogeneity;
         if (mixture.homogeneity < 1)
-          mixture[s].vars.P_g_day += (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day[s] * mixture[s].vars.Ω_water * sqrt(mixture[s].vars.Ω_N) / L_scale * (1 - mixture.homogeneity);
+          mixture[s].vars.P_g_day += (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day[s] * GLF / L_scale * (1 - mixture.homogeneity);
 
       }
 
@@ -132,58 +199,14 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       P_g_day = P_g(I_mx, I_mn, T_I_mx, T_I_mn, f_s, C_amb, L_scale);
       // P_g_day = P_g_mix(I_mx, I_mn, T_I_mx, T_I_mn, f_s, C_amb);
 
+      var vars = mixture[0].vars
+        , GLF = vars.Ω_water * sqrt(vars.Ω_N) * vars.τ_T_low * vars.τ_T_high // combined growth limiting factors
+        ;
+
       /* (3.37) conversion of μmol CO2 to mol (1e-6) and mol CO2 to kg C (0.012) Ω_water missing in Johnson (2013) */
-      mixture[0].vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day[0] * mixture[0].vars.Ω_water * sqrt(mixture[0].vars.Ω_N);
+      mixture[0].vars.P_g_day = (44 * 12 / 44 * 1e-3) * 1e-6 * (τ / 2) * P_g_day[0] * GLF;
 
     }
-
-    /*
-      (2.21) Direct solar radiation
-
-      I_s_l [μmol (photons) m-2 s-1]  :direct (including diffuse) solar radiation within the canopy
-      I_0   [μmol (photons) m-2 s-1]  :incident solar radiation on the canopy
-      k_e_i [-]                       :effective leaf extinction coefficient at leaf area layer i 
-      k     [-]                       :leaf extinction coefficient 
-      fs    [-]                       :fraction direct solar radiation
-    */
-    
-    // function I_s_l(l, I_0, k_e_i, k) {
-
-    //   if (DEBUG) debug(arguments, 'I_s_l');
-      
-    //   var I_s_l = 0
-    //     , fs = fs || 0.7
-    //     ; 
-        
-    //   I_s_l =  k * I_0 * (f_s + (1 - f_s) * exp(-k_e_i * l));
-
-    //   return I_s_l;
-
-    // }
-    
-
-    /*
-      (2.21) Diffuse solar radiation
-
-      I_d_l [μmol (photons) m-2 s-1]  :diffuse solar radiation within the canopy
-      I_0   [μmol (photons) m-2 s-1]  :incident solar radiation on the canopy
-      k_e_i [-]                       :effective leaf extinction coefficient at leaf area layer i 
-      k     [-]                       :leaf extinction coefficient 
-      f_s   [-]                       :fraction direct solar radiation 
-    */
-
-    // function I_d_l(l, I_0, k_e_i, k, f_s) {
-
-    //   if (DEBUG) debug(arguments, 'I_d_l');
-      
-    //   var I_d_l = 0;
-
-    //   I_d_l =  k * I_0 * (1 - f_s) * exp(-k_e_i * l);
-
-    //   return I_d_l;
-
-    // }
-
 
     /*
       (1.16) CO2 response function
@@ -1199,6 +1222,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
     /* set actual transpiration and water limiting factor */
     transpiration(E_T_pot);
+    
+    /* set high and low temperature limiting factors */
+    heighAndLowTempStress(T, T_mn, T_mx);
 
     /* set species.vars.P_g_day */
     grossPhotosynthesis(T, T_mn, T_mx, PPF, τ, C_amb, f_s);

@@ -72,7 +72,12 @@ var Grass = function (seedDate, harvestDates, species) {
       , δ_ndf_live_s_3: 0.3     // [kg kg-1]                   NDF digestibility live stem 3
       , δ_ndf_dead_s: 0.2       // [kg kg-1]                   NDF digestibility live leaf
       , δ_nfc: 1                // [kg kg-1]                   NFC digestibility
-
+      , T_mn_high: 5            // [°C]                        critical temperature below which low-temperature stress will occur
+      , T_mn_low: 0             // [°C]                        critical temperature at which the low-temperature stress is maximum
+      , T_mx_high: 35           // [°C]                        critical temperature at which the high-temperature stress is maximum
+      , T_mx_low: 30            // [°C]                        critical temperature above which high-temperature stress will occur
+      , T_sum_low: 100          // [°C]               low temperature stress recovery temperature sum
+      , T_sum_high: 100          // [°C]              high temperature stress recovery temperature sum
       , photo: {                // photosynthesis
             T_ref: 20           // [°C]                        reference temperature
           , T_mn: 3             // [°C]                        minimum temperature 
@@ -117,7 +122,10 @@ var Grass = function (seedDate, harvestDates, species) {
         GDD: 0                  // [°C day]           growing degree days
       , Ω_N: 1.0                // [0-1]              growth limiting factor nitrogen (1 = no stress)
       , Ω_water: 1.0            // [0-1]              growth limiting factor water (1 = no stress)
-      , P_g_day: 0.0            // [kg (C) m-2]       daily canopy gross photosynthesis
+      , τ_T_low: 1.0            // [0-1]              growth limiting factor low temperature (1 = no stress)     
+      , τ_T_high: 1.0           // [0-1]              growth limiting factor high temperature (1 = no stress)  
+      , ζ_T_low: 0.0            // [0-1]  low temperature stress recovery coefficient 
+      , ζ_T_high: 0.0           // [0-1]  low temperature stress recovery coefficient       , P_g_day: 0.0            // [kg (C) m-2]       daily canopy gross photosynthesis
       , R_m: 0.0                // [kg (C) m-2]       daily maintenance respiration
       , R_N: 0                  // [kg (C) m-2]       daily N uptake cost
       , G: 0.0                  // [kg (C) m-2]       daily net growth rate
@@ -142,17 +150,17 @@ var Grass = function (seedDate, harvestDates, species) {
       , ρ_root: 0.3             // [kg (C) kg-1 (C)]  growth fraction partitioned to root
       , ρ_l: 0.7                // [kg (C) kg-1 (C)]  growth shoot fraction partitioned to leaf
 
-      , G_l_fC_om: {            // [kg (C) kg-1 (C)]  composition of new leaf tissue, fractions 
+      , G_l_fC_om: {            // [kg (C) kg-1 (C)]  composition of new leaf tissue (OM), fractions 
             sc: 0.0
           , nc: 0.0
           , pn: 0.0 
         }
-      , G_s_fC_om: {            // [kg (C) kg-1 (C)]  composition of new stem tissue, fractions 
+      , G_s_fC_om: {            // [kg (C) kg-1 (C)]  composition of new stem tissue (OM), fractions 
             sc: 0.0
           , nc: 0.0
           , pn: 0.0 
         }
-      , G_r_fC_om: {            // [kg (C) kg-1 (C)]  composition of new root tissue, fractions 
+      , G_r_fC_om: {            // [kg (C) kg-1 (C)]  composition of new root tissue (OM), fractions 
             sc: 0.0
           , nc: 0.0
           , pn: 0.0 
