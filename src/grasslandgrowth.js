@@ -1,8 +1,26 @@
 /*
-  grassland:
+LICENSE
 
-  TODO:
-    - fix P_g. There is a difference in P_g and P_g_mix. why?
+The MIT License (MIT)
+Copywrite (c) 2015 Jan Vaillant (jan.vaillant@zalf.de)
+
+
+REFERENCES
+
+Johnson IR (2008). Biophysical pasture model documentation: model documentation for DairyMod. EcoMod and the SGS Pasture
+Model. (IMJ Consultants: Dorrigo, NSW)
+
+Johnson IR (2013). DairyMod and the SGS Pasture Model: a mathematical description of the biophysical model structure.
+IMJ Consultants, Dorrigo, NSW, Australia.
+
+
+TODO
+
+- fix P_g. There is a small difference in P_g and P_g_mix. Check initial lai layer depth.
+- tests with N-Ireland ryegrass data suggest that growthg is systematically under-(over)-estimated in spring (autum).
+  Potential solution: There is currently no ("locked") pool to accumulate reserves in autum stored in roots (or in 
+  case of clover above the root) that will be released in spring to support initial growth.
+
 */
 
 var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes additional grassland param
