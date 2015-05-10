@@ -6,7 +6,11 @@ crop.js
 crop.js is an effort to build a dynamic (generic) crop and grassland growth model entirly in JavaScript.
 
 ## Genealogy
-The (generic) crop and soil model is a JS port of [MONICA](http://monica.agrosystem-models.com/). MONICA is based on [HERMES](http://www.zalf.de/en/forschung/institute/lsa/forschung/oekomod/hermes/Pages/default.aspx) and [DAISY](https://code.google.com/p/daisy-model/). HERMES is based on [SUCROS](http://models.pps.wur.nl/node/3). The grassland model is based on the [SGS Pasture Model](http://imj.com.au/sgs/), which implements various [Thornley&Johnson](http://scholar.google.de/scholar?q=Thornley+Johnson+grass) models and approaches.
+The (generic) crop and soil model is a JS port of [MONICA](http://monica.agrosystem-models.com/). MONICA is based on [HERMES](http://www.zalf.de/en/forschung/institute/lsa/forschung/oekomod/hermes/Pages/default.aspx) and [DAISY](https://code.google.com/p/daisy-model/). HERMES is based on [SUCROS](http://models.pps.wur.nl/node/3). The grassland model is based on the [SGS Pasture Model](http://imj.com.au/sgs/).
+
+Nendel, C., M. Berg, K.C. Kersebaum, W. Mirschel, X. Specka, M. Wegehenkel, K.O. Wenkel und R. Wieland (2011): The MONICA model: Testing predictability for crop growth, soil moisture and nitrogen dynamics. Ecol. Model. 222 (9), 1614 – 1625.
+
+Johnson I. R. , Lodge G. M. , White R. E. (2003) The Sustainable Grazing Systems Pasture Model: description, philosophy and application to the SGS National Experiment. Australian Journal of Experimental Agriculture 43 , 711–728. 
 
 ## Aims
 - Replace MONICA's generic grass-legume model with a more sophisticated grassland model.
@@ -15,7 +19,6 @@ The (generic) crop and soil model is a JS port of [MONICA](http://monica.agrosys
 - Add other grassland species (or functional groups) if parameters are available.
 - Add simple rountines for automatic seed, harvest, fertilization, irrigation and tillage date predictions.
 - Simplify MONICA's input parameters, configuration and API.
-- Add simple calibration routine (phenology).
 
 ## License & Copywrite
 The library in total is released under GPL (see license file). The grassland model files are released under MIT license.
