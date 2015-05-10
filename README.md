@@ -17,6 +17,11 @@ The (generic) crop and soil model is a JS port of [MONICA](http://monica.agrosys
 - Simplify MONICA's input parameters, configuration and API.
 - Add simple calibration routine (phenology).
 
+## License & Copywrite
+The library in total is released under GPL (see license file). The grassland model files are released under MIT license.
+
+Copyright (C) 2015, Leibniz Centre for Agricultural Landscape Research (ZALF)
+
 ## Acknowledgements
 
 We gratefully acknowledge funding from the European Community´s 7th Framework Programme (FP7/2007-2013) under the grant 
