@@ -497,21 +497,22 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
         var species = mixture[s] 
           , cons = species.cons
-          , α_amb_15 = cons.photo.α_amb_15
-          , P_m_ref = cons.photo.P_m_ref
-          , k = cons.photo.k
+          , photo = cons.photo
+          , α_amb_15 = photo.α_amb_15
+          , P_m_ref = photo.P_m_ref
+          , k = photo.k
           , isC4 = species.isC4
           , α = 0
           , P_m = 0
-          , ξ = cons.photo.ξ
-          , λ_α = cons.photo.λ_α
-          , γ_α = cons.photo.γ_α
-          , γ_Pm = cons.photo.γ_Pm
-          , T_mn = cons.photo.T_mn
-          , T_ref = cons.photo.T_ref
-          , T_opt_Pm_amb = cons.photo.T_opt_Pm_amb
-          , λ = cons.photo.λ
-          , f_C_m = cons.photo.f_C_m
+          , ξ = photo.ξ
+          , λ_α = photo.λ_α
+          , γ_α = photo.γ_α
+          , γ_Pm = photo.γ_Pm
+          , T_mn = photo.T_mn
+          , T_ref = photo.T_ref
+          , T_opt_Pm_amb = photo.T_opt_Pm_amb
+          , λ = photo.λ
+          , f_C_m = photo.f_C_m
           , f_N = species.f_N_live_leaf()
           , f_N_ref = cons.N_leaf.ref
           , LAI = species.L() * L_scale
@@ -555,7 +556,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
     } // P_g
 
-  }; // grossPhotosynthesis
+  } // grossPhotosynthesis
 
 
   /* 
@@ -933,7 +934,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
     }
 
-  }; // netPhotosynthesis
+  } // netPhotosynthesis
     
 
   /*
