@@ -27,5 +27,7 @@ Copyright (C) 2015, Leibniz Centre for Agricultural Landscape Research (ZALF)
 
 ## Acknowledgements
 
-We gratefully acknowledge funding from the European Community´s 7th Framework Programme (FP7/2007-2013) under the grant 
+The study has been supported by the TRY initiative on plant traits (http://www.try-db.org). The TRY initiative and database is hosted, developed and maintained by J. Kattge and G. Bönisch (Max Planck Institute for Biogeochemistry, Jena, Germany). TRY is currently supported by DIVERSITAS/Future Earth and the German Centre for Integrative Biodiversity Research (iDiv) Halle-Jena-Leipzig
+
+We acknowledge funding from the European Community´s 7th Framework Programme (FP7/2007-2013) under the grant 
 agreement number FP7-266367 (Sustainable organic and low input dairying).
