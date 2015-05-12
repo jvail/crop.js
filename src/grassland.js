@@ -19,7 +19,19 @@
     DM: [] inital fraction of total dry matter
   }
 
-  TODO: 
+  LICENSE
+
+  The MIT License (MIT)
+  Copywrite (c) 2015 Jan Vaillant (jan.vaillant@zalf.de)
+
+
+  REFERENCES
+
+  Johnson IR (2008). Biophysical pasture model documentation: model documentation for DairyMod. EcoMod and the SGS Pasture
+  Model. (IMJ Consultants: Dorrigo, NSW)
+
+  Johnson IR (2013). DairyMod and the SGS Pasture Model: a mathematical description of the biophysical model structure.
+  IMJ Consultants, Dorrigo, NSW, Australia.
 */
 
 var Grass = function (seedDate, harvestDates, species) {

@@ -1,26 +1,36 @@
 /*
-LICENSE
+  LICENSE
 
-The MIT License (MIT)
-Copywrite (c) 2015 Jan Vaillant (jan.vaillant@zalf.de)
-
-
-REFERENCES
-
-Johnson IR (2008). Biophysical pasture model documentation: model documentation for DairyMod. EcoMod and the SGS Pasture
-Model. (IMJ Consultants: Dorrigo, NSW)
-
-Johnson IR (2013). DairyMod and the SGS Pasture Model: a mathematical description of the biophysical model structure.
-IMJ Consultants, Dorrigo, NSW, Australia.
+  The MIT License (MIT)
+  Copywrite (c) 2015 Jan Vaillant (jan.vaillant@zalf.de)
 
 
-TODO
+  REFERENCES
 
-- fix P_g. There is a small difference in P_g and P_g_mix. Check initial lai layer depth.
-- tests with N-Ireland ryegrass data suggest that growthg is systematically under-(over)-estimated in spring (autum).
-  Potential solution: There is currently no ("locked") pool to accumulate reserves in autum stored in roots (or in 
-  case of clover above the root) that will be released in spring to support initial growth.
+  Johnson IR (2008). Biophysical pasture model documentation: model documentation for DairyMod. EcoMod and the SGS Pasture
+  Model. (IMJ Consultants: Dorrigo, NSW)
 
+  Johnson IR (2013). DairyMod and the SGS Pasture Model: a mathematical description of the biophysical model structure.
+  IMJ Consultants, Dorrigo, NSW, Australia.
+
+
+  TODO
+
+  - fix P_g. There is a small difference in P_g and P_g_mix. Check initial lai layer depth.
+  - tests with N-Ireland ryegrass data suggest that growthg is systematically under-(over)-estimated in spring (autum).
+    Potential solution: There is currently no ("locked") pool to accumulate reserves in autum stored in roots (or in 
+    case of clover above the root) that will be released in spring to support initial growth.
+
+
+  README
+
+  Important (somewhat experimental) deviations from the original approach:
+
+  - Added a homogeneity factor to capture the homogeneity of the sward and avoid the complete disappearence of species due
+    to light interception (competition).
+  - Added a coverage factor that captures how much of a sqm is covered by a species to avoid inconsistencies in the height 
+    calculations
+  - Added a different (simpler) height(lai) function to better capture dm removal by height. 
 */
 
 var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes additional grassland param
