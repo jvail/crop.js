@@ -32,6 +32,13 @@
 
   Johnson IR (2013). DairyMod and the SGS Pasture Model: a mathematical description of the biophysical model structure.
   IMJ Consultants, Dorrigo, NSW, Australia.
+
+
+  README
+
+  Important (somewhat experimental) deviations from the original approach:
+
+  - Added a different (simpler) height(lai) function to better capture dm removal by height. 
 */
 
 var Grass = function (seedDate, harvestDates, species) {

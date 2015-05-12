@@ -30,7 +30,6 @@
     to light interception (competition).
   - Added a coverage factor that captures how much of a sqm is covered by a species to avoid inconsistencies in the height 
     calculations
-  - Added a different (simpler) height(lai) function to better capture dm removal by height. 
 */
 
 var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes additional grassland param
