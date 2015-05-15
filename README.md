@@ -5,6 +5,9 @@ crop.js
 
 crop.js is an effort to build a dynamic (generic) crop and grassland growth model entirly in JavaScript.
 
+## Examples & Usage
+See [examples](https://github.com/jvail/crop.js/tree/master/exp).
+
 ## Genealogy
 The (generic) crop and soil model is a JS port of major parts of [MONICA](http://monica.agrosystem-models.com/) - specifically the soil and crop growth sub-models. MONICA is based on [HERMES](http://www.zalf.de/en/forschung/institute/lsa/forschung/oekomod/hermes/Pages/default.aspx) and [DAISY](https://code.google.com/p/daisy-model/). HERMES is based on [SUCROS](http://models.pps.wur.nl/node/3). The grassland model is based on the [SGS Pasture Model](http://imj.com.au/sgs/).
 
