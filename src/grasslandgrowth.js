@@ -20,6 +20,7 @@
   - tests with N-Ireland ryegrass data suggest that growthg is systematically under-(over)-estimated in spring (autum).
     Potential solution: There is currently no ("locked") pool to accumulate reserves in autum stored in roots (or in 
     case of clover above the root) that will be released in spring to support initial growth.
+  - for consistency remove NH4 uptake (implemented in SGS) because it is not implemented in MONICA's crops 
 
 
   README
@@ -1363,6 +1364,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     set and update variables:
     N_up      potential N uptake kg N m-2 per species and soil layer
     N_up_sum  potential N uptake kg N m-2 per soil layer
+
+    NH4 uptake disabled
   */
   function nitrogenUptake() {
 
@@ -1372,11 +1375,11 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     for (var l = 0; l < vs_NumberOfLayers; l++) {
       var layer = soilColumn[l];
       /* kg (N) m-3 / kg (soil) m-3 = kg (N) kg-1 (soil) */
-      var N = (layer.get_SoilNO3() + layer.get_SoilNH4()) / layer.vs_SoilBulkDensity();
+      var N = (layer.get_SoilNO3() /*+ layer.get_SoilNH4()*/) / layer.vs_SoilBulkDensity();
       /* Johnson 2013, eq. 3.69 [kg (soil) kg-1 (root C)] TODO: error in doc. ? suppose it is per kg (root C) instead per kg (root d.wt) */
       var ξ_N = 200; //* dwt2carbon; // convert from dwt to carbon TODO: value? unit? allow per species
       /* total uptake from layer must not exceed layer N */
-      mixture.N_up_sum[l] = min((layer.get_SoilNO3() + layer.get_SoilNH4()) * vs_LayerThickness, ξ_N * N * mixture.W_r_sum[l]);
+      mixture.N_up_sum[l] = min((layer.get_SoilNO3() /*+ layer.get_SoilNH4()*/) * vs_LayerThickness, ξ_N * N * mixture.W_r_sum[l]);
     }
 
     for (var l = 0; l < vs_NumberOfLayers; l++) {

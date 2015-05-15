@@ -160,13 +160,12 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
   var addOrganicMatter = function (
     params,
-    amount,
+    amount, /* [kg FM ha-1] */ 
     nConcentration
     )
   {
     var vo_AddedOrganicMatterAmount = amount;
     var vo_AddedOrganicMatterNConcentration = nConcentration;
-
 
     var vo_AOM_DryMatterContent = params.vo_AOM_DryMatterContent;
     var vo_AOM_NH4Content = params.vo_AOM_NH4Content;
@@ -180,7 +179,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     var po_AOM_FastMaxC_to_N = centralParameterProvider.userSoilOrganicParameters.po_AOM_FastMaxC_to_N;
 
     //urea
-    if(soilColumn.vs_NumberOfOrganicLayers() > 0) {
+    if (soilColumn.vs_NumberOfOrganicLayers() > 0) {
       // kg N m-3 soil
       soilColumn[0].vs_SoilCarbamid += vo_AddedOrganicMatterAmount
                * vo_AOM_DryMatterContent * vo_AOM_CarbamidContent
@@ -287,6 +286,8 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     var vo_SoilNH4Input = vo_AOM_NH4Content * vo_AddedOrganicMatterAmount
              * vo_AOM_DryMatterContent / 10000.0 / soilColumn[0].vs_LayerThickness;
 
+    debug('vo_SoilNH4Input', vo_SoilNH4Input);
+
     var vo_SoilNO3Input = vo_AOM_NO3Content * vo_AddedOrganicMatterAmount
              * vo_AOM_DryMatterContent / 10000.0 / soilColumn[0].vs_LayerThickness;
 
@@ -295,7 +296,9 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     // Immediate top layer pool update
     soilColumn[0].vo_AOM_Pool[soilColumn[0].vo_AOM_Pool.length - 1].vo_AOM_Slow += AOM_SlowInput;
     soilColumn[0].vo_AOM_Pool[soilColumn[0].vo_AOM_Pool.length - 1].vo_AOM_Fast += AOM_FastInput;
+    debug('soilColumn[0].vs_SoilNH4', soilColumn[0].vs_SoilNH4);
     soilColumn[0].vs_SoilNH4 += vo_SoilNH4Input;
+    debug('soilColumn[0].vs_SoilNH4', soilColumn[0].vs_SoilNH4);
     soilColumn[0].vs_SoilNO3 += vo_SoilNO3Input;
     soilColumn[0].vs_SOM_Fast += SOM_FastInput;
 
@@ -451,8 +454,8 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
         // kg N m-2 d-1
         vo_NH3_Volatilised = vo_NH3_Volatilising * soilColumn[0].vs_LayerThickness;
 
-        if (soilColumn[0].vs_SoilNH4 < 0)
-          throw soilColumn[0].vs_SoilNH4;
+        if (DEBUG && soilColumn[0].vs_SoilNH4 < 0)
+          throw new Error(soilColumn[0].vs_SoilNH4);
 
       } // if (i_Layer == 0) {
     } // for
@@ -916,8 +919,8 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
           } else { // if
 
             soilColumn[i_Layer].vs_SoilNH4 -= abs(vo_NBalance[i_Layer]);
-            if (soilColumn[i_Layer].vs_SoilNH4 < 0)
-              throw soilColumn[i_Layer].vs_SoilNH4;
+            if (DEBUG && soilColumn[i_Layer].vs_SoilNH4 < 0)
+              throw new Error(soilColumn[i_Layer].vs_SoilNH4);
           } //else
         } //else
 
@@ -961,9 +964,9 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
     var AOM_Pool = soilColumn[0].vo_AOM_Pool;
 
-    AOM_Pool.forEach(function (it_AOM_Pool) {
-
-      vo_DaysAfterApplicationSum += it_AOM_Pool.vo_DaysAfterApplication;
+    AOM_Pool.forEach(function (it_AOM_Pool, idx) {
+      if (idx > 0) /* index 0 = dedicated root matter pool */
+        vo_DaysAfterApplicationSum += it_AOM_Pool.vo_DaysAfterApplication;
     });
 
     if (vo_DaysAfterApplicationSum > 0 || vo_AOM_Addition) {
@@ -973,37 +976,40 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
       vo_N_PotVolatilisedSum = 0.0;
 
-      AOM_Pool.forEach(function (it_AOM_Pool) {
+      AOM_Pool.forEach(function (it_AOM_Pool, idx) {
 
-        vo_AOM_TAN_Content = 0.0;
-        vo_MaxVolatilisation = 0.0;
-        vo_VolatilisationHalfLife = 0.0;
-        vo_VolatilisationRate = 0.0;
-        vo_N_PotVolatilised = 0.0;
+        if (idx > 0) { /* index 0 = dedicated root matter pool */
 
-        vo_AOM_TAN_Content = it_AOM_Pool.vo_AOM_NH4Content * 1000.0 * it_AOM_Pool.vo_AOM_DryMatterContent;
+          vo_AOM_TAN_Content = 0.0;
+          vo_MaxVolatilisation = 0.0;
+          vo_VolatilisationHalfLife = 0.0;
+          vo_VolatilisationRate = 0.0;
+          vo_N_PotVolatilised = 0.0;
 
-        vo_MaxVolatilisation = 0.0495 * pow(1.1020, vo_SoilWet) * pow(1.0223, vw_MeanAirTemperature) * pow(1.0417,
-                           vw_WindSpeed) * pow(1.1080, it_AOM_Pool.vo_AOM_DryMatterContent) * pow(0.8280, vo_AOM_TAN_Content) * pow(
-                               11.300, Number(it_AOM_Pool.incorporation));
+          vo_AOM_TAN_Content = it_AOM_Pool.vo_AOM_NH4Content * 1000.0 * it_AOM_Pool.vo_AOM_DryMatterContent;
 
-        vo_VolatilisationHalfLife = 1.0380 * pow(1.1020, vo_SoilWet) * pow(0.9600, vw_MeanAirTemperature) * pow(0.9500,
-                        vw_WindSpeed) * pow(1.1750, it_AOM_Pool.vo_AOM_DryMatterContent) * pow(1.1060, vo_AOM_TAN_Content) * pow(
-                                                  1.0000, Number(it_AOM_Pool.incorporation)) * (18869.3 * exp(-soilColumn[0].vs_SoilpH / 0.63321) + 0.70165);
+          vo_MaxVolatilisation = 0.0495 * pow(1.1020, vo_SoilWet) * pow(1.0223, vw_MeanAirTemperature) * pow(1.0417,
+                             vw_WindSpeed) * pow(1.1080, it_AOM_Pool.vo_AOM_DryMatterContent) * pow(0.8280, vo_AOM_TAN_Content) * pow(
+                                 11.300, Number(it_AOM_Pool.incorporation));
 
-        // ******************************************************************************************
-        // *** Based on He et al. (1999): Soil Sci. 164 (10), 750-758. The curves on p. 755 were  ***
-        // *** digitised and fit to Michaelis-Menten. The pH - Nhalf relation was normalised (pH  ***
-        // *** 7.0 = 1; average soil pH of the ALFAM experiments) and fit to a decay function.    ***
-        // *** The resulting factor was added to the Half Life calculation.                       ***
-        // ******************************************************************************************
+          vo_VolatilisationHalfLife = 1.0380 * pow(1.1020, vo_SoilWet) * pow(0.9600, vw_MeanAirTemperature) * pow(0.9500,
+                          vw_WindSpeed) * pow(1.1750, it_AOM_Pool.vo_AOM_DryMatterContent) * pow(1.1060, vo_AOM_TAN_Content) * pow(
+                                                    1.0000, Number(it_AOM_Pool.incorporation)) * (18869.3 * exp(-soilColumn[0].vs_SoilpH / 0.63321) + 0.70165);
 
-        vo_VolatilisationRate = vo_MaxVolatilisation * (vo_VolatilisationHalfLife / (pow((it_AOM_Pool.vo_DaysAfterApplication + vo_VolatilisationHalfLife), 2.0)));
+          // ******************************************************************************************
+          // *** Based on He et al. (1999): Soil Sci. 164 (10), 750-758. The curves on p. 755 were  ***
+          // *** digitised and fit to Michaelis-Menten. The pH - Nhalf relation was normalised (pH  ***
+          // *** 7.0 = 1; average soil pH of the ALFAM experiments) and fit to a decay function.    ***
+          // *** The resulting factor was added to the Half Life calculation.                       ***
+          // ******************************************************************************************
 
-        vo_N_PotVolatilised = vo_VolatilisationRate * vo_AOM_TAN_Content * (it_AOM_Pool.vo_AOM_Slow
-                    + it_AOM_Pool.vo_AOM_Fast) / 10000.0 / 1000.0;
+          vo_VolatilisationRate = vo_MaxVolatilisation * (vo_VolatilisationHalfLife / (pow((it_AOM_Pool.vo_DaysAfterApplication + vo_VolatilisationHalfLife), 2.0)));
 
-        vo_N_PotVolatilisedSum += vo_N_PotVolatilised;
+          vo_N_PotVolatilised = vo_VolatilisationRate * vo_AOM_TAN_Content * (it_AOM_Pool.vo_AOM_Slow
+                      + it_AOM_Pool.vo_AOM_Fast) / 10000.0 / 1000.0;
+
+          vo_N_PotVolatilisedSum += vo_N_PotVolatilised;
+        }
 
       });
 
@@ -1015,20 +1021,25 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       // update NH4 content of top soil layer with volatilisation balance
 
       soilColumn[0].vs_SoilNH4 -= (vo_N_ActVolatilised / soilColumn[0].vs_LayerThickness);
+
+      debug(vo_N_ActVolatilised, 'vo_N_ActVolatilised');
+      debug(soilColumn[0].vs_SoilNH4, 'soilColumn[0].vs_SoilNH4');
+      soilColumn[0].vs_SoilNH4 -= vo_N_ActVolatilised;
+      debug(soilColumn[0].vs_SoilNH4, 'soilColumn[0].vs_SoilNH4');
     } else {
       vo_N_ActVolatilised = 0.0;
     }
 
-    if (soilColumn[0].vs_SoilNH4 < 0)
-      throw soilColumn[0].vs_SoilNH4;
+    if (DEBUG && soilColumn[0].vs_SoilNH4 < 0)
+      throw new Error(soilColumn[0].vs_SoilNH4);
 
     // NH3 volatilised from top layer NH4 pool. See Urea section
     vo_Total_NH3_Volatilised = (vo_N_ActVolatilised + vo_NH3_Volatilised); // [kg N m-2]
     /** @todo <b>Claas: </b>Zusammenfassung für output. Wohin damit??? */
 
-    AOM_Pool.forEach(function (it_AOM_Pool) {
+    AOM_Pool.forEach(function (it_AOM_Pool, idx) {
 
-      if (it_AOM_Pool.vo_DaysAfterApplication > 0 && !vo_AOM_Addition) {
+      if (idx > 0 && it_AOM_Pool.vo_DaysAfterApplication > 0 && !vo_AOM_Addition) {
         it_AOM_Pool.vo_DaysAfterApplication++;
       }
     });
@@ -1036,8 +1047,8 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
   var fo_Nitrification = function () {
 
-    if (soilColumn[0].vs_SoilNO3 < 0)
-      throw soilColumn[0].vs_SoilNO3;
+    if (DEBUG && soilColumn[0].vs_SoilNO3 < 0)
+      throw new error(soilColumn[0].vs_SoilNO3);
    
     var nools = soilColumn.vs_NumberOfOrganicLayers();
     var po_AmmoniaOxidationRateCoeffStandard = centralParameterProvider.userSoilOrganicParameters.po_AmmoniaOxidationRateCoeffStandard;
@@ -1069,14 +1080,14 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
     }
 
-    if (soilColumn[0].vs_SoilNH4 < 0)
-      throw soilColumn[0].vs_SoilNH4;
+    if (DEBUG && soilColumn[0].vs_SoilNH4 < 0)
+      throw new Error(soilColumn[0].vs_SoilNH4);
 
-    if (soilColumn[0].vs_SoilNO2 < 0)
-      throw soilColumn[0].vs_SoilNO2;
+    if (DEBUG && soilColumn[0].vs_SoilNO2 < 0)
+      throw new Error(soilColumn[0].vs_SoilNO2);
 
-    if (soilColumn[0].vs_SoilNO3 < 0)
-      throw soilColumn[0].vs_SoilNO3;
+    if (DEBUG && soilColumn[0].vs_SoilNO3 < 0)
+      throw new Error(soilColumn[0].vs_SoilNO3);
 
     // Update NH4, NO2 and NO3 content with nitrification balance
     // Stange, F., C. Nendel (2014): N.N., in preparation
@@ -1109,14 +1120,14 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       }
     }
 
-    if (soilColumn[0].vs_SoilNH4 < 0)
-      throw soilColumn[0].vs_SoilNH4;
+    if (DEBUG && soilColumn[0].vs_SoilNH4 < 0)
+      throw new Error(soilColumn[0].vs_SoilNH4);
 
-    if (soilColumn[0].vs_SoilNO2 < 0)
-      throw soilColumn[0].vs_SoilNO2;
+    if (DEBUG && soilColumn[0].vs_SoilNO2 < 0)
+      throw new Error(soilColumn[0].vs_SoilNO2);
 
-    if (soilColumn[0].vs_SoilNO3 < 0)
-      throw soilColumn[0].vs_SoilNO3;
+    if (DEBUG && soilColumn[0].vs_SoilNO3 < 0)
+      throw new Error(soilColumn[0].vs_SoilNO3);
 
   };
 
@@ -1162,8 +1173,8 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 
     vo_SumDenitrification += vo_TotalDenitrification; // [kg N m-2]
 
-    if (vo_TotalDenitrification < 0)
-      throw vo_TotalDenitrification;
+    if (DEBUG && vo_TotalDenitrification < 0)
+      throw new Error(vo_TotalDenitrification);
 
   };
 

@@ -44,8 +44,8 @@ var SoilColumn = function (gps, sp, cpp) {
     this[0].vs_SoilNH4 += amount * fp.getNH4() / 10000.0 / this[0].vs_LayerThickness;
     this[0].vs_SoilCarbamid += amount * fp.getCarbamid() / 10000.0 / this[0].vs_LayerThickness;
 
-    if (this[0].vs_SoilNH4 < 0)
-      throw this[0].vs_SoilNH4;
+    if (DEBUG && this[0].vs_SoilNH4 < 0)
+      throw new Error(this[0].vs_SoilNH4);
   };
 
   // prüft ob top-dressing angewendet werden sollte, ansonsten wird
@@ -87,7 +87,7 @@ var SoilColumn = function (gps, sp, cpp) {
       delayedApps.shift();
       // JS: delayedApps === _delayedNMinApplications
       if (DEBUG && delayedApps != _delayedNMinApplications)
-        throw delayedApps;
+        throw new Error(delayedApps);
       // _delayedNMinApplications.shift();
     }
     return n_amount;
@@ -367,12 +367,12 @@ var SoilColumn = function (gps, sp, cpp) {
       no3 += this[i].vs_SoilNO3;
     }
 
-    if (this[0].vs_SoilNH4 < 0)
-      throw this[0].vs_SoilNH4;
-    if (this[0].vs_SoilNO2 < 0)
-      throw this[0].vs_SoilNO2;
-    if (this[0].vs_SoilNO3 < 0)
-      throw this[0].vs_SoilNO3;
+    if (DEBUG && this[0].vs_SoilNH4 < 0)
+      throw new Error(this[0].vs_SoilNH4);
+    if (DEBUG && this[0].vs_SoilNO2 < 0)
+      throw new Error(this[0].vs_SoilNO2);
+    if (DEBUG && this[0].vs_SoilNO3 < 0)
+      throw new Error(this[0].vs_SoilNO3);
 
     // calculate mean value of accumulated soil paramters
     soil_organic_carbon = soil_organic_carbon / layer_index;
@@ -407,12 +407,12 @@ var SoilColumn = function (gps, sp, cpp) {
       this[i].vs_SoilNO2 = no2;
       this[i].vs_SoilNO3 = no3;
       
-      if (this[i].vs_SoilNH4 < 0)
-        throw this[i].vs_SoilNH4;
-      if (this[i].vs_SoilNO2 < 0)
-        throw this[i].vs_SoilNO2;
-      if (this[i].vs_SoilNO3 < 0)
-        throw this[i].vs_SoilNO3;
+      if (DEBUG && this[i].vs_SoilNH4 < 0)
+        throw new Error(this[i].vs_SoilNH4);
+      if (DEBUG && this[i].vs_SoilNO2 < 0)
+        throw new Error(this[i].vs_SoilNO2);
+      if (DEBUG && this[i].vs_SoilNO3 < 0)
+        throw new Error(this[i].vs_SoilNO3);
 
     }
 

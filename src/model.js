@@ -19,6 +19,7 @@ var Model = function (env) {
     , _dailySumIrrigationWater = 0
     , _dataAccessor = _env.da
     , centralParameterProvider = _env.centralParameterProvider
+    , user_env = centralParameterProvider.userEnvironmentParameters
     , p_daysWithCrop = 0
     , p_accuNStress = 0.0
     , p_accuWaterStress = 0.0
@@ -26,7 +27,59 @@ var Model = function (env) {
     , p_accuOxygenStress = 0.0
     , _currentCrop = null
     , isVegPeriod = false /* tracks if veg. period has started/ended */
+    , productionProcessIdx = 0 // iterator through the production processes
+    , currentProductionProcess = env.cropRotation[productionProcessIdx] // direct handle to current process
+    , nextProductionProcessApplicationDate = currentProductionProcess.start()
     ;
+
+
+  var prodProcessStep = function (currentDate) {
+
+    /* if for some reason there are no applications (no nothing) in the production process: quit */
+    if(!nextProductionProcessApplicationDate.isValid()) {
+      // logger(MSG.ERROR, "start of production-process: " + currentProductionProcess.toString() + " is not valid");
+      return;
+    }
+
+    logger(MSG.INFO, "next app-date: " + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+
+    /* is there something to apply today? */
+    if (nextProductionProcessApplicationDate.setHours(0,0,0,0) === currentDate.setHours(0,0,0,0)) {
+      
+      currentProductionProcess.apply(nextProductionProcessApplicationDate, this);
+      logger(MSG.INFO, 'applied at: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+
+      /* get the next application date to wait for */
+      nextProductionProcessApplicationDate = currentProductionProcess.nextDate(nextProductionProcessApplicationDate);
+
+      /* if application date was not valid, we're (probably) at the end of the application list of this production 
+         process -> go to the next one in the crop rotation */
+      if (!nextProductionProcessApplicationDate.isValid() /* && _currentCrop instanceof FieldCrop*/) {
+
+        /* to count the applied fertiliser for the next production process */
+        resetFertiliserCounter();
+
+        /* resets crop values for use in next year */
+        currentProductionProcess.crop().reset();
+
+        productionProcessIdx++;
+        /* end of crop rotation? */ 
+        if (productionProcessIdx < env.cropRotation.length) {
+          currentProductionProcess = env.cropRotation[productionProcessIdx];
+          nextProductionProcessApplicationDate = currentProductionProcess.start();
+          logger(MSG.INFO, 'new valid next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+        }
+
+      } else {
+
+        if (nextProductionProcessApplicationDate.isValid())
+          logger(MSG.INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+      
+      }
+
+    }
+
+  };   
 
 
   var run = function (progressCallbacks) {
@@ -38,10 +91,6 @@ var Model = function (env) {
 
     var currentDate = env.da.startDate()
       , totalNoDays = env.da.noOfStepsPossible()
-      , dayInMonth = 0 // day in current month
-      , productionProcessIdx = 0 // iterator through the production processes
-      , currentProductionProcess = env.cropRotation[productionProcessIdx] // direct handle to current process
-      , nextProductionProcessApplicationDate = currentProductionProcess.start()
       ;
 
     logger(MSG.INFO, "next app-date: " + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
@@ -55,7 +104,6 @@ var Model = function (env) {
     for (var dayOfSimulation = 0; dayOfSimulation < totalNoDays; dayOfSimulation++) {
 
       currentDate.setDate(currentDate.getDate() + 1);
-      dayInMonth++;
 
       logger(MSG.INFO, currentDate.toISOString().split('T')[0]);
       
@@ -144,7 +192,7 @@ var Model = function (env) {
     p_accuHeatStress = 0.0;
     p_accuOxygenStress = 0.0;
 
-    if(_currentCrop.isValid() && _currentCrop instanceof FieldCrop) {
+    if(_currentCrop.isValid() && _currentCrop.type === 'fieldcrop') {
 
       cps = _currentCrop.cropParameters();
       that._currentCropGrowth = new FieldCropGrowth(_soilColumn, _env.general, cps, _env.site, _env.centralParameterProvider);
@@ -173,7 +221,7 @@ var Model = function (env) {
       
       }
 
-    } else if (_currentCrop.isValid() && _currentCrop instanceof Grass) {
+    } else if (_currentCrop.isValid() && _currentCrop.type === 'grassland') {
 
       cps = {};
       that._currentCropGrowth = new GrasslandGrowth(_soilColumn, _env.general, _currentCrop.mixture, _env.site, _env.centralParameterProvider);
@@ -280,7 +328,7 @@ var Model = function (env) {
 
     _soilOrganic.setIncorporation(doIncorporate);
     _soilOrganic.addOrganicMatter(params, amount, params.vo_NConcentration);
-    addDailySumFertiliser(amount * params.vo_NConcentration);
+    addDailySumFertiliser(amount * params.vo_AOM_DryMatterContent * params.vo_NConcentration);
   
   };
 
@@ -310,6 +358,8 @@ var Model = function (env) {
 
     /* if the production process has still some defined manual irrigation dates */
     if (!_env.useAutomaticIrrigation) {
+
+      logger(MSG.INFO, 'apply irrigation: amount: ' + amount + ', nitrateConcentration: ' + nitrateConcentration);
 
       _soilOrganic.addIrrigationWater(amount);
       _soilColumn.applyIrrigation(amount, nitrateConcentration);
@@ -342,38 +392,18 @@ var Model = function (env) {
 
     stepNo [#]  Number of current processed step
   */
-  var generalStep = function (stepNo) {
-
-    var startDate = _dataAccessor.startDate()
-      , currentDate = _dataAccessor.date(stepNo)
-      , julday = _dataAccessor.julianDayForStep(stepNo)
-      , year = currentDate.getFullYear()
-      , leapYear = currentDate.isLeapYear()
-      , tmin = _dataAccessor.dataForTimestep(WEATHER.TMIN, stepNo)
-      , tavg = _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo)
-      , tmax = _dataAccessor.dataForTimestep(WEATHER.TMAX, stepNo)
-      , precip = _dataAccessor.dataForTimestep(WEATHER.PRECIP, stepNo)
-      , wind = _dataAccessor.dataForTimestep(WEATHER.WIND, stepNo)
-      , globrad = _dataAccessor.dataForTimestep(WEATHER.GLOBRAD, stepNo)
-        /* test if data for relhumid are available; if not, value is set to -1.0 */
-      , relhumid = (_dataAccessor.isAvailable(WEATHER.RELHUMID) ? _dataAccessor.dataForTimestep(WEATHER.RELHUMID, stepNo) : -1.0)
-      , user_env = centralParameterProvider.userEnvironmentParameters
-      ;
-
-    if (!isVegPeriod && stepNo > 4 &&
-      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo) > 5 && 
-      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 1) > 5 && 
-      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 2) > 5 && 
-      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 3) > 5 && 
-      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 4) > 5
-    ) isVegPeriod = true;
-    else if (isVegPeriod && stepNo > 4 &&
-      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo) < 5 && 
-      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 1) < 5 && 
-      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 2) < 5 && 
-      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 3) < 5 && 
-      _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo - 4) < 5
-    ) isVegPeriod = false;
+  var generalStep = function (
+    julday,
+    year,
+    leapYear,
+    tmin,
+    tavg,
+    tmax,
+    precip,
+    wind,
+    globrad,
+    relhumid
+  ) {
 
     that.vw_AtmosphericCO2Concentration = (_env.atmosphericCO2 === -1 ? user_env.p_AthmosphericCO2 : _env.atmosphericCO2);
     if (int(that.vw_AtmosphericCO2Concentration) === 0)
@@ -400,7 +430,7 @@ var Model = function (env) {
         && _currentCrop.isValid()
         && _env.useNMinMineralFertilisingMethod
         && _currentCrop.seedDate().dayOfYear() > _currentCrop.harvestDate().dayOfYear()
-        && _dataAccessor.julianDayForStep(stepNo) == pc_JulianDayAutomaticFertilising) {
+        && julday == pc_JulianDayAutomaticFertilising) {
 
       logger(MSG.INFO, "N_min fertilising winter crop");
 
@@ -437,28 +467,32 @@ var Model = function (env) {
   };
 
   /* Simulating crop growth for one time step. */
-  var cropStep = function (stepNo) {
+  var cropStep = function (
+    julday,
+    tavg,
+    tmax,
+    tmin,
+    globrad,
+    sunhours,
+    relhumid,
+    wind,
+    precip,
+    vw_WindSpeedHeight,
+    f_s,
+    daylength,
+    R_a, 
+    isVegPeriod
+  ) {
 
     /* do nothing if there is no crop */
     if (!that._currentCropGrowth)
       return;
 
-    var julday = _dataAccessor.julianDayForStep(stepNo)
-      , tavg = _dataAccessor.dataForTimestep(WEATHER.TAVG, stepNo)
-      , tmax = _dataAccessor.dataForTimestep(WEATHER.TMAX, stepNo)
-      , tmin = _dataAccessor.dataForTimestep(WEATHER.TMIN, stepNo)
-      , globrad = _dataAccessor.dataForTimestep(WEATHER.GLOBRAD, stepNo)
-      /* test if data for sunhours are available; if not, value is set to -1.0 */
-      , sunhours = _dataAccessor.isAvailable(WEATHER.SUNHOURS) ? _dataAccessor.dataForTimestep(WEATHER.SUNHOURS, stepNo) : -1.0   
-      /* test if data for relhumid are available; if not, value is set to -1.0 */
-      , relhumid = _dataAccessor.isAvailable(WEATHER.RELHUMID) ? _dataAccessor.dataForTimestep(WEATHER.RELHUMID, stepNo) : -1.0
-      , wind =  _dataAccessor.dataForTimestep(WEATHER.WIND, stepNo)
-      , precip =  _dataAccessor.dataForTimestep(WEATHER.PRECIP, stepNo)
-      , vw_WindSpeedHeight = centralParameterProvider.userEnvironmentParameters.p_WindSpeedHeight
-      , f_s = _dataAccessor.dataForTimestep(WEATHER.F_DIRECTRAD, stepNo)
-      , daylength = _dataAccessor.dataForTimestep(WEATHER.DAYLENGTH, stepNo) * SEC_PER_HOUR
-      , R_a = _dataAccessor.dataForTimestep(WEATHER.EXRAD, stepNo)
-      ;
+    /* test if model's crop has been dying in previous step if yes, it will be incorporated into soil */
+    if (that._currentCropGrowth.isDying()) {
+      incorporateCurrentCrop();
+      return;
+    }
 
     p_daysWithCrop++;
 
@@ -889,6 +923,7 @@ var Model = function (env) {
     getCentralParameterProvider: getCentralParameterProvider,
     getEnvironment: getEnvironment,
     cropGrowth: this.cropGrowth,
+    prodProcessStep: prodProcessStep,
     generalStep: generalStep,
     cropStep: cropStep,
     CO2ForDate: CO2ForDate,

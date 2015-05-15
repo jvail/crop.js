@@ -142,8 +142,8 @@
             "default": "Fixed"
           },
           "amount": {
-            "desc": "Amount of N applied",
-            "unit": "kg (N) ha-1",
+            "desc": "Amount of fresh matter applied",
+            "unit": "kg (FM) ha-1",
             "min": 0,
             "max": null,
             "default": 0

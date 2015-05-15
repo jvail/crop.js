@@ -81,9 +81,9 @@ var OrganicFertilizer = function (name, carbamid, no3, nh4, dm) {
   this.name = (name !== undefined && name !== null) ? name.toLowerCase() : '';
 
   this.vo_AOM_DryMatterContent = dm || 0.0;       // [kg (DM) kg-1 (FM)]
-  this.vo_AOM_NH4Content = nh4 || 0.0;            // [kg (N)  kg-1 (FM)]
-  this.vo_AOM_NO3Content = no3 || 0.0;            // [kg (N)  kg-1 (FM)]
-  this.vo_AOM_CarbamidContent = carbamid || 0.0;  // [kg (N)  kg-1 (FM)]
+  this.vo_AOM_NH4Content = nh4 || 0.0;            // [kg (N)  kg-1 (DM)]
+  this.vo_AOM_NO3Content = no3 || 0.0;            // [kg (N)  kg-1 (DM)]
+  this.vo_AOM_CarbamidContent = carbamid || 0.0;  // [kg (N)  kg-1 (DM)]
   this.vo_AOM_SlowDecCoeffStandard = 0.0002;
   this.vo_AOM_FastDecCoeffStandard = 0.002;
   this.vo_PartAOM_to_AOM_Slow = 0.72;
@@ -93,6 +93,7 @@ var OrganicFertilizer = function (name, carbamid, no3, nh4, dm) {
   this.vo_PartAOM_Slow_to_SMB_Slow = 0;
   this.vo_PartAOM_Slow_to_SMB_Fast = 1;
   this.vo_NConcentration = 0.00;
+  this.vo_DaysAfterApplication = 0;
 
   if (this.name === 'cattle deep-litter manure') {
     this.vo_AOM_DryMatterContent = 0.289;

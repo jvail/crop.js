@@ -1512,4 +1512,5 @@ var Grass = function (seedDate, harvestDates, species) {
   this.isValid = function () {
     return true;
   };
+  this.type = 'grassland';
 };

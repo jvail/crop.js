@@ -121,8 +121,7 @@ var toString = function () {
   s += "name: " + _name + " start: " + start().toString()
       + " end: " + end().toString() + "\n";
   s += "worksteps:" + "\n";
-  var p = _worksteps.equal_range(date);
-  p.forEach(function (ws) {
+  _worksteps.forEach(function (ws) {
     s += "at: " + ws.date().toString()
         + " what: " + ws.toString() + "\n";
   });

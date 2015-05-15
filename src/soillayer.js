@@ -76,8 +76,8 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
     var vs_SoilTemperature = 0;
     this.vo_AOM_Pool = [];
 
-    if (!((_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001))
-      throw "_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001)";
+    if (DEBUG && !((_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001))
+      throw new Error("_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001)");
 
     vs_SoilMoisture_m3 = this.vs_FieldCapacity * cpp.userInitValues.p_initPercentageFC;
     this.vs_SoilMoistureOld_m3 = this.vs_FieldCapacity * cpp.userInitValues.p_initPercentageFC;

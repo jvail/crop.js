@@ -15,7 +15,7 @@ var tools = {
         ;
 
       if ((sand + clay + silt) != 100)
-        throw '(sand + clay + silt) != 100: ' + (sand + clay + silt);
+        throw new Error('(sand + clay + silt) != 100: ' + (sand + clay + silt));
 
       if (clay <= 5) {
 

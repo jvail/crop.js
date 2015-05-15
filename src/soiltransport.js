@@ -1,7 +1,3 @@
-/*
-  TODO: crop NH4 uptake?
-
-*/
 
 var SoilTransport = function (sc, sps, cpp) {
 
@@ -50,12 +46,14 @@ var SoilTransport = function (sc, sps, cpp) {
       vq_LayerThickness[i_Layer] = soilColumn[0].vs_LayerThickness;
       vc_NUptakeFromLayer[i_Layer] = crop ? crop.get_NUptakeFromLayer(i_Layer) : 0;
 
+      // disabled
       /* crop.js: remove NH4 from uptake and update NH4 in solution */
       /* [kg (N) m-3] */
+      /*
       var NH4_uptake = min(soilColumn[i_Layer].vs_SoilNH4, vc_NUptakeFromLayer[i_Layer] / vq_LayerThickness[i_Layer]);
       vc_NUptakeFromLayer[i_Layer] -=  NH4_uptake * vq_LayerThickness[i_Layer];
       soilColumn[i_Layer].vs_SoilNH4 -= NH4_uptake;
-
+      */
 
       if (i_Layer == (vs_NumberOfLayers - 1)){
         vq_PercolationRate[i_Layer] = soilColumn.vs_FluxAtLowerBoundary ; //[mm]
@@ -97,7 +95,8 @@ var SoilTransport = function (sc, sps, cpp) {
       soilColumn[i_Layer].vs_SoilNO3 = vq_SoilNO3[i_Layer];
     } // for
 
-    NH4_absorption();
+    // disabled (NH4 uptake not implemented in MONICA)
+    // NH4_absorption();
 
   };
 
@@ -378,7 +377,9 @@ var SoilTransport = function (sc, sps, cpp) {
   //  cout << "vq_LeachingAtBoundary: " << vq_LeachingAtBoundary << endl;
   };
 
-  /* Johnson eqs. 5.39 ff. */
+  /* Johnson eqs. 5.39 ff. 
+     Experimeantal implementation (disabled by default)
+  */
   function NH4_absorption() {
 
     /* TODO: make C_a_mx depend on clay content */

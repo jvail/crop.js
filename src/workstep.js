@@ -253,7 +253,7 @@ var OrganicFertiliserApplication = function (at, parameters, amount, incorp) {
 
   this._date = at;
   this._parameters = parameters;
-  this._amount = amount / parameters.vo_NConcentration; /* from [kg (N) ha-1] to [kg (FM) ha-1] */
+  this._amount = amount; /* [kg (FM) ha-1] */
   this._incrop = (incorp === undefined) ? true : incorp;
 
   this.apply = function (model) {
@@ -275,8 +275,8 @@ var OrganicFertiliserApplication = function (at, parameters, amount, incorp) {
   this.toString = function () {
     return (
       "applying organic fertiliser at: " + this.date().toString() + " amount: " + 
-      this.amount() + "\tN percentage: " + this._parameters().vo_NConcentration + "\tN amount: " + 
-      this.amount() * this._parameters().vo_NConcentration
+      this.amount() + "\tN percentage: " + this._parameters.vo_NConcentration + "\tN amount: " + 
+      this.amount() * this._parameters.vo_NConcentration
     );
   };
 
@@ -302,7 +302,7 @@ var TillageApplication = function (at, depth) {
   };
 
   this.toString = function () {
-    return "applying tillage at: " + this.date().toString() + " depth: " + this.depth();
+    return "applying tillage at: " + this.date().toString() + " depth: " + this._depth;
   };
 
   this.clone = function () {

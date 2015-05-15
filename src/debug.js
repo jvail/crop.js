@@ -32,14 +32,14 @@ var debugArgs = function (arguments_, funcName) {
               for (var i = 0, is = arg.length; i < is; i++) {
                 if (isInvalid(arg[i])) {
                   doLog(arg);
-                  throw arg;
+                  throw new Error(arg);
                 }
               }
             } else if (Array.isArray(e)) {
               e.forEach(function (e2) {
                 if (isInvalid(e2)) {
                   doLog(e);
-                  throw e2;
+                  throw new Error(e2);
                 }
               });
             } else {
@@ -47,7 +47,7 @@ var debugArgs = function (arguments_, funcName) {
                 if (e.hasOwnProperty(prop)) {
                   if (isInvalid(e[prop])) {
                     doLog(e);
-                    throw prop;
+                    throw new Error(prop);
                   }
                 }
               }
@@ -55,7 +55,7 @@ var debugArgs = function (arguments_, funcName) {
           } else {
             if (isInvalid(e)) {
               doLog(arg);
-              throw e;
+              throw new Error(e);
             }
           }
         });
@@ -63,7 +63,7 @@ var debugArgs = function (arguments_, funcName) {
         for (var i = 0, is = arg.length; i < is; i++) {
           if (isInvalid(arg[i])) {
             doLog(arg);
-            throw arg;
+            throw new Error(arg);
           }
         }
       } else {
@@ -71,7 +71,7 @@ var debugArgs = function (arguments_, funcName) {
           if (arg.hasOwnProperty(prop)) {
             if (isInvalid(arg[prop])) {
               doLog(arg);
-              throw arg;
+              throw new Error(arg);
             }
           }
         }
@@ -79,7 +79,7 @@ var debugArgs = function (arguments_, funcName) {
     } else { 
       if (isInvalid(arg)) {
         doLog(args);
-        throw arg;
+        throw new Error(arg);
       }
     }
   }

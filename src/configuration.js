@@ -5,7 +5,7 @@
     - use date string instead of Date obj?
     - what if sunhours not available?
 
-  weather = {                     object
+  weatherData = {                   object
       tmin          [°C]            array, daily minimum temperature
     , tmax          [°C]            array, daily maximum temperature
     , tavg          [°C]            array, daily average temperature
@@ -17,129 +17,168 @@
     , relhumid      [%]             array, relative humidity, optional (use empty array if not available)
     , daylength     [h]             array, daylength. required by grassland model
     , f_directrad   [h h-1]         array, fraction direct solar radiation. required by grassland model
-    , date          [date]          array, ISO date strings
+    , date          [date string]   array, ISO date strings
     , doy           [#]             array, day of year
   }
-  doDebug           [bool]          debug model and show MSG.DEBUG output
-  isVerbose         [bool]          show MSG.INFO output
-  progressCallbacks [array]       array functions, of access model variables at each time step
+  doDebug           [bool]          debug model and print MSG.DEBUG output
+  isVerbose         [bool]          print MSG.INFO output
+  callbacks         [array]         function or array of functions, access model variables at each time step 
+                                    (write an output file, change model variables etc.)
 */
 
-var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
+var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
   DEBUG = (doDebug === true) ? true : false;
   VERBOSE = (isVerbose === true) ? true : false;
 
-  var pathToOutputDir = '.';
+  if (typeof callbacks === 'function')
+    callbacks = [callbacks];    
+  else if (!Array.isArray(callbacks) || callbacks.length === 0)
+    callbacks = [defaultCallback]; /* set to default if arg not provided */
 
-  var run = function run(simInput, siteInput, prodInput) {
+  // var pathToOutputDir = '.';
+  var models = null
+    , noModels = 0
+    ;
 
-    /* set to default if arg not provided */
-    if (progressCallbacks.length === 0)
-      progressCallbacks = [defaultCallback];
+  /*
+    input is an object with sim, prod and site properties or an array of site and prod objects
+
+    simulation = { ... }      simulation settings
     
-    logger(MSG.INFO, 'Fetching parameters.');
-    
-    /* init parameters */
-    var parameterProvider = new ParameterProvider();
-    var siteParameters = new SiteParameters();
-    var generalParameters = new GeneralParameters();
-
-    /* sim */
-    var startDate = new Date(simInput.time.startDate);
-    var endDate = new Date(simInput.time.endDate);
-    var startYear = startDate.getFullYear();
-    var endYear = endDate.getFullYear();
-
-    parameterProvider.userInitValues.p_initPercentageFC = getValue(simInput.init, 'percentageFC', parameterProvider.userInitValues.p_initPercentageFC);
-    parameterProvider.userInitValues.p_initSoilNitrate = getValue(simInput.init, 'soilNitrate', parameterProvider.userInitValues.p_initSoilNitrate);
-    parameterProvider.userInitValues.p_initSoilAmmonium = getValue(simInput.init, 'soilAmmonium', parameterProvider.userInitValues.p_initSoilAmmonium);
-
-    parameterProvider.userEnvironmentParameters.p_UseSecondaryYields = getValue(simInput.switches, 'useSecondaryYieldOn', parameterProvider.userEnvironmentParameters.p_UseSecondaryYields);
-    generalParameters.pc_NitrogenResponseOn = getValue(simInput.switches, 'nitrogenResponseOn', generalParameters.pc_NitrogenResponseOn);
-    generalParameters.pc_WaterDeficitResponseOn = getValue(simInput.switches, 'waterDeficitResponseOn', generalParameters.pc_WaterDeficitResponseOn);
-    generalParameters.pc_WaterDeficitResponseOn = getValue(simInput.switches, 'lowTemperatureStressResponseOn', generalParameters.pc_LowTemperatureStressResponseOn);
-    generalParameters.pc_WaterDeficitResponseOn = getValue(simInput.switches, 'highTemperatureStressResponseOn', generalParameters.pc_HighTemperatureStressResponseOn);
-    generalParameters.pc_EmergenceMoistureControlOn = getValue(simInput.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
-    generalParameters.pc_EmergenceFloodingControlOn = getValue(simInput.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
-
-    logger(MSG.INFO, 'Fetched simulation data.');
-    
-    /* site */
-    siteParameters.vs_Latitude = siteInput.latitude;
-    siteParameters.vs_Slope = siteInput.slope;
-    siteParameters.vs_HeightNN = siteInput.heightNN;
-    siteParameters.vq_NDeposition = getValue(siteInput, 'NDeposition', siteParameters.vq_NDeposition);
-
-    parameterProvider.userEnvironmentParameters.p_AthmosphericCO2 = getValue(siteInput, 'atmosphericCO2', parameterProvider.userEnvironmentParameters.p_AthmosphericCO2);
-    parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepth = getValue(siteInput, 'groundwaterDepthMin', parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepth);
-    parameterProvider.userEnvironmentParameters.p_MaxGroundwaterDepth = getValue(siteInput, 'groundwaterDepthMax', parameterProvider.userEnvironmentParameters.p_MaxGroundwaterDepth);
-    parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepthMonth = getValue(siteInput, 'groundwaterDepthMinMonth', parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepthMonth);
-    parameterProvider.userEnvironmentParameters.p_WindSpeedHeight = getValue(siteInput, 'windSpeedHeight', parameterProvider.userEnvironmentParameters.p_WindSpeedHeight);  
-    parameterProvider.userEnvironmentParameters.p_LeachingDepth = getValue(siteInput, 'leachingDepth', parameterProvider.userEnvironmentParameters.p_LeachingDepth);
-
-    logger(MSG.INFO, 'Fetched site data.');
-
-    /* soil */
-    var lThicknessCm = 100.0 * parameterProvider.userEnvironmentParameters.p_LayerThickness;
-    var maxDepthCm =  200.0;
-    var maxNoOfLayers = int(maxDepthCm / lThicknessCm);
-
-    var layers = [];
-    if (!createLayers(layers, siteInput.horizons, lThicknessCm, maxNoOfLayers)) {
-      logger(MSG.ERROR, 'Error fetching soil data.');
-      return;
+    siteAndProd = {           obj
+      site: { ... },          site, location
+      production: { ... }     crop rotation
     }
-    
-    logger(MSG.INFO, 'Fetched soil data.');
+
+      or
+
+    siteAndProd = [{          array of objs
+      site: { ... },          site 1, location
+      production: { ... }     crop rotation 1
+    }, {   
+      site: { ... },          site n, location
+      production: { ... }     crop rotation n
+    }, ...]
+
+  */
+
+  var run = function (sim, siteAndProd) {
+
+    var startDate = new Date(sim.time.startDate);
+    var endDate = new Date(sim.time.endDate);
 
     /* weather */
-    var da = new Weather(startDate, endDate);
-    if (!createClimate(da, weather, Date.parse(simInput.time.startDate), Date.parse(simInput.time.endDate))) {
+    var weather = new Weather(startDate, endDate);
+    if (!createWeather(weather, weatherData, Date.parse(sim.time.startDate), Date.parse(sim.time.endDate))) {
       logger(MSG.ERROR, 'Error fetching weather data.');
       return;
     }
-
-    if (!(da instanceof Weather))
-      throw da;
     
     logger(MSG.INFO, 'Fetched weather data.');
 
-    /* crops */
-    var cropRotation = [];
-    if (!createProcesses(cropRotation, prodInput.crops, startDate)) {
-      logger(MSG.ERROR, 'Error fetching crop data.');
-      return;
-    }
+    models = new ModelCollection(weather);
+
+    if (!Array.isArray(siteAndProd))
+      siteAndProd = [siteAndProd];
+
+    noModels = siteAndProd.length;
+
+    for (var sp = 0, sps = siteAndProd.length; sp < sps; sp++) {
+
+      logger(MSG.INFO, 'Fetching parameter for site + ' + sp);
+      
+      var site = siteAndProd[sp].site;
+      var prod = siteAndProd[sp].production;
+      
+      /* init parameters */
+      var parameterProvider = new ParameterProvider();
+      var siteParameters = new SiteParameters();
+      var generalParameters = new GeneralParameters();
+
+      /* sim */
+      var startYear = startDate.getFullYear();
+      var endYear = endDate.getFullYear();
+
+      parameterProvider.userInitValues.p_initPercentageFC = getValue(sim.init, 'percentageFC', parameterProvider.userInitValues.p_initPercentageFC);
+      parameterProvider.userInitValues.p_initSoilNitrate = getValue(sim.init, 'soilNitrate', parameterProvider.userInitValues.p_initSoilNitrate);
+      parameterProvider.userInitValues.p_initSoilAmmonium = getValue(sim.init, 'soilAmmonium', parameterProvider.userInitValues.p_initSoilAmmonium);
+
+      parameterProvider.userEnvironmentParameters.p_UseSecondaryYields = getValue(sim.switches, 'useSecondaryYieldOn', parameterProvider.userEnvironmentParameters.p_UseSecondaryYields);
+      generalParameters.pc_NitrogenResponseOn = getValue(sim.switches, 'nitrogenResponseOn', generalParameters.pc_NitrogenResponseOn);
+      generalParameters.pc_WaterDeficitResponseOn = getValue(sim.switches, 'waterDeficitResponseOn', generalParameters.pc_WaterDeficitResponseOn);
+      generalParameters.pc_WaterDeficitResponseOn = getValue(sim.switches, 'lowTemperatureStressResponseOn', generalParameters.pc_LowTemperatureStressResponseOn);
+      generalParameters.pc_WaterDeficitResponseOn = getValue(sim.switches, 'highTemperatureStressResponseOn', generalParameters.pc_HighTemperatureStressResponseOn);
+      generalParameters.pc_EmergenceMoistureControlOn = getValue(sim.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
+      generalParameters.pc_EmergenceFloodingControlOn = getValue(sim.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
+
+      logger(MSG.INFO, 'Fetched simulation data.');
+      
+      /* site */
+      siteParameters.vs_Latitude = site.latitude;
+      siteParameters.vs_Slope = site.slope;
+      siteParameters.vs_HeightNN = site.heightNN;
+      siteParameters.vq_NDeposition = getValue(site, 'NDeposition', siteParameters.vq_NDeposition);
+
+      parameterProvider.userEnvironmentParameters.p_AthmosphericCO2 = getValue(site, 'atmosphericCO2', parameterProvider.userEnvironmentParameters.p_AthmosphericCO2);
+      parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepth = getValue(site, 'groundwaterDepthMin', parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepth);
+      parameterProvider.userEnvironmentParameters.p_MaxGroundwaterDepth = getValue(site, 'groundwaterDepthMax', parameterProvider.userEnvironmentParameters.p_MaxGroundwaterDepth);
+      parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepthMonth = getValue(site, 'groundwaterDepthMinMonth', parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepthMonth);
+      parameterProvider.userEnvironmentParameters.p_WindSpeedHeight = getValue(site, 'windSpeedHeight', parameterProvider.userEnvironmentParameters.p_WindSpeedHeight);  
+      parameterProvider.userEnvironmentParameters.p_LeachingDepth = getValue(site, 'leachingDepth', parameterProvider.userEnvironmentParameters.p_LeachingDepth);
+
+      logger(MSG.INFO, 'Fetched site data.');
+
+      /* soil */
+      var lThicknessCm = 100.0 * parameterProvider.userEnvironmentParameters.p_LayerThickness;
+      var maxDepthCm =  200.0;
+      var maxNoOfLayers = int(maxDepthCm / lThicknessCm);
+
+      var layers = [];
+      if (!createLayers(layers, site.horizons, lThicknessCm, maxNoOfLayers)) {
+        logger(MSG.ERROR, 'Error fetching soil data.');
+        return;
+      }
+      
+      logger(MSG.INFO, 'Fetched soil data.');
+
+      /* crops */
+      var cropRotation = [];
+      if (!createProcesses(cropRotation, prod.crops, startDate)) {
+        logger(MSG.ERROR, 'Error fetching crop data.');
+        return;
+      }
+      
+      logger(MSG.INFO, 'Fetched crop data.');
+
+      var env = new Environment(layers, parameterProvider);
+      env.general = generalParameters;
+      // env.pathToOutputDir = pathToOutputDir;
+      // env.setMode(1); // JS! not implemented
+      env.site = siteParameters;
+      // env.da = da; // now in ModelCollection.weather
+      env.cropRotation = cropRotation;
+     
+      // TODO: implement and test useAutomaticIrrigation & useNMinFertiliser
+      // if (hermes_config->useAutomaticIrrigation()) {
+      //   env.useAutomaticIrrigation = true;
+      //   env.autoIrrigationParams = hermes_config->getAutomaticIrrigationParameters();
+      // }
+
+      // if (hermes_config->useNMinFertiliser()) {
+      //   env.useNMinMineralFertilisingMethod = true;
+      //   env.nMinUserParams = hermes_config->getNMinUserParameters();
+      //   env.nMinFertiliserPartition = getMineralFertiliserParametersFromMonicaDB(hermes_config->getMineralFertiliserID());
+      // }
+
+      models.push(new Model(env));
     
-    logger(MSG.INFO, 'Fetched crop data.');
-
-    var env = new Environment(layers, parameterProvider);
-    env.general = generalParameters;
-    env.pathToOutputDir = pathToOutputDir;
-    // env.setMode(1); // JS! not implemented
-    env.site = siteParameters;
-    env.da = da;
-    env.cropRotation = cropRotation;
-   
-    // TODO: implement and test useAutomaticIrrigation & useNMinFertiliser
-    // if (hermes_config->useAutomaticIrrigation()) {
-    //   env.useAutomaticIrrigation = true;
-    //   env.autoIrrigationParams = hermes_config->getAutomaticIrrigationParameters();
-    // }
-
-    // if (hermes_config->useNMinFertiliser()) {
-    //   env.useNMinMineralFertilisingMethod = true;
-    //   env.nMinUserParams = hermes_config->getNMinUserParameters();
-    //   env.nMinFertiliserPartition = getMineralFertiliserParametersFromMonicaDB(hermes_config->getMineralFertiliserID());
-    // }
-
-    var model = new Model(env);
-
+    } // for each input
+    
     logger(MSG.INFO, 'Start model run.');
-
-    return model.run(progressCallbacks);
     
+    return models.run(callbacks);
+
   };
 
   /* read value from JSON input and return default value if parameter is not available */
@@ -416,7 +455,7 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
       var fDate = new Date(Date.parse(fertilizer.date))
         , method = fertilizer.method
         , name = fertilizer.name // changed from id to name
-        , amount = fertilizer.amount // [kg (N) ha-1]
+        , amount = fertilizer.amount // [kg (FM) ha-1]
         , carbamid = fertilizer.carbamid
         , no3 = fertilizer.no3
         , nh4 = fertilizer.nh4
@@ -536,46 +575,56 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
   // };
 
 
-  function createClimate(da, weatherInput) {
+  function createWeather(weather, input) {
 
-    var ok = false;
+    var ok = true;
     var data = [];
 
-    data[WEATHER.TMIN] = new Float64Array(weatherInput.tmin);                  /* [°C] */
-    data[WEATHER.TMAX] = new Float64Array(weatherInput.tmax);                  /* [°C] */
-    data[WEATHER.TAVG] = new Float64Array(weatherInput.tavg);                  /* [°C] */
-    data[WEATHER.GLOBRAD] = new Float64Array(weatherInput.globrad);            /* [MJ m-2] */
-    data[WEATHER.EXRAD] = new Float64Array(weatherInput.exrad);                /* [MJ m-2] */
-    data[WEATHER.WIND] = new Float64Array(weatherInput.wind);                  /* [m s-1] */
-    data[WEATHER.PRECIP] = new Float64Array(weatherInput.precip);              /* [mm] */
+    data[WEATHER.TMIN] = new Float64Array(input.tmin);                  /* [°C] */
+    data[WEATHER.TMAX] = new Float64Array(input.tmax);                  /* [°C] */
+    data[WEATHER.TAVG] = new Float64Array(input.tavg);                  /* [°C] */
+    data[WEATHER.GLOBRAD] = new Float64Array(input.globrad);            /* [MJ m-2] */
+    data[WEATHER.WIND] = new Float64Array(input.wind);                  /* [m s-1] */
+    data[WEATHER.PRECIP] = new Float64Array(input.precip);              /* [mm] */
 
     /* required for grassland model */
-    data[WEATHER.DAYLENGTH] = new Float64Array(weatherInput.daylength);        /* [h] */
-    data[WEATHER.F_DIRECTRAD] = new Float64Array(weatherInput.f_directrad);    /* [h h-1] fraction direct solar radiation */
+    data[WEATHER.DAYLENGTH] = new Float64Array(input.daylength);        /* [h] */
+    data[WEATHER.F_DIRECTRAD] = new Float64Array(input.f_directrad);    /* [h h-1] fraction direct solar radiation */
+    data[WEATHER.EXRAD] = new Float64Array(input.exrad);                /* [MJ m-2] */
 
-    data[WEATHER.SUNHOURS] = new Float64Array(weatherInput.sunhours);          /* [h] */
-    data[WEATHER.RELHUMID] = new Float64Array(weatherInput.relhumid);          /* [%] */
+    data[WEATHER.SUNHOURS] = new Float64Array(input.sunhours);          /* [h] */
+    data[WEATHER.RELHUMID] = new Float64Array(input.relhumid);          /* [%] */
 
-    data[WEATHER.DOY] = weatherInput.doy;
-    data[WEATHER.ISODATESTRING] = weatherInput.date;
+    data[WEATHER.DOY] = input.doy;
+    data[WEATHER.ISODATESTRING] = input.date;
 
-    da.setData(data);
-  
+    /* check if all arrays are of the same length */
+    var length = data[WEATHER.TMIN].length;
+    for (var i in WEATHER) { 
+      if (data[WEATHER[i]].length != length)
+        ok = false;
+    }
+    
+    if (ok)
+      weather.setData(data);      
+
     /* TODO: add additional checks */
-    ok = true;
 
     return ok;
 
   };
 
-  var defaultCallback = function (dayOfSimulation, date, model) {
+  function defaultCallback(dayOfSimulation, dateString, models, done) {
 
-    var progress = {};
+    var progress = [];
 
-    /* if both null we are done */
-    if (!date && !model) {
-      progress = null;
-    } else {
+    if (!done) {
+
+      for (var m = 0; m < noModels; m++) {
+        progress.push({
+          date: { value: dateString, unit: '[date]' }
+        });
+      }
 
       // var isCropPlanted = model.isCropPlanted()
       //   , mcg = model.cropGrowth()
@@ -680,8 +729,12 @@ var Configuration = function (weather, doDebug, isVerbose, progressCallbacks) {
   
     if (ENVIRONMENT_IS_WORKER)
       postMessage({ progress: progress });
-    else
-      if (progress === null) logger(MSG.INFO, 'done');
+    else {
+      console.log(JSON.stringify(progress, null, 2));  
+    }
+
+    if (done) 
+      logger(MSG.INFO, 'done');
   
   };  
 

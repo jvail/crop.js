@@ -1,33 +1,41 @@
-/*
-  TODO: make closure or remove function calls access
-*/
 
 var Weather = function (startDate, endDate) {
 
   this._startDate = startDate;
   this._endDate = endDate;
-  this._data = null;
-  this._numberOfSteps = floor((endDate - startDate) / MS_PER_DAY) + 1;
+  this._data = [];
+  this._numberOfSteps = 0;
+  this._offset = 0;
   this._dates = [];
 
   this.setData = function (data) {
     
     this._data = data;
-    /* set numberOfSteps to minimum weather data available if any array's length < _numberOfSteps */
-    for (var i = 0, is = data.length; i < is; i++) {
-      if (data[i].length < this._numberOfSteps) {
-        this._numberOfSteps = data[i].length;
-        logger(MSG.WARN, 'Weather input length from [' + i + '] < numberOfSteps. numberOfSteps now ' + this._numberOfSteps);
-      }
+    this._offset = data[WEATHER.ISODATESTRING].indexOf(this._startDate.toISOString().split('T')[0]);
+
+    var endIdx = data[WEATHER.ISODATESTRING].indexOf(this._endDate.toISOString().split('T')[0]);
+    
+    if (this._offset < 0) {
+      this._numberOfSteps = 0;
+      logger(MSG.ERROR, 'Start date not valid: no. of steps is 0');
+      throw new Error('Start date not valid: no. of steps is 0');
     }
 
-    for (i = 0; i < this._numberOfSteps; i++)
+    if (endIdx < 0) {
+      endIdx = this._data[WEATHER.ISODATESTRING].length - 1;
+      this._endDate = new Date(Date.parse(this._data[WEATHER.ISODATESTRING][endIdx]));
+      logger(MSG.WARN, 'End date not found: end date adjusted to ' + this._endDate.toISOString().split('T')[0]);
+    }
+
+    for (var i = 0; i < this._numberOfSteps; i++)
       this._dates[i] = new Date(Date.parse(this._data[WEATHER.ISODATESTRING][i]));
+
+    this._numberOfSteps = endIdx - this._offset;
 
   };
 
   this.date = function (stepNo) {
-    return this._dates[stepNo];
+    return this._dates[stepNo + this._offset];
   };
 
   this.isValid = function () { 
@@ -35,7 +43,7 @@ var Weather = function (startDate, endDate) {
   };
 
   this.dataForTimestep = function (index, dayOfSimulation) {
-    return this._data[index][dayOfSimulation];
+    return this._data[index][dayOfSimulation + this._offset];
   };
 
   this.noOfStepsPossible = function () {
@@ -53,7 +61,7 @@ var Weather = function (startDate, endDate) {
   this.julianDayForStep = function (stepNo) {
 
     if (this._data[WEATHER.DOY].length > 0) {
-      return this._data[WEATHER.DOY][stepNo];
+      return this._data[WEATHER.DOY][stepNo + this._offset];
     } else {
       var newDate = new Date(this._startDate.getFullYear(), this._startDate.getMonth(), this._startDate.getDate() + stepNo);
       return ceil((newDate - new Date(newDate.getFullYear(), 0, 1)) / 86400000) + 1;

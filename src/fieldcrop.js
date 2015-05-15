@@ -3237,6 +3237,7 @@ var FieldCrop = function (name) {
 
   return {
 
+    type: 'fieldcrop',
     id: function () { 
       return _id; 
     },
