@@ -103,7 +103,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
       pm_MaxPercolationRate = sm_params.pm_MaxPercolationRate,
       pm_LeachingDepth = env_params.p_LeachingDepth,
       pm_LayerThickness = env_params.p_LayerThickness,
-      pm_LeachingDepthLayer = int(floor(0.5 + (pm_LeachingDepth / pm_LayerThickness))) - 1,
+      pm_LeachingDepthLayer = toInt(floor(0.5 + (pm_LeachingDepth / pm_LayerThickness))) - 1,
       vm_SaturatedHydraulicConductivity = new Array(vm_NumberOfLayers);
 
     for (var i=0; i<vm_NumberOfLayers; i++) {
@@ -175,14 +175,14 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
         vm_GroundwaterTable = i_Layer;
       }
     }
-    if ((vm_GroundwaterTable > (int(vs_GroundwaterDepth / soilColumn[0].vs_LayerThickness)))
+    if ((vm_GroundwaterTable > (toInt(vs_GroundwaterDepth / soilColumn[0].vs_LayerThickness)))
          && (vm_GroundwaterTable < (vs_NumberOfLayers + 2))) {
 
-      vm_GroundwaterTable = (int(vs_GroundwaterDepth / soilColumn[0].vs_LayerThickness));
+      vm_GroundwaterTable = (toInt(vs_GroundwaterDepth / soilColumn[0].vs_LayerThickness));
 
     } else if (vm_GroundwaterTable >= (vs_NumberOfLayers + 2)){
 
-      vm_GroundwaterTable = (int(vs_GroundwaterDepth / soilColumn[0].vs_LayerThickness));
+      vm_GroundwaterTable = (toInt(vs_GroundwaterDepth / soilColumn[0].vs_LayerThickness));
 
     }
 
@@ -508,7 +508,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
 
         // groundwater table shall not undermatch the oscillating groundwater depth
         // which is generated within the outer framework
-        if (vm_GroundwaterTable >= int(vs_GroundwaterDepth / vm_LayerThickness[i_Layer])) {
+        if (vm_GroundwaterTable >= toInt(vs_GroundwaterDepth / vm_LayerThickness[i_Layer])) {
           vm_SoilMoisture[i_Layer + 1] += (
             (vm_PercolationRate[i_Layer]) / 1000.0 / vm_LayerThickness[i_Layer]
           );
@@ -548,7 +548,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
 
         vm_SoilMoisture[i_Layer + 1] = vm_SoilPoreVolume[i_Layer + 1];
 
-        if (vm_GroundwaterTable >= int(vs_GroundwaterDepth / vm_LayerThickness[i_Layer])) {
+        if (vm_GroundwaterTable >= toInt(vs_GroundwaterDepth / vm_LayerThickness[i_Layer])) {
           vm_PercolationRate[i_Layer + 1] = vm_PercolationRate[i_Layer];
           vm_WaterFlux[i_Layer] = vm_PercolationRate[i_Layer + 1];
         } else {

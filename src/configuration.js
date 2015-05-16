@@ -132,7 +132,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       /* soil */
       var lThicknessCm = 100.0 * parameterProvider.userEnvironmentParameters.p_LayerThickness;
       var maxDepthCm =  200.0;
-      var maxNoOfLayers = int(maxDepthCm / lThicknessCm);
+      var maxNoOfLayers = toInt(maxDepthCm / lThicknessCm);
 
       var layers = [];
       if (!createLayers(layers, site.horizons, lThicknessCm, maxNoOfLayers)) {
@@ -203,10 +203,10 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       
       var horizon = horizons[h];
       var hThicknessCm = horizon.thickness * 100;
-      var lInHCount = int(round(hThicknessCm / lThicknessCm));
+      var lInHCount = toInt(round(hThicknessCm / lThicknessCm));
 
       /* fill all (maxNoOfLayers) layers if available horizons depth < lThicknessCm * maxNoOfLayers */
-      if (h == (hs - 1) && (int(layers.length) + lInHCount) < maxNoOfLayers)
+      if (h == (hs - 1) && (toInt(layers.length) + lInHCount) < maxNoOfLayers)
         lInHCount += maxNoOfLayers - layers.length - lInHCount;
 
       for (var l = 0; l < lInHCount; l++) {

@@ -406,7 +406,7 @@ var Model = function (env) {
   ) {
 
     that.vw_AtmosphericCO2Concentration = (_env.atmosphericCO2 === -1 ? user_env.p_AthmosphericCO2 : _env.atmosphericCO2);
-    if (int(that.vw_AtmosphericCO2Concentration) === 0)
+    if (toInt(that.vw_AtmosphericCO2Concentration) === 0)
       that.vw_AtmosphericCO2Concentration = CO2ForDate(year, julday, leapYear);
 
     that.vs_GroundwaterDepth = GroundwaterDepthForDate(

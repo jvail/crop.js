@@ -618,14 +618,14 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
         + soilColumn[2].get_Saturation()) - (soilColumn[0].get_Vs_SoilMoisture_m3() + soilColumn[1].get_Vs_SoilMoisture_m3()
         + soilColumn[2].get_Vs_SoilMoisture_m3())) / 3.0;
     if (vc_AirFilledPoreVolume < d_CriticalOxygenContent) {
-      vc_TimeUnderAnoxia += int(vc_TimeStep);
+      vc_TimeUnderAnoxia += toInt(vc_TimeStep);
       if (vc_TimeUnderAnoxia > 4)
         vc_TimeUnderAnoxia = 4;
       if (vc_AirFilledPoreVolume < 0.0)
         vc_AirFilledPoreVolume = 0.0;
       vc_MaxOxygenDeficit = vc_AirFilledPoreVolume / d_CriticalOxygenContent;
-      // JS! c++ : double (int / int) -> js int(double / double) !! took hours to debug!
-      vc_OxygenDeficit = 1.0 - int(vc_TimeUnderAnoxia / 4) * (1.0 - vc_MaxOxygenDeficit);
+      // JS! c++ : double (int / int) -> js toInt(double / double) !! took hours to debug!
+      vc_OxygenDeficit = 1.0 - toInt(vc_TimeUnderAnoxia / 4) * (1.0 - vc_MaxOxygenDeficit);
     } else {
       vc_TimeUnderAnoxia = 0;
       vc_OxygenDeficit = 1.0;
@@ -1837,13 +1837,13 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     }
 
     // Calculating rooting depth layer []
-    vc_RootingDepth = int(floor(0.5 + (vc_RootingDepth_m / vs_LayerThickness))); // []
+    vc_RootingDepth = toInt(floor(0.5 + (vc_RootingDepth_m / vs_LayerThickness))); // []
 
     if (vc_RootingDepth > vs_NumberOfLayers) {
       vc_RootingDepth = vs_NumberOfLayers;
     }
 
-    vc_RootingZone = int(floor(0.5 + ((1.3 * vc_RootingDepth_m) / vs_LayerThickness))); // []
+    vc_RootingZone = toInt(floor(0.5 + ((1.3 * vc_RootingDepth_m) / vs_LayerThickness))); // []
 
     if (vc_RootingZone > vs_NumberOfLayers){
       vc_RootingZone = vs_NumberOfLayers;
@@ -1858,7 +1858,7 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
         vc_RootDensityFactor[i_Layer] = exp(-pc_RootFormFactor * (i_Layer * vs_LayerThickness)); // []
       } else if (i_Layer < vc_RootingZone){
         vc_RootDensityFactor[i_Layer] = exp(-pc_RootFormFactor * (i_Layer * vs_LayerThickness))
-          * (1.0 - int((i_Layer - vc_RootingDepth) / (vc_RootingZone - vc_RootingDepth))); // JS! int division
+          * (1.0 - toInt((i_Layer - vc_RootingDepth) / (vc_RootingZone - vc_RootingDepth))); // JS! int division
       } else {
         vc_RootDensityFactor[i_Layer] = 0.0; // []
       }
@@ -2017,8 +2017,8 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
   ) {
 
     // JS! make sure it is an "int"
-    vc_RootingZone = int(vc_RootingZone);
-    vc_GroundwaterTable = int(vc_GroundwaterTable);
+    vc_RootingZone = toInt(vc_RootingZone);
+    vc_GroundwaterTable = toInt(vc_GroundwaterTable);
 
 
     var vc_PotentialTranspirationDeficit = 0.0; // [mm]
@@ -2214,7 +2214,7 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
         vc_TranspirationDeficit = 1.0; //[]
       }
 
-      var vm_GroundwaterDistance = int(vc_GroundwaterTable - vc_RootingDepth); // JS! just in case ... added int()
+      var vm_GroundwaterDistance = toInt(vc_GroundwaterTable - vc_RootingDepth); // JS! just in case ... added int()
       if (vm_GroundwaterDistance <= 1) {
         vc_TranspirationDeficit = 1.0;
       }
@@ -2236,8 +2236,8 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
   ) {
 
     // JS! make sure it is an "int"
-    vc_RootingZone = int(vc_RootingZone);
-    vc_GroundwaterTable = int(vc_GroundwaterTable);
+    vc_RootingZone = toInt(vc_RootingZone);
+    vc_GroundwaterTable = toInt(vc_GroundwaterTable);
 
 
     var vc_ConvectiveNUptake = 0.0; // old TRNSUM
@@ -2436,10 +2436,10 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
 
   var _cropYield = function (v, bmv) {
 
-    var yield = 0;
+    var cropYield = 0;
     for (var i = 0, is = v.length; i < is; i++)
-      yield += bmv[v[i].organId - 1] * (v[i].yieldPercentage);
-    return yield;
+      cropYield += bmv[v[i].organId - 1] * (v[i].yieldPercentage);
+    return cropYield;
   };
 
   var _cropFreshMatterYield = function (v, bmv) {

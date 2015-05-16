@@ -1438,7 +1438,7 @@ var ParameterProvider = function () {
       this.map[textureClass][distance] = value;
     },
     getRate: function (textureClass, distance) {
-      distance = int(distance);
+      distance = toInt(distance);
       var map = this.getMap(textureClass);
       return (map[distance] === undefined) ? 0.0 : map[distance];
     },

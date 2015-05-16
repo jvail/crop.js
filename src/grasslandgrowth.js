@@ -1223,8 +1223,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     nitrogenUptake();
 
     // groundwater
-    // var vc_RootingZone = int(floor(0.5 + ((1.3 * mixture.d_r_mx()) / vs_LayerThickness)));
-    // var vm_GroundwaterTable = int(soilColumn.vm_GroundwaterTable);
+    // var vc_RootingZone = toInt(floor(0.5 + ((1.3 * mixture.d_r_mx()) / vs_LayerThickness)));
+    // var vm_GroundwaterTable = toInt(soilColumn.vm_GroundwaterTable);
 
     /* TODO: set for each species? */ 
     vc_ReferenceEvapotranspiration =  fc_ReferenceEvapotranspiration(T, T_mx, T_mn, rh, u, u_h, R_s, C_amb, R_a);

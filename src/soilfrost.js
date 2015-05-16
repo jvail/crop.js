@@ -196,7 +196,7 @@ var FrostComponent = function (sc, cpp) {
 
     for (var i_Layer = 0; i_Layer < vs_number_of_layers; i_Layer++) {
 
-      if (i_Layer < (int(floor((vm_FrostDepth / soilColumn[i_Layer].vs_LayerThickness) + 0.5)))) {
+      if (i_Layer < (toInt(floor((vm_FrostDepth / soilColumn[i_Layer].vs_LayerThickness) + 0.5)))) {
 
         // soil layer is frozen
         soilColumn[i_Layer].vs_SoilFrozen = true;
@@ -208,7 +208,7 @@ var FrostComponent = function (sc, cpp) {
       }
 
 
-      if (i_Layer < (int(floor((vm_ThawDepth / soilColumn[i_Layer].vs_LayerThickness) + 0.5)))) {
+      if (i_Layer < (toInt(floor((vm_ThawDepth / soilColumn[i_Layer].vs_LayerThickness) + 0.5)))) {
         // soil layer is thawing
 
         if (vm_ThawDepth < ((i_Layer + 1) * soilColumn[i_Layer].vs_LayerThickness) && (vm_ThawDepth < vm_FrostDepth)) {

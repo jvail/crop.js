@@ -799,12 +799,12 @@ var tools = {
           if (m[soilType] === undefined)
             m[soilType] = {};
 
-          m[soilType][int(row['soil_raw_density*10'])] = rp;
+          m[soilType][toInt(row['soil_raw_density*10'])] = rp;
 
         }
       }
 
-      var rd10 = int(rawDensity * 10);
+      var rd10 = toInt(rawDensity * 10);
       if (m[soilType][rd10])
         return m[soilType][rd10];
 
@@ -855,12 +855,12 @@ var tools = {
           if (m[soilType] === undefined)
             m[soilType] = {};
 
-          m[soilType][int(row['organic_matter'])] = rp;
+          m[soilType][toInt(row['organic_matter'])] = rp;
 
         }
       }
 
-      var rd10 = int(organicMatter * 10);
+      var rd10 = toInt(organicMatter * 10);
 
       return (m[soilType][rd10]) ? m[soilType][rd10] : new RPSCDRes();
   

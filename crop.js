@@ -123,7 +123,7 @@ var abs    = Math.abs
   , cos    = Math.cos
   , exp    = Math.exp
   , floor  = Math.floor
-  , int    = function (x) {
+  , toInt    = function (x) {
       return x | 0;
     }
   , log    = Math.log
@@ -1223,12 +1223,12 @@ var tools = {
           if (m[soilType] === undefined)
             m[soilType] = {};
 
-          m[soilType][int(row['soil_raw_density*10'])] = rp;
+          m[soilType][toInt(row['soil_raw_density*10'])] = rp;
 
         }
       }
 
-      var rd10 = int(rawDensity * 10);
+      var rd10 = toInt(rawDensity * 10);
       if (m[soilType][rd10])
         return m[soilType][rd10];
 
@@ -1279,12 +1279,12 @@ var tools = {
           if (m[soilType] === undefined)
             m[soilType] = {};
 
-          m[soilType][int(row['organic_matter'])] = rp;
+          m[soilType][toInt(row['organic_matter'])] = rp;
 
         }
       }
 
-      var rd10 = int(organicMatter * 10);
+      var rd10 = toInt(organicMatter * 10);
 
       return (m[soilType][rd10]) ? m[soilType][rd10] : new RPSCDRes();
   
@@ -2749,7 +2749,7 @@ var ParameterProvider = function () {
       this.map[textureClass][distance] = value;
     },
     getRate: function (textureClass, distance) {
-      distance = int(distance);
+      distance = toInt(distance);
       var map = this.getMap(textureClass);
       return (map[distance] === undefined) ? 0.0 : map[distance];
     },
@@ -9737,14 +9737,14 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
         + soilColumn[2].get_Saturation()) - (soilColumn[0].get_Vs_SoilMoisture_m3() + soilColumn[1].get_Vs_SoilMoisture_m3()
         + soilColumn[2].get_Vs_SoilMoisture_m3())) / 3.0;
     if (vc_AirFilledPoreVolume < d_CriticalOxygenContent) {
-      vc_TimeUnderAnoxia += int(vc_TimeStep);
+      vc_TimeUnderAnoxia += toInt(vc_TimeStep);
       if (vc_TimeUnderAnoxia > 4)
         vc_TimeUnderAnoxia = 4;
       if (vc_AirFilledPoreVolume < 0.0)
         vc_AirFilledPoreVolume = 0.0;
       vc_MaxOxygenDeficit = vc_AirFilledPoreVolume / d_CriticalOxygenContent;
-      // JS! c++ : double (int / int) -> js int(double / double) !! took hours to debug!
-      vc_OxygenDeficit = 1.0 - int(vc_TimeUnderAnoxia / 4) * (1.0 - vc_MaxOxygenDeficit);
+      // JS! c++ : double (int / int) -> js toInt(double / double) !! took hours to debug!
+      vc_OxygenDeficit = 1.0 - toInt(vc_TimeUnderAnoxia / 4) * (1.0 - vc_MaxOxygenDeficit);
     } else {
       vc_TimeUnderAnoxia = 0;
       vc_OxygenDeficit = 1.0;
@@ -10956,13 +10956,13 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     }
 
     // Calculating rooting depth layer []
-    vc_RootingDepth = int(floor(0.5 + (vc_RootingDepth_m / vs_LayerThickness))); // []
+    vc_RootingDepth = toInt(floor(0.5 + (vc_RootingDepth_m / vs_LayerThickness))); // []
 
     if (vc_RootingDepth > vs_NumberOfLayers) {
       vc_RootingDepth = vs_NumberOfLayers;
     }
 
-    vc_RootingZone = int(floor(0.5 + ((1.3 * vc_RootingDepth_m) / vs_LayerThickness))); // []
+    vc_RootingZone = toInt(floor(0.5 + ((1.3 * vc_RootingDepth_m) / vs_LayerThickness))); // []
 
     if (vc_RootingZone > vs_NumberOfLayers){
       vc_RootingZone = vs_NumberOfLayers;
@@ -10977,7 +10977,7 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
         vc_RootDensityFactor[i_Layer] = exp(-pc_RootFormFactor * (i_Layer * vs_LayerThickness)); // []
       } else if (i_Layer < vc_RootingZone){
         vc_RootDensityFactor[i_Layer] = exp(-pc_RootFormFactor * (i_Layer * vs_LayerThickness))
-          * (1.0 - int((i_Layer - vc_RootingDepth) / (vc_RootingZone - vc_RootingDepth))); // JS! int division
+          * (1.0 - toInt((i_Layer - vc_RootingDepth) / (vc_RootingZone - vc_RootingDepth))); // JS! int division
       } else {
         vc_RootDensityFactor[i_Layer] = 0.0; // []
       }
@@ -11136,8 +11136,8 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
   ) {
 
     // JS! make sure it is an "int"
-    vc_RootingZone = int(vc_RootingZone);
-    vc_GroundwaterTable = int(vc_GroundwaterTable);
+    vc_RootingZone = toInt(vc_RootingZone);
+    vc_GroundwaterTable = toInt(vc_GroundwaterTable);
 
 
     var vc_PotentialTranspirationDeficit = 0.0; // [mm]
@@ -11333,7 +11333,7 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
         vc_TranspirationDeficit = 1.0; //[]
       }
 
-      var vm_GroundwaterDistance = int(vc_GroundwaterTable - vc_RootingDepth); // JS! just in case ... added int()
+      var vm_GroundwaterDistance = toInt(vc_GroundwaterTable - vc_RootingDepth); // JS! just in case ... added int()
       if (vm_GroundwaterDistance <= 1) {
         vc_TranspirationDeficit = 1.0;
       }
@@ -11355,8 +11355,8 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
   ) {
 
     // JS! make sure it is an "int"
-    vc_RootingZone = int(vc_RootingZone);
-    vc_GroundwaterTable = int(vc_GroundwaterTable);
+    vc_RootingZone = toInt(vc_RootingZone);
+    vc_GroundwaterTable = toInt(vc_GroundwaterTable);
 
 
     var vc_ConvectiveNUptake = 0.0; // old TRNSUM
@@ -11555,10 +11555,10 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
 
   var _cropYield = function (v, bmv) {
 
-    var yield = 0;
+    var cropYield = 0;
     for (var i = 0, is = v.length; i < is; i++)
-      yield += bmv[v[i].organId - 1] * (v[i].yieldPercentage);
-    return yield;
+      cropYield += bmv[v[i].organId - 1] * (v[i].yieldPercentage);
+    return cropYield;
   };
 
   var _cropFreshMatterYield = function (v, bmv) {
@@ -13530,7 +13530,6 @@ var Grass = function (seedDate, harvestDates, species) {
   - tests with N-Ireland ryegrass data suggest that growthg is systematically under-(over)-estimated in spring (autum).
     Potential solution: There is currently no ("locked") pool to accumulate reserves in autum stored in roots (or in 
     case of clover above the root) that will be released in spring to support initial growth.
-  - for consistency remove NH4 uptake (implemented in SGS) because it is not implemented in MONICA's crops 
 
 
   README
@@ -13541,6 +13540,7 @@ var Grass = function (seedDate, harvestDates, species) {
     to light interception (competition).
   - Added a coverage factor that captures how much of a sqm is covered by a species to avoid inconsistencies in the height 
     calculations
+  - for consistency removed NH4 uptake (implemented in SGS) because it is not implemented in MONICA's crops
 */
 
 var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes additional grassland param
@@ -14123,6 +14123,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         , C_total = species.C_live_shoot() + species.C_root()
         , N_avail = species.vars.N_avail
         , isC4 = species.isC4
+        , isLegume = species.isLegume
         ;
 
       // vars.R_m = R_m(T, species.N_live_shoot() / species.C_live_shoot(), cons.N_leaf.ref, C_total);
@@ -14152,6 +14153,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           , ρ_root = 1 - ρ_shoot
           , N_req = 0
           , N_assim = 0 // sum all organs [kg N m-2]
+          , N_fix = 0
           , N_ref_opt = cons.N_leaf.opt
           , N_ref_max = cons.N_leaf.max
           ;
@@ -14159,10 +14161,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         vars.ρ_shoot = ρ_shoot;
         vars.ρ_root = ρ_root;
 
-        /* 
-          now update N_up & N_fix 
-          move remobilized N to protein pool of live tissuse: This will increase tissue N conc.
-
+        /*
           if N conc. for any tissue is below opt. then allow for max. N assimilation otherwise utilize available N up to N opt.
           
           TODO:
@@ -14234,15 +14233,12 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
             , N_assimilated = C_assimilated * f_pn * fN_pn / fC_pn /* [kg (N) m-2] */
             ;
 
-          if (N_assimilated > N_up_pool)  {
+          if (!isLegume && N_assimilated > N_up_pool)  {
             /* TODO: find a better implementation as such that a re-calculation of f_pn is not necessary.
               The idea here is that if N is limited the sc and nc fractions are increased (f_sc += 0.8 * (f_pn_old - f_pn)).
               It is unclear if this is a good representation of the underlying physiology but the result is satisfying in terms
               of typical observations in pastures during summer: high growth rates -> insufficient N uptake -> lower protein content -> 
               higher nc and ndf content */ 
-
-            // for legumes assume a fall back to a minimum of N.opt instead of N.max and satisfy missing N form fixation
-            // TODO: move legumes to the end of mixture array
 
             // recalculate C_assimilated with f_pn exactly depleting N_up_pool; sc is fixed
             // f_pn = (N(available) / (Y(f_sc,f_pn) * P)) * (fC_pn / fN_pn) -> solved for f_pn
@@ -14281,6 +14277,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
             N_up_pool = 0;
 
+          } else if (isLegume && N_assimilated > N_up_pool) {
+            N_fix += N_assimilated - N_up_pool;
           } else {
             N_up_pool -= N_assimilated;
           }
@@ -14315,10 +14313,10 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
         } // for each organ
 
-        // TODO: dont forget to account for remob and fixation here!
         vars.Ω_N = pc_NitrogenResponseOn ? min(1, N_assim / N_req) : 1;
         vars.N_assim = N_assim;
         vars.N_req = N_req;
+        vars.N_fix = N_fix;
         vars.G = vars.G_leaf + vars.G_stem + vars.G_root;
 
         /* additional protein synthesis (not growth) if N_up_pool still > 0 */
@@ -14735,8 +14733,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     nitrogenUptake();
 
     // groundwater
-    // var vc_RootingZone = int(floor(0.5 + ((1.3 * mixture.d_r_mx()) / vs_LayerThickness)));
-    // var vm_GroundwaterTable = int(soilColumn.vm_GroundwaterTable);
+    // var vc_RootingZone = toInt(floor(0.5 + ((1.3 * mixture.d_r_mx()) / vs_LayerThickness)));
+    // var vm_GroundwaterTable = toInt(soilColumn.vm_GroundwaterTable);
 
     /* TODO: set for each species? */ 
     vc_ReferenceEvapotranspiration =  fc_ReferenceEvapotranspiration(T, T_mx, T_mn, rh, u, u_h, R_s, C_amb, R_a);
@@ -16945,7 +16943,7 @@ var Model = function (env) {
   ) {
 
     that.vw_AtmosphericCO2Concentration = (_env.atmosphericCO2 === -1 ? user_env.p_AthmosphericCO2 : _env.atmosphericCO2);
-    if (int(that.vw_AtmosphericCO2Concentration) === 0)
+    if (toInt(that.vw_AtmosphericCO2Concentration) === 0)
       that.vw_AtmosphericCO2Concentration = CO2ForDate(year, julday, leapYear);
 
     that.vs_GroundwaterDepth = GroundwaterDepthForDate(
@@ -18246,7 +18244,7 @@ var SoilColumn = function (gps, sp, cpp) {
     var vi_ActualPlantAvailableWater = 0.0;
     var vi_MaxPlantAvailableWater = 0.0;
     var vi_PlantAvailableWaterFraction = 0.0;
-    var vi_CriticalMoistureLayer = int(ceil(vi_CriticalMoistureDepth / that[0].vs_LayerThickness));
+    var vi_CriticalMoistureLayer = toInt(ceil(vi_CriticalMoistureDepth / that[0].vs_LayerThickness));
 
     for (var i_Layer = 0; i_Layer < vi_CriticalMoistureLayer; i_Layer++){
       vi_ActualPlantAvailableWater += (this[i_Layer].get_Vs_SoilMoisture_m3()
@@ -20438,7 +20436,7 @@ var FrostComponent = function (sc, cpp) {
 
     for (var i_Layer = 0; i_Layer < vs_number_of_layers; i_Layer++) {
 
-      if (i_Layer < (int(floor((vm_FrostDepth / soilColumn[i_Layer].vs_LayerThickness) + 0.5)))) {
+      if (i_Layer < (toInt(floor((vm_FrostDepth / soilColumn[i_Layer].vs_LayerThickness) + 0.5)))) {
 
         // soil layer is frozen
         soilColumn[i_Layer].vs_SoilFrozen = true;
@@ -20450,7 +20448,7 @@ var FrostComponent = function (sc, cpp) {
       }
 
 
-      if (i_Layer < (int(floor((vm_ThawDepth / soilColumn[i_Layer].vs_LayerThickness) + 0.5)))) {
+      if (i_Layer < (toInt(floor((vm_ThawDepth / soilColumn[i_Layer].vs_LayerThickness) + 0.5)))) {
         // soil layer is thawing
 
         if (vm_ThawDepth < ((i_Layer + 1) * soilColumn[i_Layer].vs_LayerThickness) && (vm_ThawDepth < vm_FrostDepth)) {
@@ -20872,7 +20870,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
       pm_MaxPercolationRate = sm_params.pm_MaxPercolationRate,
       pm_LeachingDepth = env_params.p_LeachingDepth,
       pm_LayerThickness = env_params.p_LayerThickness,
-      pm_LeachingDepthLayer = int(floor(0.5 + (pm_LeachingDepth / pm_LayerThickness))) - 1,
+      pm_LeachingDepthLayer = toInt(floor(0.5 + (pm_LeachingDepth / pm_LayerThickness))) - 1,
       vm_SaturatedHydraulicConductivity = new Array(vm_NumberOfLayers);
 
     for (var i=0; i<vm_NumberOfLayers; i++) {
@@ -20944,14 +20942,14 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
         vm_GroundwaterTable = i_Layer;
       }
     }
-    if ((vm_GroundwaterTable > (int(vs_GroundwaterDepth / soilColumn[0].vs_LayerThickness)))
+    if ((vm_GroundwaterTable > (toInt(vs_GroundwaterDepth / soilColumn[0].vs_LayerThickness)))
          && (vm_GroundwaterTable < (vs_NumberOfLayers + 2))) {
 
-      vm_GroundwaterTable = (int(vs_GroundwaterDepth / soilColumn[0].vs_LayerThickness));
+      vm_GroundwaterTable = (toInt(vs_GroundwaterDepth / soilColumn[0].vs_LayerThickness));
 
     } else if (vm_GroundwaterTable >= (vs_NumberOfLayers + 2)){
 
-      vm_GroundwaterTable = (int(vs_GroundwaterDepth / soilColumn[0].vs_LayerThickness));
+      vm_GroundwaterTable = (toInt(vs_GroundwaterDepth / soilColumn[0].vs_LayerThickness));
 
     }
 
@@ -21277,7 +21275,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
 
         // groundwater table shall not undermatch the oscillating groundwater depth
         // which is generated within the outer framework
-        if (vm_GroundwaterTable >= int(vs_GroundwaterDepth / vm_LayerThickness[i_Layer])) {
+        if (vm_GroundwaterTable >= toInt(vs_GroundwaterDepth / vm_LayerThickness[i_Layer])) {
           vm_SoilMoisture[i_Layer + 1] += (
             (vm_PercolationRate[i_Layer]) / 1000.0 / vm_LayerThickness[i_Layer]
           );
@@ -21317,7 +21315,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
 
         vm_SoilMoisture[i_Layer + 1] = vm_SoilPoreVolume[i_Layer + 1];
 
-        if (vm_GroundwaterTable >= int(vs_GroundwaterDepth / vm_LayerThickness[i_Layer])) {
+        if (vm_GroundwaterTable >= toInt(vs_GroundwaterDepth / vm_LayerThickness[i_Layer])) {
           vm_PercolationRate[i_Layer + 1] = vm_PercolationRate[i_Layer];
           vm_WaterFlux[i_Layer] = vm_PercolationRate[i_Layer + 1];
         } else {
@@ -23086,7 +23084,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       /* soil */
       var lThicknessCm = 100.0 * parameterProvider.userEnvironmentParameters.p_LayerThickness;
       var maxDepthCm =  200.0;
-      var maxNoOfLayers = int(maxDepthCm / lThicknessCm);
+      var maxNoOfLayers = toInt(maxDepthCm / lThicknessCm);
 
       var layers = [];
       if (!createLayers(layers, site.horizons, lThicknessCm, maxNoOfLayers)) {
@@ -23157,10 +23155,10 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       
       var horizon = horizons[h];
       var hThicknessCm = horizon.thickness * 100;
-      var lInHCount = int(round(hThicknessCm / lThicknessCm));
+      var lInHCount = toInt(round(hThicknessCm / lThicknessCm));
 
       /* fill all (maxNoOfLayers) layers if available horizons depth < lThicknessCm * maxNoOfLayers */
-      if (h == (hs - 1) && (int(layers.length) + lInHCount) < maxNoOfLayers)
+      if (h == (hs - 1) && (toInt(layers.length) + lInHCount) < maxNoOfLayers)
         lInHCount += maxNoOfLayers - layers.length - lInHCount;
 
       for (var l = 0; l < lInHCount; l++) {

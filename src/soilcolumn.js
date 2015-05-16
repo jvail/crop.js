@@ -233,7 +233,7 @@ var SoilColumn = function (gps, sp, cpp) {
     var vi_ActualPlantAvailableWater = 0.0;
     var vi_MaxPlantAvailableWater = 0.0;
     var vi_PlantAvailableWaterFraction = 0.0;
-    var vi_CriticalMoistureLayer = int(ceil(vi_CriticalMoistureDepth / that[0].vs_LayerThickness));
+    var vi_CriticalMoistureLayer = toInt(ceil(vi_CriticalMoistureDepth / that[0].vs_LayerThickness));
 
     for (var i_Layer = 0; i_Layer < vi_CriticalMoistureLayer; i_Layer++){
       vi_ActualPlantAvailableWater += (this[i_Layer].get_Vs_SoilMoisture_m3()

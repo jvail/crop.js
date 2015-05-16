@@ -30,7 +30,7 @@ var abs    = Math.abs
   , cos    = Math.cos
   , exp    = Math.exp
   , floor  = Math.floor
-  , int    = function (x) {
+  , toInt    = function (x) {
       return x | 0;
     }
   , log    = Math.log
