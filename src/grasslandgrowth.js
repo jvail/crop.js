@@ -769,6 +769,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
           } else if (isLegume && N_assimilated > N_up_pool) {
             N_fix += N_assimilated - N_up_pool;
+            N_up_pool -= N_assimilated;
           } else {
             N_up_pool -= N_assimilated;
           }
