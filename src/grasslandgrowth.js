@@ -20,7 +20,6 @@
   - tests with N-Ireland ryegrass data suggest that growthg is systematically under-(over)-estimated in spring (autum).
     Potential solution: There is currently no ("locked") pool to accumulate reserves in autum stored in roots (or in 
     case of clover above the root) that will be released in spring to support initial growth.
-  - for consistency remove NH4 uptake (implemented in SGS) because it is not implemented in MONICA's crops 
 
 
   README
@@ -31,6 +30,7 @@
     to light interception (competition).
   - Added a coverage factor that captures how much of a sqm is covered by a species to avoid inconsistencies in the height 
     calculations
+  - for consistency removed NH4 uptake (implemented in SGS) because it is not implemented in MONICA's crops
 */
 
 var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes additional grassland param
@@ -613,6 +613,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         , C_total = species.C_live_shoot() + species.C_root()
         , N_avail = species.vars.N_avail
         , isC4 = species.isC4
+        , isLegume = species.isLegume
         ;
 
       // vars.R_m = R_m(T, species.N_live_shoot() / species.C_live_shoot(), cons.N_leaf.ref, C_total);
@@ -642,6 +643,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           , ρ_root = 1 - ρ_shoot
           , N_req = 0
           , N_assim = 0 // sum all organs [kg N m-2]
+          , N_fix = 0
           , N_ref_opt = cons.N_leaf.opt
           , N_ref_max = cons.N_leaf.max
           ;
@@ -649,10 +651,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         vars.ρ_shoot = ρ_shoot;
         vars.ρ_root = ρ_root;
 
-        /* 
-          now update N_up & N_fix 
-          move remobilized N to protein pool of live tissuse: This will increase tissue N conc.
-
+        /*
           if N conc. for any tissue is below opt. then allow for max. N assimilation otherwise utilize available N up to N opt.
           
           TODO:
@@ -724,15 +723,12 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
             , N_assimilated = C_assimilated * f_pn * fN_pn / fC_pn /* [kg (N) m-2] */
             ;
 
-          if (N_assimilated > N_up_pool)  {
+          if (!isLegume && N_assimilated > N_up_pool)  {
             /* TODO: find a better implementation as such that a re-calculation of f_pn is not necessary.
               The idea here is that if N is limited the sc and nc fractions are increased (f_sc += 0.8 * (f_pn_old - f_pn)).
               It is unclear if this is a good representation of the underlying physiology but the result is satisfying in terms
               of typical observations in pastures during summer: high growth rates -> insufficient N uptake -> lower protein content -> 
               higher nc and ndf content */ 
-
-            // for legumes assume a fall back to a minimum of N.opt instead of N.max and satisfy missing N form fixation
-            // TODO: move legumes to the end of mixture array
 
             // recalculate C_assimilated with f_pn exactly depleting N_up_pool; sc is fixed
             // f_pn = (N(available) / (Y(f_sc,f_pn) * P)) * (fC_pn / fN_pn) -> solved for f_pn
@@ -771,6 +767,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
             N_up_pool = 0;
 
+          } else if (isLegume && N_assimilated > N_up_pool) {
+            N_fix += N_assimilated - N_up_pool;
           } else {
             N_up_pool -= N_assimilated;
           }
@@ -805,10 +803,10 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
         } // for each organ
 
-        // TODO: dont forget to account for remob and fixation here!
         vars.Ω_N = pc_NitrogenResponseOn ? min(1, N_assim / N_req) : 1;
         vars.N_assim = N_assim;
         vars.N_req = N_req;
+        vars.N_fix = N_fix;
         vars.G = vars.G_leaf + vars.G_stem + vars.G_root;
 
         /* additional protein synthesis (not growth) if N_up_pool still > 0 */
