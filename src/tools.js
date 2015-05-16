@@ -135,7 +135,7 @@ var tools = {
           textureClass = 'Tu2';
 
       } else {
-        textureClass = 'Tt'
+        textureClass = 'Tt';
       }
 
       return textureClass;
@@ -459,9 +459,9 @@ var tools = {
       function Theta_33(S, C, OM) {
         
         var Theta_33t = (
-          - 0.251 * S + 0.195 * C + 0.011 * OM
-          + 0.006 * (S * OM) - 0.027 * (C * OM)
-          + 0.452 * (S * C) + 0.299
+          - 0.251 * S + 0.195 * C + 0.011 * OM +
+            0.006 * (S * OM) - 0.027 * (C * OM) +
+            0.452 * (S * C) + 0.299
         );
         
         return Theta_33t + (1.283 * pow(Theta_33t, 2) - 0.374 * Theta_33t - 0.015);
@@ -479,9 +479,9 @@ var tools = {
       function Theta_S33(S, C, OM) {
         
         var Theta_S33t = (
-            0.278 * S + 0.034 * C + 0.022 * OM
-          - 0.018 * (S * OM) - 0.027 * (C * OM) -
-          - 0.584 * (S * C) + 0.078
+            0.278 * S + 0.034 * C + 0.022 * OM -
+            0.018 * (S * OM) - 0.027 * (C * OM) -
+            0.584 * (S * C) + 0.078
         );
         
         return Theta_S33t + (0.636 * Theta_S33t - 0.107);
@@ -499,9 +499,9 @@ var tools = {
       function Theta_1500(S, C, OM) {
         
         var Theta_1500t = (
-          - 0.024 * S + 0.487 * C + 0.006 * OM
-          + 0.005 * (S * OM) - 0.013 * (C * OM)
-          + 0.068 * (S * C) + 0.031
+          - 0.024 * S + 0.487 * C + 0.006 * OM +
+            0.005 * (S * OM) - 0.013 * (C * OM) +
+            0.068 * (S * C) + 0.031
         );
         
         return Theta_1500t + (0.14 * Theta_1500t - 0.02);
@@ -520,7 +520,7 @@ var tools = {
       var percent_clay = clay * 100;
       var sand_2 = pow(percent_sand, 2);
       var clay_2 = pow(percent_clay, 2);
-      var a = exp(-4.396 - 0.0715 * percent_clay - 4.88e-4 * sand_2 - 4.285e-5 * sand_2 * percent_clay)
+      var a = exp(-4.396 - 0.0715 * percent_clay - 4.88e-4 * sand_2 - 4.285e-5 * sand_2 * percent_clay);
       var b = - 3.140 - 0.00222 * clay_2 - 3.484e-5 * sand_2 * percent_clay;
       var SAT = 0.332 - 7.251e-4 * percent_sand + 0.1276 * log10(percent_clay);
       var FC = pow((0.3333 / a), (1.0 / b));
@@ -561,7 +561,7 @@ var tools = {
       var sat = 0.0;
       var pwp = 0.0;
 
-      if (texture != "") {
+      if (texture !== "") {
         var srd = soilParameter.vs_SoilRawDensity() / 1000.0; // [kg m-3] -> [g cm-3]
         var som = soilParameter.vs_SoilOrganicMatter() * 100.0; // [kg kg-1] -> [%]
 
@@ -671,8 +671,8 @@ var tools = {
           var sat_mod_lowerBound = 0.0;
           var pwp_mod_lowerBound = 0.0;
           // modifier values are given only for organic matter > 1.0% (class h2)
-          if (som_lowerBound != 0.0) {
-            var lbRes = Tools.readSoilCharacteristicModifier(texture, som_lowerBound);
+          if (som_lowerBound !== 0.0) {
+            lbRes = Tools.readSoilCharacteristicModifier(texture, som_lowerBound);
             sat_mod_lowerBound = lbRes.sat;
             fc_mod_lowerBound = lbRes.fc;
             pwp_mod_lowerBound = lbRes.pwp;
@@ -681,8 +681,8 @@ var tools = {
           var fc_mod_upperBound = 0.0;
           var sat_mod_upperBound = 0.0;
           var pwp_mod_upperBound = 0.0;
-          if (som_upperBound != 0.0) {
-            var ubRes = Tools.readSoilCharacteristicModifier(texture, som_upperBound);
+          if (som_upperBound !== 0.0) {
+            ubRes = Tools.readSoilCharacteristicModifier(texture, som_upperBound);
             sat_mod_upperBound = ubRes.sat;
             fc_mod_upperBound = ubRes.fc;
             pwp_mod_upperBound = ubRes.pwp;

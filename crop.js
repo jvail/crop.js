@@ -1,6 +1,6 @@
 var crop = crop || {};
 (function () {
-
+'use strict';
 var example_config = {
  "simulation": {
   "time": {
@@ -296,14 +296,16 @@ var logger = function (type, msg) {
 
 /* JS debugging */
 
-var debugArgs = function (arguments_, funcName) {
+var debugArgs = function (arguments_, funcName_) {
 
   // TODO: recursive
 
   if (!DEBUG) return; 
 
   var args = Array.prototype.slice.call(arguments_)
-    , funcName = funcName || ''
+    , i = 0
+    , is = 0
+    , funcName = funcName_ || ''
     , isInvalid = function (x) {
         if (x instanceof Function)
           return false;
@@ -318,14 +320,14 @@ var debugArgs = function (arguments_, funcName) {
       }
     ;
 
-  for (var i = 0, is = args.length; i < is; i++) {
+  for (i = 0, is = args.length; i < is; i++) {
     var arg = args[i];
     if (arg && typeof arg === 'object') {
       if (Array.isArray(arg)) {
         arg.forEach(function (e) {
           if (e && typeof e === 'object') {
             if (isTypedArray(e)) {
-              for (var i = 0, is = arg.length; i < is; i++) {
+              for (i = 0, is = arg.length; i < is; i++) {
                 if (isInvalid(arg[i])) {
                   doLog(arg);
                   throw new Error(arg);
@@ -356,7 +358,7 @@ var debugArgs = function (arguments_, funcName) {
           }
         });
       } else if (isTypedArray(arg)) {
-        for (var i = 0, is = arg.length; i < is; i++) {
+        for (i = 0, is = arg.length; i < is; i++) {
           if (isInvalid(arg[i])) {
             doLog(arg);
             throw new Error(arg);
@@ -394,7 +396,7 @@ var isTypedArray = function (x) {
     x instanceof Float64Array || 
     x instanceof Float64Array
   );
-}
+};
 
 var debug = function () {
 
@@ -403,7 +405,7 @@ var debug = function () {
   // check if it is an arguments object
   if (
     typeof arguments[0] === 'object' &&
-    arguments[0].length != undefined && 
+    arguments[0].length !== undefined && 
     !Array.isArray(arguments[0]) &&
     !isTypedArray(arguments[0])
   ) return debugArgs(arguments[0], arguments[1]);
@@ -559,7 +561,7 @@ var tools = {
           textureClass = 'Tu2';
 
       } else {
-        textureClass = 'Tt'
+        textureClass = 'Tt';
       }
 
       return textureClass;
@@ -883,9 +885,9 @@ var tools = {
       function Theta_33(S, C, OM) {
         
         var Theta_33t = (
-          - 0.251 * S + 0.195 * C + 0.011 * OM
-          + 0.006 * (S * OM) - 0.027 * (C * OM)
-          + 0.452 * (S * C) + 0.299
+          - 0.251 * S + 0.195 * C + 0.011 * OM +
+            0.006 * (S * OM) - 0.027 * (C * OM) +
+            0.452 * (S * C) + 0.299
         );
         
         return Theta_33t + (1.283 * pow(Theta_33t, 2) - 0.374 * Theta_33t - 0.015);
@@ -903,9 +905,9 @@ var tools = {
       function Theta_S33(S, C, OM) {
         
         var Theta_S33t = (
-            0.278 * S + 0.034 * C + 0.022 * OM
-          - 0.018 * (S * OM) - 0.027 * (C * OM) -
-          - 0.584 * (S * C) + 0.078
+            0.278 * S + 0.034 * C + 0.022 * OM -
+            0.018 * (S * OM) - 0.027 * (C * OM) -
+            0.584 * (S * C) + 0.078
         );
         
         return Theta_S33t + (0.636 * Theta_S33t - 0.107);
@@ -923,9 +925,9 @@ var tools = {
       function Theta_1500(S, C, OM) {
         
         var Theta_1500t = (
-          - 0.024 * S + 0.487 * C + 0.006 * OM
-          + 0.005 * (S * OM) - 0.013 * (C * OM)
-          + 0.068 * (S * C) + 0.031
+          - 0.024 * S + 0.487 * C + 0.006 * OM +
+            0.005 * (S * OM) - 0.013 * (C * OM) +
+            0.068 * (S * C) + 0.031
         );
         
         return Theta_1500t + (0.14 * Theta_1500t - 0.02);
@@ -944,7 +946,7 @@ var tools = {
       var percent_clay = clay * 100;
       var sand_2 = pow(percent_sand, 2);
       var clay_2 = pow(percent_clay, 2);
-      var a = exp(-4.396 - 0.0715 * percent_clay - 4.88e-4 * sand_2 - 4.285e-5 * sand_2 * percent_clay)
+      var a = exp(-4.396 - 0.0715 * percent_clay - 4.88e-4 * sand_2 - 4.285e-5 * sand_2 * percent_clay);
       var b = - 3.140 - 0.00222 * clay_2 - 3.484e-5 * sand_2 * percent_clay;
       var SAT = 0.332 - 7.251e-4 * percent_sand + 0.1276 * log10(percent_clay);
       var FC = pow((0.3333 / a), (1.0 / b));
@@ -985,7 +987,7 @@ var tools = {
       var sat = 0.0;
       var pwp = 0.0;
 
-      if (texture != "") {
+      if (texture !== "") {
         var srd = soilParameter.vs_SoilRawDensity() / 1000.0; // [kg m-3] -> [g cm-3]
         var som = soilParameter.vs_SoilOrganicMatter() * 100.0; // [kg kg-1] -> [%]
 
@@ -1095,8 +1097,8 @@ var tools = {
           var sat_mod_lowerBound = 0.0;
           var pwp_mod_lowerBound = 0.0;
           // modifier values are given only for organic matter > 1.0% (class h2)
-          if (som_lowerBound != 0.0) {
-            var lbRes = Tools.readSoilCharacteristicModifier(texture, som_lowerBound);
+          if (som_lowerBound !== 0.0) {
+            lbRes = Tools.readSoilCharacteristicModifier(texture, som_lowerBound);
             sat_mod_lowerBound = lbRes.sat;
             fc_mod_lowerBound = lbRes.fc;
             pwp_mod_lowerBound = lbRes.pwp;
@@ -1105,8 +1107,8 @@ var tools = {
           var fc_mod_upperBound = 0.0;
           var sat_mod_upperBound = 0.0;
           var pwp_mod_upperBound = 0.0;
-          if (som_upperBound != 0.0) {
-            var ubRes = Tools.readSoilCharacteristicModifier(texture, som_upperBound);
+          if (som_upperBound !== 0.0) {
+            ubRes = Tools.readSoilCharacteristicModifier(texture, som_upperBound);
             sat_mod_upperBound = ubRes.sat;
             fc_mod_upperBound = ubRes.fc;
             pwp_mod_upperBound = ubRes.pwp;
@@ -1309,7 +1311,7 @@ var tools = {
 };
 
 
-// 'use strict';
+
 
 var YieldComponent = function (oid, yp, ydm) {
 
@@ -1375,7 +1377,7 @@ var AOM_Properties = function () {
   /* Difference of AOM slow between to timesteps */
   this.vo_AOM_FastDelta = 0.0; 
   /* True if organic fertilizer is added with a subsequent incorporation. */
-  incorporation = false; // TODO: rename -> doIncorporate
+  this.incorporation = false; // TODO: rename -> doIncorporate
 
 };
 
@@ -4715,7 +4717,7 @@ var soilAggregationValues = {
 };
 
 
-'use strict';
+
 
 var MineralFertilizer = function (name, carbamid, no3, nh4) {
 
@@ -5221,13 +5223,12 @@ Seed.prototype = Object.create(WorkStep);
 Seed.prototype.constructor = Seed;
 
 
-var Harvest = function (at, crop, cropResult) {
+var Harvest = function (at, crop) {
 
   WorkStep.call(this, at);
   
   this._date = at;
   this._crop = crop;
-  this._cropResult = cropResult;
 
   this.setDate = function (date) {
     this._date = date;
@@ -5259,26 +5260,6 @@ var Harvest = function (at, crop, cropResult) {
           this._crop.setCropHeight(model.cropGrowth().get_CropHeight());
           this._crop.setAccumulatedETa(model.cropGrowth().get_AccumulatedETa());
         }
-
-        //store results for this crop
-        this._cropResult['id'] = this._crop.id();
-        this._cropResult['name'] = this._crop.name();
-        this._cropResult['primaryYield'] = roundN(2, this._crop.primaryYield());
-        this._cropResult['secondaryYield'] = roundN(2, this._crop.secondaryYield());
-        this._cropResult['primaryYieldTM'] = roundN(2, this._crop.primaryYieldTM());
-        this._cropResult['secondaryYieldTM'] = roundN(2, this._crop.secondaryYieldTM());
-        this._cropResult['sumIrrigation'] = roundN(2, this._crop.appliedIrrigationWater());
-        this._cropResult['biomassNContent'] = roundN(2, this._crop.primaryYieldN());
-        this._cropResult['aboveBiomassNContent'] = roundN(2, this._crop.aboveGroundBiomasseN());
-        this._cropResult['daysWithCrop'] = roundN(2, model.daysWithCrop());
-        this._cropResult['sumTotalNUptake'] = roundN(2, this._crop.sumTotalNUptake());
-        this._cropResult['cropHeight'] = roundN(2, this._crop.cropHeight());
-        this._cropResult['sumETaPerCrop'] = roundN(2, this._crop.get_AccumulatedETa());
-        this._cropResult['NStress'] = roundN(2, model.getAccumulatedNStress());
-        this._cropResult['WaterStress'] = roundN(2, model.getAccumulatedWaterStress());
-        this._cropResult['HeatStress'] = roundN(2, model.getAccumulatedHeatStress());
-        this._cropResult['OxygenStress'] = roundN(2, model.getAccumulatedOxygenStress());
-        this._cropResult['sumFertiliser'] = roundN(2, model.sumFertiliser());
 
         model.harvestCurrentCrop();
 
@@ -5767,7 +5748,7 @@ var Weather = function (startDate, endDate) {
 };
 
 
-'use strict';
+
 
 var FieldCrop = function (name) {
 
@@ -13544,7 +13525,6 @@ var Grass = function (seedDate, harvestDates, species) {
 */
 
 var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes additional grassland param
-  'use strict';
 
   var soilColumn = sc
     , generalParams = gps
@@ -14279,6 +14259,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
           } else if (isLegume && N_assimilated > N_up_pool) {
             N_fix += N_assimilated - N_up_pool;
+            N_up_pool -= N_assimilated;
           } else {
             N_up_pool -= N_assimilated;
           }
@@ -20824,8 +20805,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
       vw_WindSpeed = 0,
       vw_WindSpeedHeight = 0,
       vm_XSACriticalSoilMoisture = 0,
-      crop = null
-
+      crop = null,
       vm_Infiltration = 0.0,
       vm_Interception = 0.0,
       vm_SurfaceRunOff = 0.0,
@@ -22018,7 +21998,6 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     , get_SumSurfaceRunOff: get_SumSurfaceRunOff
     , get_KcFactor: get_KcFactor
     , get_TranspirationDeficit: get_TranspirationDeficit
-    , get_CapillaryRise: get_CapillaryRise
     , getMaxSnowDepth: getMaxSnowDepth
     , accumulatedSnowDepth: accumulatedSnowDepth
     , getAccumulatedFrostDepth: getAccumulatedFrostDepth
@@ -22688,7 +22667,7 @@ var SoilTemperature = function (sc, mm, cpp) {
   vt_HeatConductivity[vt_BottomLayer] = vt_HeatConductivity[vt_GroundLayer];
 
   // Initialisation soil surface temperature
-  vt_SoilSurfaceTemperature = pt_InitialSurfaceTemperature;
+  var vt_SoilSurfaceTemperature = pt_InitialSurfaceTemperature;
 
 
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -22898,7 +22877,7 @@ var SoilTemperature = function (sc, mm, cpp) {
    * @param layer Index of layer
    * @return Soil temperature
    */
-  get_SoilTemperature = function (layer) {
+  var get_SoilTemperature = function (layer) {
     return soilColumn[layer].get_Vs_SoilTemperature();
   };
 
@@ -22944,7 +22923,6 @@ var SoilTemperature = function (sc, mm, cpp) {
     , get_AvgTopSoilTemperature: get_AvgTopSoilTemperature
     , getDampingFactor: function () { return dampingFactor; }
     , setDampingFactor: function (factor) { dampingFactor = factor; }
-    , vt_SoilSurfaceTemperature: vt_SoilSurfaceTemperature
   };
 
 };
@@ -23713,8 +23691,9 @@ if (ENVIRONMENT_IS_NODE) {
   onmessage = function (evt) {
     if (evt.data.hasOwnProperty('run')) {
       var config = evt.data.run;
-      var cfg = new Configuration(null, config.weather, config.debug);
-      postMessage(cfg.run(config.sim, config.site, config.crop));
+      /* callbacks vis importScript */
+      var cfg = new Configuration(null, config.weather, config.debug, callbacks);
+      postMessage(cfg.run(config.sim, config.siteAndProd));
     } else {
       postMessage(null);
     }

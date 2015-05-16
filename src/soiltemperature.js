@@ -193,7 +193,7 @@ var SoilTemperature = function (sc, mm, cpp) {
   vt_HeatConductivity[vt_BottomLayer] = vt_HeatConductivity[vt_GroundLayer];
 
   // Initialisation soil surface temperature
-  vt_SoilSurfaceTemperature = pt_InitialSurfaceTemperature;
+  var vt_SoilSurfaceTemperature = pt_InitialSurfaceTemperature;
 
 
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -403,7 +403,7 @@ var SoilTemperature = function (sc, mm, cpp) {
    * @param layer Index of layer
    * @return Soil temperature
    */
-  get_SoilTemperature = function (layer) {
+  var get_SoilTemperature = function (layer) {
     return soilColumn[layer].get_Vs_SoilTemperature();
   };
 
@@ -449,7 +449,6 @@ var SoilTemperature = function (sc, mm, cpp) {
     , get_AvgTopSoilTemperature: get_AvgTopSoilTemperature
     , getDampingFactor: function () { return dampingFactor; }
     , setDampingFactor: function (factor) { dampingFactor = factor; }
-    , vt_SoilSurfaceTemperature: vt_SoilSurfaceTemperature
   };
 
 };

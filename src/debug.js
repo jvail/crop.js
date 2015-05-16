@@ -1,5 +1,5 @@
 /* JS debugging */
-'use strict';
+
 var debugArgs = function (arguments_, funcName_) {
 
   // TODO: recursive
@@ -7,6 +7,8 @@ var debugArgs = function (arguments_, funcName_) {
   if (!DEBUG) return; 
 
   var args = Array.prototype.slice.call(arguments_)
+    , i = 0
+    , is = 0
     , funcName = funcName_ || ''
     , isInvalid = function (x) {
         if (x instanceof Function)
@@ -22,14 +24,14 @@ var debugArgs = function (arguments_, funcName_) {
       }
     ;
 
-  for (var i = 0, is = args.length; i < is; i++) {
+  for (i = 0, is = args.length; i < is; i++) {
     var arg = args[i];
     if (arg && typeof arg === 'object') {
       if (Array.isArray(arg)) {
         arg.forEach(function (e) {
           if (e && typeof e === 'object') {
             if (isTypedArray(e)) {
-              for (var i = 0, is = arg.length; i < is; i++) {
+              for (i = 0, is = arg.length; i < is; i++) {
                 if (isInvalid(arg[i])) {
                   doLog(arg);
                   throw new Error(arg);
@@ -60,7 +62,7 @@ var debugArgs = function (arguments_, funcName_) {
           }
         });
       } else if (isTypedArray(arg)) {
-        for (var i = 0, is = arg.length; i < is; i++) {
+        for (i = 0, is = arg.length; i < is; i++) {
           if (isInvalid(arg[i])) {
             doLog(arg);
             throw new Error(arg);
@@ -98,7 +100,7 @@ var isTypedArray = function (x) {
     x instanceof Float64Array || 
     x instanceof Float64Array
   );
-}
+};
 
 var debug = function () {
 
@@ -107,7 +109,7 @@ var debug = function () {
   // check if it is an arguments object
   if (
     typeof arguments[0] === 'object' &&
-    arguments[0].length != undefined && 
+    arguments[0].length !== undefined && 
     !Array.isArray(arguments[0]) &&
     !isTypedArray(arguments[0])
   ) return debugArgs(arguments[0], arguments[1]);

@@ -34,7 +34,6 @@
 */
 
 var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes additional grassland param
-  'use strict';
 
   var soilColumn = sc
     , generalParams = gps

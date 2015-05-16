@@ -1,4 +1,4 @@
-'use strict';
+
 
 var FieldCrop = function (name) {
 

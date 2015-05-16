@@ -1,4 +1,4 @@
-// 'use strict';
+
 
 var YieldComponent = function (oid, yp, ydm) {
 
@@ -64,7 +64,7 @@ var AOM_Properties = function () {
   /* Difference of AOM slow between to timesteps */
   this.vo_AOM_FastDelta = 0.0; 
   /* True if organic fertilizer is added with a subsequent incorporation. */
-  incorporation = false; // TODO: rename -> doIncorporate
+  this.incorporation = false; // TODO: rename -> doIncorporate
 
 };
 

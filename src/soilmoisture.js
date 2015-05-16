@@ -57,8 +57,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
       vw_WindSpeed = 0,
       vw_WindSpeedHeight = 0,
       vm_XSACriticalSoilMoisture = 0,
-      crop = null
-
+      crop = null,
       vm_Infiltration = 0.0,
       vm_Interception = 0.0,
       vm_SurfaceRunOff = 0.0,
@@ -1251,7 +1250,6 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     , get_SumSurfaceRunOff: get_SumSurfaceRunOff
     , get_KcFactor: get_KcFactor
     , get_TranspirationDeficit: get_TranspirationDeficit
-    , get_CapillaryRise: get_CapillaryRise
     , getMaxSnowDepth: getMaxSnowDepth
     , accumulatedSnowDepth: accumulatedSnowDepth
     , getAccumulatedFrostDepth: getAccumulatedFrostDepth

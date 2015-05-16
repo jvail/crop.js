@@ -1,4 +1,4 @@
-'use strict';
+
 
 var MineralFertilizer = function (name, carbamid, no3, nh4) {
 

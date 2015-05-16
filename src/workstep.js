@@ -62,13 +62,12 @@ Seed.prototype = Object.create(WorkStep);
 Seed.prototype.constructor = Seed;
 
 
-var Harvest = function (at, crop, cropResult) {
+var Harvest = function (at, crop) {
 
   WorkStep.call(this, at);
   
   this._date = at;
   this._crop = crop;
-  this._cropResult = cropResult;
 
   this.setDate = function (date) {
     this._date = date;
@@ -100,26 +99,6 @@ var Harvest = function (at, crop, cropResult) {
           this._crop.setCropHeight(model.cropGrowth().get_CropHeight());
           this._crop.setAccumulatedETa(model.cropGrowth().get_AccumulatedETa());
         }
-
-        //store results for this crop
-        this._cropResult['id'] = this._crop.id();
-        this._cropResult['name'] = this._crop.name();
-        this._cropResult['primaryYield'] = roundN(2, this._crop.primaryYield());
-        this._cropResult['secondaryYield'] = roundN(2, this._crop.secondaryYield());
-        this._cropResult['primaryYieldTM'] = roundN(2, this._crop.primaryYieldTM());
-        this._cropResult['secondaryYieldTM'] = roundN(2, this._crop.secondaryYieldTM());
-        this._cropResult['sumIrrigation'] = roundN(2, this._crop.appliedIrrigationWater());
-        this._cropResult['biomassNContent'] = roundN(2, this._crop.primaryYieldN());
-        this._cropResult['aboveBiomassNContent'] = roundN(2, this._crop.aboveGroundBiomasseN());
-        this._cropResult['daysWithCrop'] = roundN(2, model.daysWithCrop());
-        this._cropResult['sumTotalNUptake'] = roundN(2, this._crop.sumTotalNUptake());
-        this._cropResult['cropHeight'] = roundN(2, this._crop.cropHeight());
-        this._cropResult['sumETaPerCrop'] = roundN(2, this._crop.get_AccumulatedETa());
-        this._cropResult['NStress'] = roundN(2, model.getAccumulatedNStress());
-        this._cropResult['WaterStress'] = roundN(2, model.getAccumulatedWaterStress());
-        this._cropResult['HeatStress'] = roundN(2, model.getAccumulatedHeatStress());
-        this._cropResult['OxygenStress'] = roundN(2, model.getAccumulatedOxygenStress());
-        this._cropResult['sumFertiliser'] = roundN(2, model.sumFertiliser());
 
         model.harvestCurrentCrop();
 
