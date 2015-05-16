@@ -13,8 +13,9 @@ if (ENVIRONMENT_IS_NODE) {
   onmessage = function (evt) {
     if (evt.data.hasOwnProperty('run')) {
       var config = evt.data.run;
-      var cfg = new Configuration(null, config.weather, config.debug);
-      postMessage(cfg.run(config.sim, config.site, config.crop));
+      /* callbacks vis importScript */
+      var cfg = new Configuration(null, config.weather, config.debug, callbacks);
+      postMessage(cfg.run(config.sim, config.siteAndProd));
     } else {
       postMessage(null);
     }

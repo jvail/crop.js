@@ -1,13 +1,13 @@
 /* JS debugging */
-
-var debugArgs = function (arguments_, funcName) {
+'use strict';
+var debugArgs = function (arguments_, funcName_) {
 
   // TODO: recursive
 
   if (!DEBUG) return; 
 
   var args = Array.prototype.slice.call(arguments_)
-    , funcName = funcName || ''
+    , funcName = funcName_ || ''
     , isInvalid = function (x) {
         if (x instanceof Function)
           return false;
