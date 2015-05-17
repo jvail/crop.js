@@ -277,17 +277,21 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
   vc_MaxRootingDepth = (vc_SoilSpecificMaxRootingDepth + (pc_CropSpecificMaxRootingDepth * 2.0)) / 3.0; //[m]
 
   var calculateCropGrowthStep = function (
+    vs_JulianDay,
     vw_MeanAirTemperature, 
     vw_MaxAirTemperature,
     vw_MinAirTemperature,
     vw_GlobalRadiation,
     vw_SunshineHours,
-    vs_JulianDay,
     vw_RelativeHumidity,
     vw_WindSpeed,
     vw_WindSpeedHeight,
     vw_AtmosphericCO2Concentration,
     vw_GrossPrecipitation
+    // f_s,
+    // daylength,
+    // R_a,
+    // isVegPeriod
   ) {
 
     if (cutting_delay_days>0) {

@@ -58,7 +58,7 @@ var Weather = function (startDate, endDate) {
     return this._endDate; 
   };
 
-  this.julianDayForStep = function (stepNo) {
+  this.doy = function (stepNo) {
 
     if (this._data[WEATHER.DOY].length > 0) {
       return this._data[WEATHER.DOY][stepNo + this._offset];

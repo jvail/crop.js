@@ -40,7 +40,26 @@ function CropGrowthAPI() {};
 
 CropGrowthAPI.prototype = {
 
-  step: function () {},
+  /*
+    parameter:
+
+    day of year                     [#]
+    mean daily temperature          [C°]
+    maximum daily temperature       [C°]
+    minimum daily temperature       [C°]
+    global radiation                [MJ m-2]
+    sunshine hours                  [h]
+    relative humidity               [-]
+    wind speed                      [m s-1]
+    wind speed height               [m]
+    CO2 concentration               [μmol mol-1]
+    rainfall                        [mm]
+    fraction direct solar radiation [-]
+    daylength                       [s]
+    extraterrestrial radiation      [MJ m-2]
+    veg. period                     [bool]
+  */
+  step: function (/* parameters */) {},
 
   name: function (species) { return 'unknown'; },
   isDying: function () { return false; },

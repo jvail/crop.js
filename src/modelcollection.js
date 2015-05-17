@@ -29,7 +29,7 @@ var ModelCollection = function (weather) {
       , noModels = this.length
       ;
 
-    var julday = 0
+    var doy = 0
       , tavg = 0
       , tmax = 0
       , tmin = 0
@@ -37,8 +37,9 @@ var ModelCollection = function (weather) {
       , sunhours = 0   
       , relhumid = 0
       , wind = 0
+      , windHeight = 2 // TODO: stored where?
+      , C_amb = 380    // TODO: move CO2forDate from model.js to weather (source or equation?)
       , precip = 0
-      , vw_WindSpeedHeight = 0
       , f_s = 0
       , daylength = 0
       , R_a = 0
@@ -53,7 +54,7 @@ var ModelCollection = function (weather) {
       year = year = currentDate.getFullYear();
 
       /* get weather data for current day */
-      julday = weather.julianDayForStep(dayOfSimulation);
+      doy = weather.doy(dayOfSimulation);
       tavg = weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation);
       tmax = weather.dataForTimestep(WEATHER.TMAX, dayOfSimulation);
       tmin = weather.dataForTimestep(WEATHER.TMIN, dayOfSimulation);
@@ -64,7 +65,6 @@ var ModelCollection = function (weather) {
       relhumid = weather.isAvailable(WEATHER.RELHUMID) ? weather.dataForTimestep(WEATHER.RELHUMID, dayOfSimulation) : -1.0;
       wind =  weather.dataForTimestep(WEATHER.WIND, dayOfSimulation);
       precip =  weather.dataForTimestep(WEATHER.PRECIP, dayOfSimulation);
-      vw_WindSpeedHeight = 2;
       f_s = weather.dataForTimestep(WEATHER.F_DIRECTRAD, dayOfSimulation);
       daylength = weather.dataForTimestep(WEATHER.DAYLENGTH, dayOfSimulation) * SEC_PER_HOUR;
       R_a = weather.dataForTimestep(WEATHER.EXRAD, dayOfSimulation);
@@ -95,7 +95,7 @@ var ModelCollection = function (weather) {
         /* crop  */
         if(model.isCropPlanted()) {
           model.cropStep(
-            julday,
+            doy,
             tavg,
             tmax,
             tmin,
@@ -103,8 +103,9 @@ var ModelCollection = function (weather) {
             sunhours,
             relhumid,
             wind,
+            windHeight,
+            C_amb,
             precip,
-            vw_WindSpeedHeight,
             f_s,
             daylength,
             R_a,
@@ -114,7 +115,7 @@ var ModelCollection = function (weather) {
         
         /* soil */
         model.generalStep(
-          julday,
+          doy,
           year,
           leapYear,
           tmin,

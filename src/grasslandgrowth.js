@@ -1196,12 +1196,12 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
 
   /*
+    doy         [#]             doy
     T           [C°]            mean daily temperature
     T_mx        [C°]            maximum daily temperature
     T_mn        [C°]            minimum daily temperature
     R_s         [MJ m-2]        global radiation
     sunhours    [h]             unused
-    doy         [#]             doy
     rh          [-]             relative humidity
     u           [m-s]           wind speed
     u_h         [m]             wind speed height
@@ -1213,7 +1213,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     isVegPeriod [bool]
   */
 
-  var step = function (T, T_mx, T_mn, R_s, sunhours, julday, rh, u, u_h, C_amb, rr, f_s, τ, R_a, isVegPeriod) {
+  var step = function (doy, T, T_mx, T_mn, R_s, sunhours, rh, u, u_h, C_amb, rr, f_s, τ, R_a, isVegPeriod) {
 
     var PPF = R_s * PPF_PER_MJ_GLOBAL_RADIATION;
 

@@ -5731,7 +5731,7 @@ var Weather = function (startDate, endDate) {
     return this._endDate; 
   };
 
-  this.julianDayForStep = function (stepNo) {
+  this.doy = function (stepNo) {
 
     if (this._data[WEATHER.DOY].length > 0) {
       return this._data[WEATHER.DOY][stepNo + this._offset];
@@ -5791,7 +5791,26 @@ function CropGrowthAPI() {};
 
 CropGrowthAPI.prototype = {
 
-  step: function () {},
+  /*
+    parameter:
+
+    day of year                     [#]
+    mean daily temperature          [C°]
+    maximum daily temperature       [C°]
+    minimum daily temperature       [C°]
+    global radiation                [MJ m-2]
+    sunshine hours                  [h]
+    relative humidity               [-]
+    wind speed                      [m s-1]
+    wind speed height               [m]
+    CO2 concentration               [μmol mol-1]
+    rainfall                        [mm]
+    fraction direct solar radiation [-]
+    daylength                       [s]
+    extraterrestrial radiation      [MJ m-2]
+    veg. period                     [bool]
+  */
+  step: function (/* parameters */) {},
 
   name: function (species) { return 'unknown'; },
   isDying: function () { return false; },
@@ -9484,17 +9503,21 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
   vc_MaxRootingDepth = (vc_SoilSpecificMaxRootingDepth + (pc_CropSpecificMaxRootingDepth * 2.0)) / 3.0; //[m]
 
   var calculateCropGrowthStep = function (
+    vs_JulianDay,
     vw_MeanAirTemperature, 
     vw_MaxAirTemperature,
     vw_MinAirTemperature,
     vw_GlobalRadiation,
     vw_SunshineHours,
-    vs_JulianDay,
     vw_RelativeHumidity,
     vw_WindSpeed,
     vw_WindSpeedHeight,
     vw_AtmosphericCO2Concentration,
     vw_GrossPrecipitation
+    // f_s,
+    // daylength,
+    // R_a,
+    // isVegPeriod
   ) {
 
     if (cutting_delay_days>0) {
@@ -14788,12 +14811,12 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
 
   /*
+    doy         [#]             doy
     T           [C°]            mean daily temperature
     T_mx        [C°]            maximum daily temperature
     T_mn        [C°]            minimum daily temperature
     R_s         [MJ m-2]        global radiation
     sunhours    [h]             unused
-    doy         [#]             doy
     rh          [-]             relative humidity
     u           [m-s]           wind speed
     u_h         [m]             wind speed height
@@ -14805,7 +14828,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     isVegPeriod [bool]
   */
 
-  var step = function (T, T_mx, T_mn, R_s, sunhours, julday, rh, u, u_h, C_amb, rr, f_s, τ, R_a, isVegPeriod) {
+  var step = function (doy, T, T_mx, T_mn, R_s, sunhours, rh, u, u_h, C_amb, rr, f_s, τ, R_a, isVegPeriod) {
 
     var PPF = R_s * PPF_PER_MJ_GLOBAL_RADIATION;
 
@@ -16499,7 +16522,7 @@ var ModelCollection = function (weather) {
       , noModels = this.length
       ;
 
-    var julday = 0
+    var doy = 0
       , tavg = 0
       , tmax = 0
       , tmin = 0
@@ -16507,8 +16530,9 @@ var ModelCollection = function (weather) {
       , sunhours = 0   
       , relhumid = 0
       , wind = 0
+      , windHeight = 2 // TODO: stored where?
+      , C_amb = 380    // TODO: move CO2forDate from model.js to weather (source or equation?)
       , precip = 0
-      , vw_WindSpeedHeight = 0
       , f_s = 0
       , daylength = 0
       , R_a = 0
@@ -16523,7 +16547,7 @@ var ModelCollection = function (weather) {
       year = year = currentDate.getFullYear();
 
       /* get weather data for current day */
-      julday = weather.julianDayForStep(dayOfSimulation);
+      doy = weather.doy(dayOfSimulation);
       tavg = weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation);
       tmax = weather.dataForTimestep(WEATHER.TMAX, dayOfSimulation);
       tmin = weather.dataForTimestep(WEATHER.TMIN, dayOfSimulation);
@@ -16534,7 +16558,6 @@ var ModelCollection = function (weather) {
       relhumid = weather.isAvailable(WEATHER.RELHUMID) ? weather.dataForTimestep(WEATHER.RELHUMID, dayOfSimulation) : -1.0;
       wind =  weather.dataForTimestep(WEATHER.WIND, dayOfSimulation);
       precip =  weather.dataForTimestep(WEATHER.PRECIP, dayOfSimulation);
-      vw_WindSpeedHeight = 2;
       f_s = weather.dataForTimestep(WEATHER.F_DIRECTRAD, dayOfSimulation);
       daylength = weather.dataForTimestep(WEATHER.DAYLENGTH, dayOfSimulation) * SEC_PER_HOUR;
       R_a = weather.dataForTimestep(WEATHER.EXRAD, dayOfSimulation);
@@ -16565,7 +16588,7 @@ var ModelCollection = function (weather) {
         /* crop  */
         if(model.isCropPlanted()) {
           model.cropStep(
-            julday,
+            doy,
             tavg,
             tmax,
             tmin,
@@ -16573,8 +16596,9 @@ var ModelCollection = function (weather) {
             sunhours,
             relhumid,
             wind,
+            windHeight,
+            C_amb,
             precip,
-            vw_WindSpeedHeight,
             f_s,
             daylength,
             R_a,
@@ -16584,7 +16608,7 @@ var ModelCollection = function (weather) {
         
         /* soil */
         model.generalStep(
-          julday,
+          doy,
           year,
           leapYear,
           tmin,
@@ -16616,6 +16640,13 @@ var ModelCollection = function (weather) {
 
 };
 
+
+/*
+  TODO:
+
+    - CO2 eq.?
+
+*/
 
 var Model = function (env) {
 
@@ -17024,9 +17055,9 @@ var Model = function (env) {
     relhumid
   ) {
 
-    that.vw_AtmosphericCO2Concentration = (_env.atmosphericCO2 === -1 ? user_env.p_AthmosphericCO2 : _env.atmosphericCO2);
-    if (toInt(that.vw_AtmosphericCO2Concentration) === 0)
-      that.vw_AtmosphericCO2Concentration = CO2ForDate(year, julday, leapYear);
+    // that.vw_AtmosphericCO2Concentration = (_env.atmosphericCO2 === -1 ? user_env.p_AthmosphericCO2 : _env.atmosphericCO2);
+    // if (toInt(that.vw_AtmosphericCO2Concentration) === 0)
+    //   that.vw_AtmosphericCO2Concentration = CO2ForDate(year, julday, leapYear);
 
     that.vs_GroundwaterDepth = GroundwaterDepthForDate(
       user_env.p_MaxGroundwaterDepth,
@@ -17095,8 +17126,8 @@ var Model = function (env) {
     sunhours,
     relhumid,
     wind,
-    precip,
     vw_WindSpeedHeight,
+    precip,
     f_s,
     daylength,
     R_a, 
@@ -17116,20 +17147,19 @@ var Model = function (env) {
     p_daysWithCrop++;
 
     that._currentCropGrowth.step(
+      julday,
       tavg,
       tmax,
       tmin,
       globrad,
       sunhours,
-      julday,
-      (relhumid / 100.0),
+      (relhumid / 100),
       wind,
       vw_WindSpeedHeight,
-      that.vw_AtmosphericCO2Concentration,
       precip,
       f_s,
       daylength,
-      R_a,
+      R_a, 
       isVegPeriod
     );
 

@@ -1,3 +1,10 @@
+/*
+  TODO:
+
+    - CO2 eq.?
+
+*/
+
 var Model = function (env) {
 
   var that = this;
@@ -405,9 +412,9 @@ var Model = function (env) {
     relhumid
   ) {
 
-    that.vw_AtmosphericCO2Concentration = (_env.atmosphericCO2 === -1 ? user_env.p_AthmosphericCO2 : _env.atmosphericCO2);
-    if (toInt(that.vw_AtmosphericCO2Concentration) === 0)
-      that.vw_AtmosphericCO2Concentration = CO2ForDate(year, julday, leapYear);
+    // that.vw_AtmosphericCO2Concentration = (_env.atmosphericCO2 === -1 ? user_env.p_AthmosphericCO2 : _env.atmosphericCO2);
+    // if (toInt(that.vw_AtmosphericCO2Concentration) === 0)
+    //   that.vw_AtmosphericCO2Concentration = CO2ForDate(year, julday, leapYear);
 
     that.vs_GroundwaterDepth = GroundwaterDepthForDate(
       user_env.p_MaxGroundwaterDepth,
@@ -476,8 +483,8 @@ var Model = function (env) {
     sunhours,
     relhumid,
     wind,
-    precip,
     vw_WindSpeedHeight,
+    precip,
     f_s,
     daylength,
     R_a, 
@@ -497,20 +504,19 @@ var Model = function (env) {
     p_daysWithCrop++;
 
     that._currentCropGrowth.step(
+      julday,
       tavg,
       tmax,
       tmin,
       globrad,
       sunhours,
-      julday,
-      (relhumid / 100.0),
+      (relhumid / 100),
       wind,
       vw_WindSpeedHeight,
-      that.vw_AtmosphericCO2Concentration,
       precip,
       f_s,
       daylength,
-      R_a,
+      R_a, 
       isVegPeriod
     );
 
