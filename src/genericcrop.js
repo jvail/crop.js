@@ -1,6 +1,6 @@
 
 
-var FieldCrop = function (name) {
+var GenericCrop = function (name) {
 
   var _id = -1
     , _name = name.toLowerCase()
@@ -3237,7 +3237,7 @@ var FieldCrop = function (name) {
 
   return {
 
-    type: 'fieldcrop',
+    type: 'generic',
     id: function () { 
       return _id; 
     },

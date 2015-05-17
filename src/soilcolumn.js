@@ -221,9 +221,9 @@ var SoilColumn = function (gps, sp, cpp) {
     if (that.cropGrowth === null)
       logger(MSG.ERROR, "crop is null");
 
-    var s = that.cropGrowth.get_HeatSumIrrigationStart();
-    var e = that.cropGrowth.get_HeatSumIrrigationEnd();
-    var cts = that.cropGrowth.get_CurrentTemperatureSum();
+    var s = that.cropGrowth.heatSumIrrigationStart();
+    var e = that.cropGrowth.heatSumIrrigationEnd();
+    var cts = that.cropGrowth.currentTemperatureSum();
 
     if (cts < s || cts > e) return false;
 

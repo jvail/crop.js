@@ -39,7 +39,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       vo_SumNH3_Volatilised = 0.0,
       vo_TotalDenitrification = 0.0,
       incorporation = false,
-      crop = null;
+      crop = null; // TODO: rename to cropGrowth
 
       // JS! unused in cpp
       // vs_SoilMineralNContent = new Float64Array(sc.vs_NumberOfOrganicLayers()),
@@ -105,7 +105,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     ) 
   {
 
-    var vc_NetPrimaryProduction = crop ? crop.get_NetPrimaryProduction() : 0;
+    var vc_NetPrimaryProduction = crop ? crop.netPrimaryProduction() : 0;
 
     //fo_OM_Input(vo_AOM_Addition);
     fo_Urea(vw_Precipitation + irrigationAmount);

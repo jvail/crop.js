@@ -83,21 +83,22 @@ var Harvest = function (at, crop) {
       if (model.currentCrop() == this._crop) {
 
         if (model.cropGrowth()) {
+          var cropGrowth = model.cropGrowth();
           this._crop.setHarvestYields(
-            model.cropGrowth().get_FreshPrimaryCropYield() /
-            100.0, model.cropGrowth().get_FreshSecondaryCropYield() / 100.0
+            cropGrowth.primaryYieldFreshMatter() /
+            100.0, cropGrowth.get_FreshSecondaryCropYield() / 100.0
           );
           this._crop.setHarvestYieldsTM(
-            model.cropGrowth().get_PrimaryCropYield() / 100.0,
-            model.cropGrowth().get_SecondaryCropYield() / 100.0
+            cropGrowth.primaryYield() / 100.0,
+            cropGrowth.secondaryYield() / 100.0
           );
           this._crop.setYieldNContent(
-            model.cropGrowth().get_PrimaryYieldNContent(),
-            model.cropGrowth().get_SecondaryYieldNContent()
+            cropGrowth.primaryYieldNitrogenContent(),
+            cropGrowth.secondaryYieldNitrogenContent()
           );
-          this._crop.setSumTotalNUptake(model.cropGrowth().get_SumTotalNUptake());
-          this._crop.setCropHeight(model.cropGrowth().get_CropHeight());
-          this._crop.setAccumulatedETa(model.cropGrowth().get_AccumulatedETa());
+          this._crop.setSumTotalNUptake(cropGrowth.accumulatedNitrogenUptake());
+          this._crop.setCropHeight(cropGrowth.height());
+          this._crop.setAccumulatedETa(cropGrowth.accumulatedEvapotranspiration());
         }
 
         model.harvestCurrentCrop();
@@ -138,27 +139,27 @@ var Cutting = function (at, crop, cropResult) {
     if (model.currentCrop() == this._crop) {
       // if (model.cropGrowth()) {
         // this._crop.setHarvestYields(
-        //   model.cropGrowth().get_FreshPrimaryCropYield() /
+        //   model.cropGrowth().primaryYieldFreshMatter() /
         //   100.0, model.cropGrowth().get_FreshSecondaryCropYield() / 100.0
         // );
         // this._crop.setHarvestYieldsTM(
-        //   model.cropGrowth().get_PrimaryCropYield() / 100.0,
-        //   model.cropGrowth().get_SecondaryCropYield() / 100.0
+        //   model.cropGrowth().primaryYield() / 100.0,
+        //   model.cropGrowth().secondaryYield() / 100.0
         // );
-        // this._crop.addCuttingYieldDM(model.cropGrowth().get_PrimaryCropYield() / 100.0);
+        // this._crop.addCuttingYieldDM(model.cropGrowth().primaryYield() / 100.0);
       // }
       // this._crop.setYieldNContent(
-      //   model.cropGrowth().get_PrimaryYieldNContent(),
-      //   model.cropGrowth().get_SecondaryYieldNContent()
+      //   model.cropGrowth().primaryYieldNitrogenContent(),
+      //   model.cropGrowth().secondaryYieldNitrogenContent()
       // );
-      // this._crop.setSumTotalNUptake(model.cropGrowth().get_SumTotalNUptake());
-      // this._crop.setCropHeight(model.cropGrowth().get_CropHeight());
+      // this._crop.setSumTotalNUptake(model.cropGrowth().accumulatedNitrogenUptake());
+      // this._crop.setCropHeight(model.cropGrowth().height());
 
       var cut = {
           id: this._crop.id()
         , name: this._crop.name()
         , date: this._date
-        , primaryYieldTM: model.cropGrowth().get_PrimaryCropYield() / 100.0
+        , primaryYieldTM: model.cropGrowth().primaryYield() / 100.0
       };
 
       if (fs) {

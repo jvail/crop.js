@@ -145,15 +145,17 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     var vc_CropPlanted   = false;
     var vc_CropHeight  = 0.0;
     var vc_DevelopmentalStage = 0;
+    var cropGrowth = null;
 
     if (monica.cropGrowth()) {
+      cropGrowth = monica.cropGrowth();
       vc_CropPlanted = true;
-      vc_PercentageSoilCoverage = monica.cropGrowth().get_SoilCoverage();
-      vc_KcFactor = monica.cropGrowth().get_KcFactor();
-      vc_CropHeight = monica.cropGrowth().get_CropHeight();
-      vc_DevelopmentalStage = monica.cropGrowth().get_DevelopmentalStage();
+      vc_PercentageSoilCoverage = cropGrowth.soilCoverage();
+      vc_KcFactor = cropGrowth.kcFactor();
+      vc_CropHeight = cropGrowth.height();
+      vc_DevelopmentalStage = cropGrowth.developmentalStage();
       if (vc_DevelopmentalStage > 0) {
-        vc_NetPrecipitation = monica.cropGrowth().get_NetPrecipitation();
+        vc_NetPrecipitation = cropGrowth.netPrecipitation();
       } else {
         vc_NetPrecipitation = vw_Precipitation;
       }
@@ -393,7 +395,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     var vm_GroundwaterDistance;
     var vm_WaterAddedFromCapillaryRise;
 
-    vc_RootingDepth = crop ? crop.get_RootingDepth() : 0;
+    vc_RootingDepth = crop ? crop.rootingDepth() : 0;
 
     vm_GroundwaterDistance = vm_GroundwaterTable - vc_RootingDepth;// []
 
@@ -731,6 +733,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     var vc_EvaporatedFromIntercept = 0.0;
     var vm_EvaporatedFromSurface = 0.0;
     var vm_EvaporationFromSurface = false;
+    var cropGrowth = monica.cropGrowth();
 
     var vm_SnowDepth = snowComponent.getVm_SnowDepth();
 
@@ -749,12 +752,12 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     if (vc_DevelopmentalStage > 0) {
       // Reference evapotranspiration is only grabbed here for consistent
       // output in monica.cpp
-      vm_ReferenceEvapotranspiration = monica.cropGrowth().get_ReferenceEvapotranspiration();
+      vm_ReferenceEvapotranspiration = cropGrowth.referenceEvapotranspiration();
 
       // Remaining ET from crop module already includes Kc factor and evaporation
       // from interception storage
-      vm_PotentialEvapotranspiration = monica.cropGrowth().get_RemainingEvapotranspiration();
-      vc_EvaporatedFromIntercept = monica.cropGrowth().get_EvaporatedFromIntercept();
+      vm_PotentialEvapotranspiration = cropGrowth.remainingEvapotranspiration();
+      vc_EvaporatedFromIntercept = cropGrowth.evaporatedFromIntercept();
 
     } else { // if no crop grows ETp is calculated from ET0 * kc
       vm_ReferenceEvapotranspiration = ReferenceEvapotranspiration(vs_HeightNN, vw_MaxAirTemperature,
@@ -841,7 +844,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
 
             // Transpiration is derived from ET0; Soil coverage and Kc factors
             // already considered in crop part!
-            vm_Transpiration[i_Layer] = monica.cropGrowth().get_Transpiration(i_Layer);
+            vm_Transpiration[i_Layer] = cropGrowth.transpiration(i_Layer);
 
             // Transpiration is capped in case potential ET after surface
             // and interception evaporation has occurred on same day

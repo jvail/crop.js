@@ -192,10 +192,10 @@ var Model = function (env) {
     p_accuHeatStress = 0.0;
     p_accuOxygenStress = 0.0;
 
-    if(_currentCrop.isValid() && _currentCrop.type === 'fieldcrop') {
+    if(_currentCrop.isValid() && _currentCrop.type === 'generic') {
 
       cps = _currentCrop.cropParameters();
-      that._currentCropGrowth = new FieldCropGrowth(_soilColumn, _env.general, cps, _env.site, _env.centralParameterProvider);
+      that._currentCropGrowth = new GenericCropGrowth(_soilColumn, _env.general, cps, _env.site, _env.centralParameterProvider);
 
       _soilTransport.put_Crop(that._currentCropGrowth);
       _soilColumn.put_Crop(that._currentCropGrowth);
@@ -244,28 +244,28 @@ var Model = function (env) {
     if (_currentCrop && _currentCrop.isValid()) {
 
       /* prepare to add root and crop residues to soilorganic (AOMs) */
-      var rootBiomass = that._currentCropGrowth.get_OrganBiomass(0);
-      var rootNConcentration = that._currentCropGrowth.get_RootNConcentration();
+      var rootBiomass = that._currentCropGrowth.biomass(0);
+      var rootNConcentration = that._currentCropGrowth.rootNitrogenConcentration();
 
       logger(MSG.INFO, 'Harvest: adding organic matter from root to soilOrganic');
       logger(MSG.INFO, 'Root biomass: ' + rootBiomass + ' Root N concentration: ' + rootNConcentration);
 
       _soilOrganic.addOrganicMatter(_currentCrop.residueParameters(), rootBiomass, rootNConcentration);
 
-      var residueBiomass = that._currentCropGrowth.get_ResidueBiomass(_env.useSecondaryYields);
+      var residueBiomass = that._currentCropGrowth.residueBiomass(_env.useSecondaryYields);
 
       /* TODO: das hier noch berechnen (???) */
-      var residueNConcentration = that._currentCropGrowth.get_ResiduesNConcentration();
+      var residueNConcentration = that._currentCropGrowth.residuesNitrogenConcentration();
 
       logger(MSG.INFO, 'Adding organic matter from residues to soilOrganic');
       logger(MSG.INFO, 'Residue biomass: ' + residueBiomass + ' Residue N concentration: ' + residueNConcentration);
-      logger(MSG.INFO, 'Primary yield biomass: ' + that._currentCropGrowth.get_PrimaryCropYield()
-          + ' Primary yield N concentration: ' + that._currentCropGrowth.get_PrimaryYieldNConcentration());
-      logger(MSG.INFO, 'Secondary yield biomass: ' + that._currentCropGrowth.get_SecondaryCropYield()
+      logger(MSG.INFO, 'Primary yield biomass: ' + that._currentCropGrowth.primaryYield()
+          + ' Primary yield N concentration: ' + that._currentCropGrowth.primaryYieldNitrogenConcentration());
+      logger(MSG.INFO, 'Secondary yield biomass: ' + that._currentCropGrowth.secondaryYield()
           + ' Secondary yield N concentration: ' + '??');
-      logger(MSG.INFO, 'Residues N content: ' + that._currentCropGrowth.get_ResiduesNContent()
-          + ' Primary yield N content: ' + that._currentCropGrowth.get_PrimaryYieldNContent()
-          + ' Secondary yield N content: ' + that._currentCropGrowth.get_SecondaryYieldNContent());
+      logger(MSG.INFO, 'Residues N content: ' + that._currentCropGrowth.residuesNitrogenContent()
+          + ' Primary yield N content: ' + that._currentCropGrowth.primaryYieldNitrogenContent()
+          + ' Secondary yield N content: ' + that._currentCropGrowth.secondaryYieldNitrogenContent());
 
       _soilOrganic.addOrganicMatter(_currentCrop.residueParameters(), residueBiomass, residueNConcentration);
     
@@ -287,8 +287,8 @@ var Model = function (env) {
     if (_currentCrop && _currentCrop.isValid()) {
 
       /* prepare to add root and crop residues to soilorganic (AOMs) */
-      var totalBiomass = that._currentCropGrowth.totalBiomass();
-      var totalNConcentration = that._currentCropGrowth.get_AbovegroundBiomassNConcentration() + that._currentCropGrowth.get_RootNConcentration();
+      var totalBiomass = that._currentCropGrowth.biomass();
+      var totalNConcentration = that._currentCropGrowth.shootBiomassNitrogenConcentration() + that._currentCropGrowth.rootNitrogenConcentration();
 
       logger(MSG.INFO, "Incorporation: adding organic matter from total biomass of crop to soilOrganic");
       logger(MSG.INFO, "Total biomass: " + totalBiomass + " Total N concentration: " + totalNConcentration);
@@ -527,10 +527,10 @@ var Model = function (env) {
     
     }
 
-    p_accuNStress += that._currentCropGrowth.get_CropNRedux();
-    p_accuWaterStress += that._currentCropGrowth.get_TranspirationDeficit();
-    p_accuHeatStress += that._currentCropGrowth.get_HeatStressRedux();
-    p_accuOxygenStress += that._currentCropGrowth.get_OxygenDeficit();
+    p_accuNStress += that._currentCropGrowth.nitrogenStress();
+    p_accuWaterStress += that._currentCropGrowth.waterStress();
+    p_accuHeatStress += that._currentCropGrowth.heatStress();
+    p_accuOxygenStress += that._currentCropGrowth.oxygenStress();
 
   };
 
@@ -756,7 +756,7 @@ var Model = function (env) {
   /*  Returns evapotranspiration [mm] */
   var getEvapotranspiration = function () {
     if (that._currentCropGrowth)
-      return that._currentCropGrowth.get_RemainingEvapotranspiration();
+      return that._currentCropGrowth.remainingEvapotranspiration();
     return 0.0;
   };
 
@@ -770,7 +770,7 @@ var Model = function (env) {
   /* Returns actual evaporation */
   var getEvaporation = function () {
     if (that._currentCropGrowth)
-      return that._currentCropGrowth.get_EvaporatedFromIntercept();
+      return that._currentCropGrowth.evaporatedFromIntercept();
     return 0.0;
   };
 

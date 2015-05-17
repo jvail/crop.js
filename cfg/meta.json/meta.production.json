@@ -1,9 +1,26 @@
 {
   "crops": [
     {
-      "name": {
-        "desc": "Crop species name",
-        "enum": []
+      "species": [
+        {
+          "name": {
+            "desc": "Name of species",
+            "enum": []
+          },
+          "dryMatterFraction": {
+            "desc": "Fraction of initial dry weight",
+            "min": 0,
+            "max": 1,
+            "default": 1,
+          }
+        }
+      ],
+      "model": {
+        "desc": "The model that implements the species",
+        "enum": [
+          "generic",
+          "grassland"
+        ]        
       },
       "sowingDate": {
         "desc": "Date at which the crop is sown or transplanted",
@@ -26,7 +43,7 @@
         "advanced": true
       },
       "plantDryWeight": {
-        "desc": "Dry weight at planting or seed dry weight",
+        "desc": "Initial dry weight or at planting, seeding",
         "unit": "kg (DM) ha-1",
         "min": 1,
         "max": null

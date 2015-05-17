@@ -364,9 +364,9 @@ var SoilTemperature = function (sc, mm, cpp) {
     var shading_coefficient = dampingFactor;
 
     var soil_coverage = 0.0;
-    if (monica.cropGrowth()) {
-      soil_coverage = monica.cropGrowth().get_SoilCoverage();
-    }
+    if (monica.cropGrowth())
+      soil_coverage = monica.cropGrowth().soilCoverage();
+
     shading_coefficient =  0.1 + ((soil_coverage * dampingFactor) + ((1-soil_coverage) * (1-dampingFactor)));
 
 

@@ -93,17 +93,17 @@ var successiveHarvestCb = (function () {
       msa = model.soilColumnNC();
       msq = model.soilTransport();
 
-
+      // kg N in top 30 cm
       csv += (msc.soilLayer(0).vs_LayerThickness * (msc.soilLayer(0).get_SoilNO3() + msc.soilLayer(1).get_SoilNO3() + msc.soilLayer(2).get_SoilNO3())) + ';';
       csv += (msc.soilLayer(0).vs_LayerThickness * (msc.soilLayer(0).get_SoilNH4() + msc.soilLayer(1).get_SoilNH4() + msc.soilLayer(2).get_SoilNH4())) + ';';
 
       if (isCropPlanted) {
         mcg = model.cropGrowth();
-        csv += mcg.get_LeafAreaIndex() + ';';
-        csv += mcg.get_OrganBiomass(3) + ';';
-        csv += mcg.get_DevelopmentalStage() + ';';
+        csv += mcg.leafAreaIndex() + ';';
+        csv += mcg.biomass(3) + ';';
+        csv += mcg.developmentalStage() + ';';
         /* harvest rye as soon as last dev stage has been reached */
-        if (mcg.get_DevelopmentalStage() === model.currentCrop().cropParameters().pc_NumberOfDevelopmentalStages - 1) {
+        if (mcg.developmentalStage() === model.currentCrop().cropParameters().pc_NumberOfDevelopmentalStages - 1) {
           if (harvests.indexOf(dateString) < 0) { /* do not harvest both plots at the same day */
             model.harvestCurrentCrop();
             harvests[m] = dateString;

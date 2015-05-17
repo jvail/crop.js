@@ -311,7 +311,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       } else {
 
-        var fieldcrop = new FieldCrop(crop.name);
+        var fieldcrop = new GenericCrop(crop.name);
         fieldcrop.setSeedAndHarvestDate(sd, hd);
         cropRotation[c] = new ProductionProcess(crop.name, fieldcrop);
       
@@ -639,46 +639,37 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       // progress = {
       //     date: { value: date.toISOString(), unit: '[date]' }
-      //   , CropName: { value: isCropPlanted ? mcg.get_CropName() : '', unit: '-' }
-      //   , TranspirationDeficit: { value: isCropPlanted ? mcg.get_TranspirationDeficit() : 0, unit: '[0;1]' }
-      //   , ActualTranspiration: { value: isCropPlanted ? mcg.get_ActualTranspiration() : 0, unit: '[mm]' } 
-      //   , CropNRedux: { value: isCropPlanted ? mcg.get_CropNRedux() : 0, unit: '[0;1]' }
-      //   , HeatStressRedux: { value: isCropPlanted ? mcg.get_HeatStressRedux() : 0, unit: '[0;1]' }
-      //   , OxygenDeficit: { value: isCropPlanted ? mcg.get_OxygenDeficit() : 0, unit: '[0;1]' }
-      //   , DevelopmentalStage: { value: isCropPlanted ? mcg.get_DevelopmentalStage() + 1 : 0, unit: '[#]' }
-      //   , CurrentTemperatureSum: { value: isCropPlanted ? mcg.get_CurrentTemperatureSum() : 0, unit: '°C' }
-      //   , VernalisationFactor: { value: isCropPlanted ? mcg.get_VernalisationFactor() : 0, unit: '[0;1]' }
+      //   , CropName: { value: isCropPlanted ? mcg.name() : '', unit: '-' }
+      //   , WaterStress: { value: isCropPlanted ? mcg.waterStress() : 0, unit: '[0;1]' }
+      //   , Transpiration: { value: isCropPlanted ? mcg.transpiration() : 0, unit: '[mm]' } 
+      //   , NitrogenStress: { value: isCropPlanted ? mcg.nitrogenStress() : 0, unit: '[0;1]' }
+      //   , HeatStress: { value: isCropPlanted ? mcg.heatStress() : 0, unit: '[0;1]' }
+      //   , OxygenStress: { value: isCropPlanted ? mcg.oxygenStress() : 0, unit: '[0;1]' }
+      //   , DevelopmentalStage: { value: isCropPlanted ? mcg.developmentalStage() + 1 : 0, unit: '[#]' }
+      //   , CurrentTemperatureSum: { value: isCropPlanted ? mcg.currentTemperatureSum() : 0, unit: '°C' }
+      //   , VernalisationFactor: { value: isCropPlanted ? mcg.vernalisationFactor() : 0, unit: '[0;1]' }
       //   , DaylengthFactor: { value: isCropPlanted ? mcg.get_DaylengthFactor() : 0, unit: '[0;1]' }
-      //   , OrganGrowthIncrementRoot: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(0) : 0, unit: '[kg (DM) ha-1]' }
-      //   , OrganGrowthIncrementLeaf: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(1) : 0, unit: '[kg (DM) ha-1]' }
-      //   , OrganGrowthIncrementShoot: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(2) : 0, unit: '[kg (DM) ha-1]' }
-      //   , OrganGrowthIncrementFruit: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(3) : 0, unit: '[kg (DM) ha-1]' }
-      //   , RelativeTotalDevelopment: { value: isCropPlanted ? mcg.get_RelativeTotalDevelopment() : 0, unit: '[0;1]' }
-      //   , OrganBiomassRoot: { value: isCropPlanted ? mcg.get_OrganBiomass(0) : 0, unit: '[kg (DM) ha-1]' }
-      //   , OrganBiomassLeaf: { value: isCropPlanted ? mcg.get_OrganBiomass(1) : 0, unit: '[kg (DM) ha-1]' }
-      //   , OrganBiomassShoot: { value: isCropPlanted ? mcg.get_OrganBiomass(2) : 0, unit: '[kg (DM) ha-1]' }
-      //   , OrganBiomassFruit: { value: isCropPlanted ? mcg.get_OrganBiomass(3) : 0, unit: '[kg (DM) ha-1]' }
-      //   , PrimaryCropYield: { value: isCropPlanted ? mcg.get_PrimaryCropYield() : 0, unit: '[kg (DM) ha-1]' }
-      //   , LeafAreaIndex: { value:  isCropPlanted ? mcg.get_LeafAreaIndex() : 0, unit: '[m-2 m-2]' }
-      //   , GrossPhotosynthesisHaRate: { value: isCropPlanted ? mcg.get_GrossPhotosynthesisHaRate() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
-      //   , NetPhotosynthesis: { value: isCropPlanted ? mcg.get_NetPhotosynthesis() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
-      //   , MaintenanceRespirationAS: { value: isCropPlanted ? mcg.get_MaintenanceRespirationAS() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
-      //   , GrowthRespirationAS: { value: isCropPlanted ? mcg.get_GrowthRespirationAS() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
-      //   , StomataResistance: { value: isCropPlanted ? mcg.get_StomataResistance() : 0, unit: '[s m-1]' }
-      //   , CropHeight: { value: isCropPlanted ? mcg.get_CropHeight() : 0, unit: '[m]' }
-      //   , LeafAreaIndex: { value: isCropPlanted ? mcg.get_LeafAreaIndex() : 0, unit: '[m2 m-2]' }
-      //   , RootingDepth: { value: isCropPlanted ? mcg.get_RootingDepth() : 0, unit: '[layer #]' }
-      //   , AbovegroundBiomass: { value: isCropPlanted ? mcg.get_AbovegroundBiomass() : 0, unit: '[kg ha-1]' }
-      //   , TotalBiomassNContent: { value: isCropPlanted ? mcg.get_TotalBiomassNContent() : 0, unit: '[?]' }
-      //   , SumTotalNUptake: { value: isCropPlanted ? mcg.get_SumTotalNUptake() : 0, unit: '[kg (N) ha-1]' }
-      //   , ActNUptake: { value: isCropPlanted ? mcg.get_ActNUptake() : 0, unit: '[kg (N) ha-1]' }
-      //   , PotNUptake: { value: isCropPlanted ? mcg.get_PotNUptake() : 0, unit: '[kg (N) ha-1]' }
-      //   , TargetNConcentration: { value: isCropPlanted ? mcg.get_TargetNConcentration() : 0, unit: '[kg (N) ha-1]' }
-      //   , CriticalNConcentration: { value: isCropPlanted ? mcg.get_CriticalNConcentration() : 0, unit: '[kg (N) ha-1]' }
-      //   , AbovegroundBiomassNConcentration: { value: isCropPlanted ? mcg.get_AbovegroundBiomassNConcentration() : 0, unit: '[kg (N) ha-1]' }
-      //   , NetPrimaryProduction: { value: isCropPlanted ? mcg.get_NetPrimaryProduction() : 0, unit: '[kg (N) ha-1]' }
-      //   , GrossPrimaryProduction: { value: isCropPlanted ? mcg.get_GrossPrimaryProduction() : 0, unit: '[kg (N) ha-1]' }
-      //   , AutotrophicRespiration: { value: isCropPlanted ? mcg.get_AutotrophicRespiration() : 0, unit: '[kg (C) ha-1]' }
+      //   , GrowthIncrementRoot: { value: isCropPlanted ? mcg.growthIncrement(0) : 0, unit: '[kg (DM) ha-1]' }
+      //   , GrowthIncrementLeaf: { value: isCropPlanted ? mcg.growthIncrement(1) : 0, unit: '[kg (DM) ha-1]' }
+      //   , GrowthIncrementShoot: { value: isCropPlanted ? mcg.growthIncrement(2) : 0, unit: '[kg (DM) ha-1]' }
+      //   , GrowthIncrementFruit: { value: isCropPlanted ? mcg.growthIncrement(3) : 0, unit: '[kg (DM) ha-1]' }
+      //   , RelativeTotalDevelopment: { value: isCropPlanted ? mcg.relativeTotalDevelopment() : 0, unit: '[0;1]' }
+      //   , BiomassRoot: { value: isCropPlanted ? mcg.biomass(0) : 0, unit: '[kg (DM) ha-1]' }
+      //   , BiomassLeaf: { value: isCropPlanted ? mcg.biomass(1) : 0, unit: '[kg (DM) ha-1]' }
+      //   , BiomassShoot: { value: isCropPlanted ? mcg.biomass(2) : 0, unit: '[kg (DM) ha-1]' }
+      //   , BiomassFruit: { value: isCropPlanted ? mcg.biomass(3) : 0, unit: '[kg (DM) ha-1]' }
+      //   , PrimaryYieldDryMatter: { value: isCropPlanted ? mcg.primaryYieldDryMatter() : 0, unit: '[kg (DM) ha-1]' }
+      //   , LeafAreaIndex: { value:  isCropPlanted ? mcg.leafAreaIndex() : 0, unit: '[m-2 m-2]' }
+      //   , NetPhotosynthesis: { value: isCropPlanted ? mcg.netPhotosynthesis() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
+      //   , StomataResistance: { value: isCropPlanted ? mcg.stomataResistance() : 0, unit: '[s m-1]' }
+      //   , CropHeight: { value: isCropPlanted ? mcg.height() : 0, unit: '[m]' }
+      //   , RootingDepth: { value: isCropPlanted ? mcg.rootingDepth() : 0, unit: '[layer #]' }
+      //   , ShootBiomass: { value: isCropPlanted ? mcg.shootBiomass() : 0, unit: '[kg ha-1]' }
+      //   , AccumulatedNitrogenUptake: { value: isCropPlanted ? mcg.accumulatedNitrogenUptake() : 0, unit: '[kg (N) ha-1]' }
+      //   , NitrogenUptake: { value: isCropPlanted ? mcg.nitrogenUptake() : 0, unit: '[kg (N) ha-1]' }
+      //   , PotentialNitrogenUptake: { value: isCropPlanted ? mcg.potentialNitrogenUptake() : 0, unit: '[kg (N) ha-1]' }
+      //   , ShootBiomassNitrogenConcentration: { value: isCropPlanted ? mcg.shootBiomassNitrogenConcentration() : 0, unit: '[kg (N) ha-1]' }
+      //   , NetPrimaryProduction: { value: isCropPlanted ? mcg.netPrimaryProduction() : 0, unit: '[kg (N) ha-1]' }
       // };
 
       // var outLayers = 20;
@@ -705,7 +696,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       // progress['ActualEvaporation'] = { value: msm.get_ActualEvaporation(), unit: '[mm]' };
       // progress['Evapotranspiration'] = { value: msm.get_Evapotranspiration(), unit: '[mm]' };
       // progress['ET0'] = { value: msm.get_ET0(), unit: '[mm]' };
-      // progress['KcFactor'] = { value: msm.get_KcFactor(), unit: '[?]' };
+      // progress['KcFactor'] = { value: msm.kcFactor(), unit: '[?]' };
       // progress['AtmosphericCO2Concentration'] = { value: model.get_AtmosphericCO2Concentration(), unit: '[ppm]' };
       // progress['GroundwaterDepth'] = { value: model.get_GroundwaterDepth(), unit: '[m]' };
       // progress['GroundwaterRecharge'] = { value: msm.get_GroundwaterRecharge(), unit: '[mm]' };

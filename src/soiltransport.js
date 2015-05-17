@@ -44,7 +44,7 @@ var SoilTransport = function (sc, sps, cpp) {
       vq_SoilNO3[i_Layer] = soilColumn[i_Layer].vs_SoilNO3;
 
       vq_LayerThickness[i_Layer] = soilColumn[0].vs_LayerThickness;
-      vc_NUptakeFromLayer[i_Layer] = crop ? crop.get_NUptakeFromLayer(i_Layer) : 0;
+      vc_NUptakeFromLayer[i_Layer] = crop ? crop.nitrogenUptake(i_Layer) : 0;
 
       // disabled
       /* crop.js: remove NH4 from uptake and update NH4 in solution */

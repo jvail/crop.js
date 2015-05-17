@@ -22,6 +22,7 @@ Johnson I. R. , Lodge G. M. , White R. E. (2003) The Sustainable Grazing Systems
 - Add other grassland species (or functional groups) if parameters are available.
 - Add simple rountines for automatic seed, harvest, fertilization, irrigation and tillage date predictions.
 - Simplify MONICA's input parameters, configuration and API.
+- Provide infrastructure and unified API to easily extend crop.js with custion crop growth models
 
 ## License & Copywrite
 The library in total is released under GPL (see license file). The grassland model files are released under MIT license.
