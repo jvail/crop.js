@@ -5244,21 +5244,22 @@ var Harvest = function (at, crop) {
       if (model.currentCrop() == this._crop) {
 
         if (model.cropGrowth()) {
+          var cropGrowth = model.cropGrowth();
           this._crop.setHarvestYields(
-            model.cropGrowth().get_FreshPrimaryCropYield() /
-            100.0, model.cropGrowth().get_FreshSecondaryCropYield() / 100.0
+            cropGrowth.primaryYieldFreshMatter() /
+            100.0, cropGrowth.get_FreshSecondaryCropYield() / 100.0
           );
           this._crop.setHarvestYieldsTM(
-            model.cropGrowth().get_PrimaryCropYield() / 100.0,
-            model.cropGrowth().get_SecondaryCropYield() / 100.0
+            cropGrowth.primaryYield() / 100.0,
+            cropGrowth.secondaryYield() / 100.0
           );
           this._crop.setYieldNContent(
-            model.cropGrowth().get_PrimaryYieldNContent(),
-            model.cropGrowth().get_SecondaryYieldNContent()
+            cropGrowth.primaryYieldNitrogenContent(),
+            cropGrowth.secondaryYieldNitrogenContent()
           );
-          this._crop.setSumTotalNUptake(model.cropGrowth().get_SumTotalNUptake());
-          this._crop.setCropHeight(model.cropGrowth().get_CropHeight());
-          this._crop.setAccumulatedETa(model.cropGrowth().get_AccumulatedETa());
+          this._crop.setSumTotalNUptake(cropGrowth.accumulatedNitrogenUptake());
+          this._crop.setCropHeight(cropGrowth.height());
+          this._crop.setAccumulatedETa(cropGrowth.accumulatedEvapotranspiration());
         }
 
         model.harvestCurrentCrop();
@@ -5299,27 +5300,27 @@ var Cutting = function (at, crop, cropResult) {
     if (model.currentCrop() == this._crop) {
       // if (model.cropGrowth()) {
         // this._crop.setHarvestYields(
-        //   model.cropGrowth().get_FreshPrimaryCropYield() /
+        //   model.cropGrowth().primaryYieldFreshMatter() /
         //   100.0, model.cropGrowth().get_FreshSecondaryCropYield() / 100.0
         // );
         // this._crop.setHarvestYieldsTM(
-        //   model.cropGrowth().get_PrimaryCropYield() / 100.0,
-        //   model.cropGrowth().get_SecondaryCropYield() / 100.0
+        //   model.cropGrowth().primaryYield() / 100.0,
+        //   model.cropGrowth().secondaryYield() / 100.0
         // );
-        // this._crop.addCuttingYieldDM(model.cropGrowth().get_PrimaryCropYield() / 100.0);
+        // this._crop.addCuttingYieldDM(model.cropGrowth().primaryYield() / 100.0);
       // }
       // this._crop.setYieldNContent(
-      //   model.cropGrowth().get_PrimaryYieldNContent(),
-      //   model.cropGrowth().get_SecondaryYieldNContent()
+      //   model.cropGrowth().primaryYieldNitrogenContent(),
+      //   model.cropGrowth().secondaryYieldNitrogenContent()
       // );
-      // this._crop.setSumTotalNUptake(model.cropGrowth().get_SumTotalNUptake());
-      // this._crop.setCropHeight(model.cropGrowth().get_CropHeight());
+      // this._crop.setSumTotalNUptake(model.cropGrowth().accumulatedNitrogenUptake());
+      // this._crop.setCropHeight(model.cropGrowth().height());
 
       var cut = {
           id: this._crop.id()
         , name: this._crop.name()
         , date: this._date
-        , primaryYieldTM: model.cropGrowth().get_PrimaryCropYield() / 100.0
+        , primaryYieldTM: model.cropGrowth().primaryYield() / 100.0
       };
 
       if (fs) {
@@ -5748,9 +5749,111 @@ var Weather = function (startDate, endDate) {
 };
 
 
+/*
+  CropGrowthAPI must be implemented by any crop growth model.
+
+  Function parameters are optional. If not provided by callee return the sum over the index. E.g.
+  if 'species' argument is not set (i.e. species === undefined) return sum over all species. 
+  Otherwise return the specific species value.
+
+  Example:
+
+  var MyCropGrowth = function (params) {
+
+    var name = 'my crop';
+
+    var myHeightFunction = function (species) {
+      
+      var height = 0;
+      if (species === undefiend) { // return max. height
+        for (var i = 0; i < noSpecies; i++)
+          height = (heights[i] > height ? heights[i] : height);
+      } else {
+        height = heights[species];
+      }
+      return height;
+    
+    };
+
+    return Object.create(CropGrowthAPI.prototype, {
+      name: { value: name },
+      height: { value: myHeightFunction }
+    });
+
+  };
+
+  TODO: 
+   
+    - fix and add units
+*/
+
+function CropGrowthAPI() {};
+
+CropGrowthAPI.prototype.step = function () {};
+CropGrowthAPI.prototype.isDying = function () {};
+
+CropGrowthAPI.prototype.name = function (species) {};
+CropGrowthAPI.prototype.height = function (species) {};
+CropGrowthAPI.prototype.kcFactor = function (species) {};
+CropGrowthAPI.prototype.leafAreaIndex = function (species) {};
+CropGrowthAPI.prototype.numberOfOrgans = function (species) {};
+CropGrowthAPI.prototype.soilCoverage = function (species) {};
+CropGrowthAPI.prototype.stomataResistance = function (species) {};
+CropGrowthAPI.prototype.vernalisationFactor = function (species) {};
+CropGrowthAPI.prototype.numberOfSpecies = function () {};
+CropGrowthAPI.prototype.rootingDepth = function (species) {};
+
+CropGrowthAPI.prototype.nitrogenStress = function (species) {};
+CropGrowthAPI.prototype.heatStress = function (species) {};
+CropGrowthAPI.prototype.oxygenStress = function (species) {};
+CropGrowthAPI.prototype.waterStress = function (species) {};
+
+CropGrowthAPI.prototype.biomass = function (organ, species) {};
+CropGrowthAPI.prototype.growthIncrement = function (organ, species) {};
+CropGrowthAPI.prototype.shootBiomass = function (species) {};
+CropGrowthAPI.prototype.shootBiomassNitrogenConcentration = function (species) {};
+CropGrowthAPI.prototype.rootBiomass = function (species) {};
+CropGrowthAPI.prototype.rootNitrogenConcentration = function (species) {};
+CropGrowthAPI.prototype.netPrimaryProduction = function (species) {};
+CropGrowthAPI.prototype.netPhotosynthesis = function (species) {};
+CropGrowthAPI.prototype.grossPhotosynthesis = function (species) {};
+
+CropGrowthAPI.prototype.primaryYield = function (species) {};
+CropGrowthAPI.prototype.primaryYieldFreshMatter = function (species) {};
+CropGrowthAPI.prototype.primaryYieldNitrogenConcentration = function (species) {};
+CropGrowthAPI.prototype.primaryYieldNitrogenContent = function (species) {};
+CropGrowthAPI.prototype.primaryYieldCrudeProteinConcentration = function (species) {};
+CropGrowthAPI.prototype.secondaryYield = function (species) {};
+CropGrowthAPI.prototype.secondaryYieldNitrogenConcentration = function (species) {};
+CropGrowthAPI.prototype.secondaryYieldNitrogenContent = function (species) {};
+CropGrowthAPI.prototype.residueBiomass = function (useSecondaryYields, species) {};
+CropGrowthAPI.prototype.residuesNitrogenConcentration = function (species) {};
+CropGrowthAPI.prototype.residuesNitrogenContent = function (species) {};
+
+CropGrowthAPI.prototype.referenceEvapotranspiration = function () {};
+CropGrowthAPI.prototype.accumulatedEvapotranspiration = function () {};
+CropGrowthAPI.prototype.accumulateEvapotranspiration = function (actualEvapotranspiration) {};
+CropGrowthAPI.prototype.remainingEvapotranspiration = function (species) {};
+CropGrowthAPI.prototype.transpiration = function (layer, species) {};
+CropGrowthAPI.prototype.potentialTranspiration = function (species) {};
+CropGrowthAPI.prototype.evaporatedFromIntercept = function () {};
+CropGrowthAPI.prototype.netPrecipitation = function () {};
+
+CropGrowthAPI.prototype.nitrogenUptake = function (layer, species) {};
+CropGrowthAPI.prototype.potentialNitrogenUptake = function (species) {};
+CropGrowthAPI.prototype.accumulatedNitrogenUptake = function (species) {};
+
+CropGrowthAPI.prototype.currentTemperatureSum = function (species) {};
+CropGrowthAPI.prototype.developmentalStage = function (species) {};
+CropGrowthAPI.prototype.relativeTotalDevelopment = function (species) {};
+
+CropGrowthAPI.prototype.heatSumIrrigationEnd = function () {};
+CropGrowthAPI.prototype.heatSumIrrigationStart = function () {};
 
 
-var FieldCrop = function (name) {
+
+
+var GenericCrop = function (name) {
 
   var _id = -1
     , _name = name.toLowerCase()
@@ -8987,7 +9090,7 @@ var FieldCrop = function (name) {
 
   return {
 
-    type: 'fieldcrop',
+    type: 'generic',
     id: function () { 
       return _id; 
     },
@@ -9103,9 +9206,14 @@ var FieldCrop = function (name) {
     - applyCutting(): reset LAI
     - get_PrimaryCropYield(): bestimme yield auch nach cutting
     - get_FreshPrimaryCropYield(): bestimme yield auch nach cutting
+
+
+  TODO: 
+   
+    - dont return per ha values 
 */
 
-var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
+var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
 
   var soilColumn = sc
     , generalParams = gps
@@ -11694,6 +11802,10 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     return vc_NConcentrationRoot;
   };
 
+  var get_RootBiomass = function () {
+    return vc_RootBiomass;
+  };
+
   /**
   * Returns the depth of the maximum active and effective root.
   * [m]
@@ -11749,6 +11861,10 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
 
   var get_NetPhotosynthesis = function () {
     return vc_NetPhotosynthesis;
+  };
+
+  var get_GrossPhotosynthesis = function () {
+    return vc_GrossPhotosynthesis;
   };
 
   var get_ReferenceEvapotranspiration = function () {
@@ -11859,8 +11975,11 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     return vc_SumTotalNUptake;
   };
 
-  var get_ActNUptake = function () {
-    return vc_TotalNUptake;
+  var get_ActNUptake = function (layer) {
+    if (layer === undefined)
+      return vc_TotalNUptake;
+    else
+      return get_NUptakeFromLayer(layer)
   };
 
   var get_GrossPrimaryProduction = function () {
@@ -11883,89 +12002,146 @@ var FieldCropGrowth = function (sc, gps, cps, stps, cpp) {
     return pc_NumberOfOrgans; 
   };
 
-  var totalBiomass = function () { 
+  var totalBiomass = function (organ) { 
+
+    if (organ !== undefined)
+      return get_OrganBiomass(organ);
+
     return vc_TotalBiomass; 
   };
-
-  // new interface
 
   var get_numberOfSpecies = function () {
     return 1;
   };
 
+  return Object.create(CropGrowthAPI.prototype, {
+    step: { value: calculateCropGrowthStep },
+    isDying: { value: isDying },
+    name: { value: get_CropName },
+    height: { value: get_CropHeight },
+    kcFactor: { value: get_KcFactor },
+    leafAreaIndex: { value: get_LeafAreaIndex },
+    numberOfOrgans: { value: get_NumberOfOrgans },
+    soilCoverage: { value: get_SoilCoverage },
+    stomataResistance: { value: get_StomataResistance },
+    vernalisationFactor: { value: get_VernalisationFactor },
+    numberOfSpecies: { value: get_numberOfSpecies },
+    rootingDepth: { value: get_RootingDepth },
+    nitrogenStress: { value: get_CropNRedux },
+    heatStress: { value: get_HeatStressRedux },
+    oxygenStress: { value: get_OxygenDeficit },
+    waterStress: { value: get_TranspirationDeficit },
+    biomass: { value: totalBiomass },
+    growthIncrement: { value: get_OrganGrowthIncrement },
+    shootBiomass: { value: get_AbovegroundBiomass },
+    shootBiomassNitrogenConcentration: { value: get_AbovegroundBiomassNConcentration },
+    rootBiomass: { value: get_RootBiomass },
+    rootNitrogenConcentration: { value: get_RootNConcentration },
+    netPrimaryProduction: { value: get_NetPrimaryProduction },
+    netPhotosynthesis: { value: get_NetPhotosynthesis },
+    grossPhotosynthesis: { value: get_GrossPhotosynthesis },
+    primaryYield: { value: get_PrimaryCropYield },
+    primaryYieldFreshMatter: { value: get_FreshPrimaryCropYield },
+    primaryYieldNitrogenConcentration: { value: get_PrimaryYieldNConcentration },
+    primaryYieldNitrogenContent: { value: get_PrimaryYieldNContent },
+    primaryYieldCrudeProteinConcentration: { value: get_RawProteinConcentration },
+    secondaryYield: { value: get_SecondaryCropYield },
+    secondaryYieldNitrogenConcentration: { value: get_ResiduesNConcentration },
+    secondaryYieldNitrogenContent: { value: get_SecondaryYieldNContent },
+    residueBiomass: { value: get_ResidueBiomass },
+    residuesNitrogenConcentration: { value: get_ResiduesNConcentration },
+    residuesNitrogenContent: { value: get_ResiduesNContent },
+    referenceEvapotranspiration: { value: get_ReferenceEvapotranspiration },
+    accumulatedEvapotranspiration: { value: get_AccumulatedETa },
+    accumulateEvapotranspiration: { value: accumulateEvapotranspiration },
+    remainingEvapotranspiration: { value: get_RemainingEvapotranspiration },
+    transpiration: { value: get_Transpiration },
+    potentialTranspiration: { value: get_PotentialTranspiration },
+    evaporatedFromIntercept: { value: get_EvaporatedFromIntercept },
+    netPrecipitation: { value: get_NetPrecipitation },
+    nitrogenUptake: { value: get_ActNUptake },
+    potentialNitrogenUptake: { value: get_PotNUptake },
+    accumulatedNitrogenUptake: { value: get_SumTotalNUptake },
+    currentTemperatureSum: { value: get_CurrentTemperatureSum },
+    developmentalStage: { value: get_DevelopmentalStage },
+    relativeTotalDevelopment: { value: get_RelativeTotalDevelopment },
+    heatSumIrrigationEnd: { value: get_HeatSumIrrigationEnd },
+    heatSumIrrigationStart: { value: get_HeatSumIrrigationStart }
+  });
 
-  return {
-      step: calculateCropGrowthStep
-    , accumulateEvapotranspiration: accumulateEvapotranspiration
-    , isDying: isDying
-    , totalBiomass: totalBiomass
-    , getEffectiveRootingDepth: getEffectiveRootingDepth
-    , get_AbovegroundBiomass: get_AbovegroundBiomass
-    , get_AbovegroundBiomassNConcentration: get_AbovegroundBiomassNConcentration
-    , get_AbovegroundBiomassNContent: get_AbovegroundBiomassNContent
-    , get_AccumulatedETa: get_AccumulatedETa
-    , get_ActNUptake: get_ActNUptake
-    , get_ActualTranspiration: get_ActualTranspiration
-    , get_Assimilates: get_Assimilates
-    , get_AssimilationRate: get_AssimilationRate
-    , get_AutotrophicRespiration: get_AutotrophicRespiration
-    , get_CriticalNConcentration: get_CriticalNConcentration
-    , get_CropHeight: get_CropHeight
-    , get_CropNRedux: get_CropNRedux
-    , get_CropName: get_CropName
-    , get_CurrentTemperatureSum: get_CurrentTemperatureSum
-    , get_DaylengthFactor: get_DaylengthFactor
-    , get_DevelopmentalStage: get_DevelopmentalStage
-    , get_EvaporatedFromIntercept: get_EvaporatedFromIntercept
-    , get_FreshPrimaryCropYield: get_FreshPrimaryCropYield
-    , get_FreshSecondaryCropYield: get_FreshSecondaryCropYield
-    , get_GrossPhotosynthesisHaRate: get_GrossPhotosynthesisHaRate
-    , get_GrossPhotosynthesisRate: get_GrossPhotosynthesisRate
-    , get_GrossPrimaryProduction: get_GrossPrimaryProduction
-    , get_GrowthRespirationAS: get_GrowthRespirationAS
-    , get_HeatStressRedux: get_HeatStressRedux
-    , get_HeatSumIrrigationEnd: get_HeatSumIrrigationEnd
-    , get_HeatSumIrrigationStart: get_HeatSumIrrigationStart
-    , get_KcFactor: get_KcFactor
-    , get_LeafAreaIndex: get_LeafAreaIndex
-    , get_MaintenanceRespirationAS: get_MaintenanceRespirationAS
-    , get_NUptakeFromLayer: get_NUptakeFromLayer
-    , get_NetMaintenanceRespiration: get_NetMaintenanceRespiration
-    , get_NetPhotosynthesis: get_NetPhotosynthesis
-    , get_NetPrecipitation: get_NetPrecipitation
-    , get_NetPrimaryProduction: get_NetPrimaryProduction
-    , get_NumberOfOrgans: get_NumberOfOrgans
-    , get_OrganBiomass: get_OrganBiomass
-    , get_OrganGrowthIncrement: get_OrganGrowthIncrement
-    , get_OrganSpecificNPP: get_OrganSpecificNPP
-    , get_OrganSpecificTotalRespired: get_OrganSpecificTotalRespired
-    , get_OxygenDeficit: get_OxygenDeficit
-    , get_PotNUptake: get_PotNUptake
-    , get_PotentialTranspiration: get_PotentialTranspiration
-    , get_PrimaryCropYield: get_PrimaryCropYield
-    , get_PrimaryYieldNConcentration: get_PrimaryYieldNConcentration
-    , get_PrimaryYieldNContent: get_PrimaryYieldNContent
-    , get_RawProteinConcentration: get_RawProteinConcentration
-    , get_ReferenceEvapotranspiration: get_ReferenceEvapotranspiration
-    , get_RelativeTotalDevelopment: get_RelativeTotalDevelopment
-    , get_RemainingEvapotranspiration: get_RemainingEvapotranspiration
-    , get_ResidueBiomass: get_ResidueBiomass
-    , get_ResiduesNConcentration: get_ResiduesNConcentration
-    , get_ResiduesNContent: get_ResiduesNContent
-    , get_RootNConcentration: get_RootNConcentration
-    , get_RootingDepth: get_RootingDepth
-    , get_SecondaryCropYield: get_SecondaryCropYield
-    , get_SecondaryYieldNContent: get_SecondaryYieldNContent
-    , get_SoilCoverage: get_SoilCoverage
-    , get_StomataResistance: get_StomataResistance
-    , get_SumTotalNUptake: get_SumTotalNUptake
-    , get_TargetNConcentration: get_TargetNConcentration
-    , get_TotalBiomassNContent: get_TotalBiomassNContent
-    , get_Transpiration: get_Transpiration
-    , get_TranspirationDeficit: get_TranspirationDeficit
-    , get_VernalisationFactor: get_VernalisationFactor
-    , get_numberOfSpecies: get_numberOfSpecies
-  };
+
+  // return {
+  //     step: calculateCropGrowthStep
+  //   , accumulateEvapotranspiration: accumulateEvapotranspiration
+  //   , isDying: isDying
+  //   , totalBiomass: totalBiomass
+  //   , getEffectiveRootingDepth: getEffectiveRootingDepth
+  //   , get_AbovegroundBiomass: get_AbovegroundBiomass
+  //   , get_AbovegroundBiomassNConcentration: get_AbovegroundBiomassNConcentration
+  //   , get_AbovegroundBiomassNContent: get_AbovegroundBiomassNContent
+  //   , get_AccumulatedETa: get_AccumulatedETa
+  //   , get_ActNUptake: get_ActNUptake
+  //   , get_ActualTranspiration: get_ActualTranspiration
+  //   , get_Assimilates: get_Assimilates
+  //   , get_AssimilationRate: get_AssimilationRate
+  //   , get_AutotrophicRespiration: get_AutotrophicRespiration
+  //   , get_CriticalNConcentration: get_CriticalNConcentration
+  //   , get_CropHeight: get_CropHeight
+  //   , get_CropNRedux: get_CropNRedux
+  //   , get_CropName: get_CropName
+  //   , get_CurrentTemperatureSum: get_CurrentTemperatureSum
+  //   , get_DaylengthFactor: get_DaylengthFactor
+  //   , get_DevelopmentalStage: get_DevelopmentalStage
+  //   , get_EvaporatedFromIntercept: get_EvaporatedFromIntercept
+  //   , get_FreshPrimaryCropYield: get_FreshPrimaryCropYield
+  //   , get_FreshSecondaryCropYield: get_FreshSecondaryCropYield
+  //   , get_GrossPhotosynthesisHaRate: get_GrossPhotosynthesisHaRate
+  //   , get_GrossPhotosynthesisRate: get_GrossPhotosynthesisRate
+  //   , get_GrossPrimaryProduction: get_GrossPrimaryProduction
+  //   , get_GrowthRespirationAS: get_GrowthRespirationAS
+  //   , get_HeatStressRedux: get_HeatStressRedux
+  //   , get_HeatSumIrrigationEnd: get_HeatSumIrrigationEnd
+  //   , get_HeatSumIrrigationStart: get_HeatSumIrrigationStart
+  //   , get_KcFactor: get_KcFactor
+  //   , get_LeafAreaIndex: get_LeafAreaIndex
+  //   , get_MaintenanceRespirationAS: get_MaintenanceRespirationAS
+  //   , get_NUptakeFromLayer: get_NUptakeFromLayer
+  //   , get_NetMaintenanceRespiration: get_NetMaintenanceRespiration
+  //   , get_NetPhotosynthesis: get_NetPhotosynthesis
+  //   , get_NetPrecipitation: get_NetPrecipitation
+  //   , get_NetPrimaryProduction: get_NetPrimaryProduction
+  //   , get_NumberOfOrgans: get_NumberOfOrgans
+  //   , get_OrganBiomass: get_OrganBiomass
+  //   , get_OrganGrowthIncrement: get_OrganGrowthIncrement
+  //   , get_OrganSpecificNPP: get_OrganSpecificNPP
+  //   , get_OrganSpecificTotalRespired: get_OrganSpecificTotalRespired
+  //   , get_OxygenDeficit: get_OxygenDeficit
+  //   , get_PotNUptake: get_PotNUptake
+  //   , get_PotentialTranspiration: get_PotentialTranspiration
+  //   , get_PrimaryCropYield: get_PrimaryCropYield
+  //   , get_PrimaryYieldNConcentration: get_PrimaryYieldNConcentration
+  //   , get_PrimaryYieldNContent: get_PrimaryYieldNContent
+  //   , get_RawProteinConcentration: get_RawProteinConcentration
+  //   , get_ReferenceEvapotranspiration: get_ReferenceEvapotranspiration
+  //   , get_RelativeTotalDevelopment: get_RelativeTotalDevelopment
+  //   , get_RemainingEvapotranspiration: get_RemainingEvapotranspiration
+  //   , get_ResidueBiomass: get_ResidueBiomass
+  //   , get_ResiduesNConcentration: get_ResiduesNConcentration
+  //   , get_ResiduesNContent: get_ResiduesNContent
+  //   , get_RootNConcentration: get_RootNConcentration
+  //   , get_RootingDepth: get_RootingDepth
+  //   , get_SecondaryCropYield: get_SecondaryCropYield
+  //   , get_SecondaryYieldNContent: get_SecondaryYieldNContent
+  //   , get_SoilCoverage: get_SoilCoverage
+  //   , get_StomataResistance: get_StomataResistance
+  //   , get_SumTotalNUptake: get_SumTotalNUptake
+  //   , get_TargetNConcentration: get_TargetNConcentration
+  //   , get_TotalBiomassNContent: get_TotalBiomassNContent
+  //   , get_Transpiration: get_Transpiration
+  //   , get_TranspirationDeficit: get_TranspirationDeficit
+  //   , get_VernalisationFactor: get_VernalisationFactor
+  //   , get_numberOfSpecies: get_numberOfSpecies
+  // };
 
 };
 
@@ -16710,10 +16886,10 @@ var Model = function (env) {
     p_accuHeatStress = 0.0;
     p_accuOxygenStress = 0.0;
 
-    if(_currentCrop.isValid() && _currentCrop.type === 'fieldcrop') {
+    if(_currentCrop.isValid() && _currentCrop.type === 'generic') {
 
       cps = _currentCrop.cropParameters();
-      that._currentCropGrowth = new FieldCropGrowth(_soilColumn, _env.general, cps, _env.site, _env.centralParameterProvider);
+      that._currentCropGrowth = new GenericCropGrowth(_soilColumn, _env.general, cps, _env.site, _env.centralParameterProvider);
 
       _soilTransport.put_Crop(that._currentCropGrowth);
       _soilColumn.put_Crop(that._currentCropGrowth);
@@ -16762,28 +16938,28 @@ var Model = function (env) {
     if (_currentCrop && _currentCrop.isValid()) {
 
       /* prepare to add root and crop residues to soilorganic (AOMs) */
-      var rootBiomass = that._currentCropGrowth.get_OrganBiomass(0);
-      var rootNConcentration = that._currentCropGrowth.get_RootNConcentration();
+      var rootBiomass = that._currentCropGrowth.biomass(0);
+      var rootNConcentration = that._currentCropGrowth.rootNitrogenConcentration();
 
       logger(MSG.INFO, 'Harvest: adding organic matter from root to soilOrganic');
       logger(MSG.INFO, 'Root biomass: ' + rootBiomass + ' Root N concentration: ' + rootNConcentration);
 
       _soilOrganic.addOrganicMatter(_currentCrop.residueParameters(), rootBiomass, rootNConcentration);
 
-      var residueBiomass = that._currentCropGrowth.get_ResidueBiomass(_env.useSecondaryYields);
+      var residueBiomass = that._currentCropGrowth.residueBiomass(_env.useSecondaryYields);
 
       /* TODO: das hier noch berechnen (???) */
-      var residueNConcentration = that._currentCropGrowth.get_ResiduesNConcentration();
+      var residueNConcentration = that._currentCropGrowth.residuesNitrogenConcentration();
 
       logger(MSG.INFO, 'Adding organic matter from residues to soilOrganic');
       logger(MSG.INFO, 'Residue biomass: ' + residueBiomass + ' Residue N concentration: ' + residueNConcentration);
-      logger(MSG.INFO, 'Primary yield biomass: ' + that._currentCropGrowth.get_PrimaryCropYield()
-          + ' Primary yield N concentration: ' + that._currentCropGrowth.get_PrimaryYieldNConcentration());
-      logger(MSG.INFO, 'Secondary yield biomass: ' + that._currentCropGrowth.get_SecondaryCropYield()
+      logger(MSG.INFO, 'Primary yield biomass: ' + that._currentCropGrowth.primaryYield()
+          + ' Primary yield N concentration: ' + that._currentCropGrowth.primaryYieldNitrogenConcentration());
+      logger(MSG.INFO, 'Secondary yield biomass: ' + that._currentCropGrowth.secondaryYield()
           + ' Secondary yield N concentration: ' + '??');
-      logger(MSG.INFO, 'Residues N content: ' + that._currentCropGrowth.get_ResiduesNContent()
-          + ' Primary yield N content: ' + that._currentCropGrowth.get_PrimaryYieldNContent()
-          + ' Secondary yield N content: ' + that._currentCropGrowth.get_SecondaryYieldNContent());
+      logger(MSG.INFO, 'Residues N content: ' + that._currentCropGrowth.residuesNitrogenContent()
+          + ' Primary yield N content: ' + that._currentCropGrowth.primaryYieldNitrogenContent()
+          + ' Secondary yield N content: ' + that._currentCropGrowth.secondaryYieldNitrogenContent());
 
       _soilOrganic.addOrganicMatter(_currentCrop.residueParameters(), residueBiomass, residueNConcentration);
     
@@ -16805,8 +16981,8 @@ var Model = function (env) {
     if (_currentCrop && _currentCrop.isValid()) {
 
       /* prepare to add root and crop residues to soilorganic (AOMs) */
-      var totalBiomass = that._currentCropGrowth.totalBiomass();
-      var totalNConcentration = that._currentCropGrowth.get_AbovegroundBiomassNConcentration() + that._currentCropGrowth.get_RootNConcentration();
+      var totalBiomass = that._currentCropGrowth.biomass();
+      var totalNConcentration = that._currentCropGrowth.shootBiomassNitrogenConcentration() + that._currentCropGrowth.rootNitrogenConcentration();
 
       logger(MSG.INFO, "Incorporation: adding organic matter from total biomass of crop to soilOrganic");
       logger(MSG.INFO, "Total biomass: " + totalBiomass + " Total N concentration: " + totalNConcentration);
@@ -17045,10 +17221,10 @@ var Model = function (env) {
     
     }
 
-    p_accuNStress += that._currentCropGrowth.get_CropNRedux();
-    p_accuWaterStress += that._currentCropGrowth.get_TranspirationDeficit();
-    p_accuHeatStress += that._currentCropGrowth.get_HeatStressRedux();
-    p_accuOxygenStress += that._currentCropGrowth.get_OxygenDeficit();
+    p_accuNStress += that._currentCropGrowth.nitrogenStress();
+    p_accuWaterStress += that._currentCropGrowth.waterStress();
+    p_accuHeatStress += that._currentCropGrowth.heatStress();
+    p_accuOxygenStress += that._currentCropGrowth.oxygenStress();
 
   };
 
@@ -17274,7 +17450,7 @@ var Model = function (env) {
   /*  Returns evapotranspiration [mm] */
   var getEvapotranspiration = function () {
     if (that._currentCropGrowth)
-      return that._currentCropGrowth.get_RemainingEvapotranspiration();
+      return that._currentCropGrowth.remainingEvapotranspiration();
     return 0.0;
   };
 
@@ -17288,7 +17464,7 @@ var Model = function (env) {
   /* Returns actual evaporation */
   var getEvaporation = function () {
     if (that._currentCropGrowth)
-      return that._currentCropGrowth.get_EvaporatedFromIntercept();
+      return that._currentCropGrowth.evaporatedFromIntercept();
     return 0.0;
   };
 
@@ -18213,9 +18389,9 @@ var SoilColumn = function (gps, sp, cpp) {
     if (that.cropGrowth === null)
       logger(MSG.ERROR, "crop is null");
 
-    var s = that.cropGrowth.get_HeatSumIrrigationStart();
-    var e = that.cropGrowth.get_HeatSumIrrigationEnd();
-    var cts = that.cropGrowth.get_CurrentTemperatureSum();
+    var s = that.cropGrowth.heatSumIrrigationStart();
+    var e = that.cropGrowth.heatSumIrrigationEnd();
+    var cts = that.cropGrowth.currentTemperatureSum();
 
     if (cts < s || cts > e) return false;
 
@@ -18675,7 +18851,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       vo_SumNH3_Volatilised = 0.0,
       vo_TotalDenitrification = 0.0,
       incorporation = false,
-      crop = null;
+      crop = null; // TODO: rename to cropGrowth
 
       // JS! unused in cpp
       // vs_SoilMineralNContent = new Float64Array(sc.vs_NumberOfOrganicLayers()),
@@ -18741,7 +18917,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     ) 
   {
 
-    var vc_NetPrimaryProduction = crop ? crop.get_NetPrimaryProduction() : 0;
+    var vc_NetPrimaryProduction = crop ? crop.netPrimaryProduction() : 0;
 
     //fo_OM_Input(vo_AOM_Addition);
     fo_Urea(vw_Precipitation + irrigationAmount);
@@ -20893,15 +21069,17 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     var vc_CropPlanted   = false;
     var vc_CropHeight  = 0.0;
     var vc_DevelopmentalStage = 0;
+    var cropGrowth = null;
 
     if (monica.cropGrowth()) {
+      cropGrowth = monica.cropGrowth();
       vc_CropPlanted = true;
-      vc_PercentageSoilCoverage = monica.cropGrowth().get_SoilCoverage();
-      vc_KcFactor = monica.cropGrowth().get_KcFactor();
-      vc_CropHeight = monica.cropGrowth().get_CropHeight();
-      vc_DevelopmentalStage = monica.cropGrowth().get_DevelopmentalStage();
+      vc_PercentageSoilCoverage = cropGrowth.soilCoverage();
+      vc_KcFactor = cropGrowth.kcFactor();
+      vc_CropHeight = cropGrowth.height();
+      vc_DevelopmentalStage = cropGrowth.developmentalStage();
       if (vc_DevelopmentalStage > 0) {
-        vc_NetPrecipitation = monica.cropGrowth().get_NetPrecipitation();
+        vc_NetPrecipitation = cropGrowth.netPrecipitation();
       } else {
         vc_NetPrecipitation = vw_Precipitation;
       }
@@ -21141,7 +21319,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     var vm_GroundwaterDistance;
     var vm_WaterAddedFromCapillaryRise;
 
-    vc_RootingDepth = crop ? crop.get_RootingDepth() : 0;
+    vc_RootingDepth = crop ? crop.rootingDepth() : 0;
 
     vm_GroundwaterDistance = vm_GroundwaterTable - vc_RootingDepth;// []
 
@@ -21479,6 +21657,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     var vc_EvaporatedFromIntercept = 0.0;
     var vm_EvaporatedFromSurface = 0.0;
     var vm_EvaporationFromSurface = false;
+    var cropGrowth = monica.cropGrowth();
 
     var vm_SnowDepth = snowComponent.getVm_SnowDepth();
 
@@ -21497,12 +21676,12 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     if (vc_DevelopmentalStage > 0) {
       // Reference evapotranspiration is only grabbed here for consistent
       // output in monica.cpp
-      vm_ReferenceEvapotranspiration = monica.cropGrowth().get_ReferenceEvapotranspiration();
+      vm_ReferenceEvapotranspiration = cropGrowth.referenceEvapotranspiration();
 
       // Remaining ET from crop module already includes Kc factor and evaporation
       // from interception storage
-      vm_PotentialEvapotranspiration = monica.cropGrowth().get_RemainingEvapotranspiration();
-      vc_EvaporatedFromIntercept = monica.cropGrowth().get_EvaporatedFromIntercept();
+      vm_PotentialEvapotranspiration = cropGrowth.remainingEvapotranspiration();
+      vc_EvaporatedFromIntercept = cropGrowth.evaporatedFromIntercept();
 
     } else { // if no crop grows ETp is calculated from ET0 * kc
       vm_ReferenceEvapotranspiration = ReferenceEvapotranspiration(vs_HeightNN, vw_MaxAirTemperature,
@@ -21589,7 +21768,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
 
             // Transpiration is derived from ET0; Soil coverage and Kc factors
             // already considered in crop part!
-            vm_Transpiration[i_Layer] = monica.cropGrowth().get_Transpiration(i_Layer);
+            vm_Transpiration[i_Layer] = cropGrowth.transpiration(i_Layer);
 
             // Transpiration is capped in case potential ET after surface
             // and interception evaporation has occurred on same day
@@ -22065,7 +22244,7 @@ var SoilTransport = function (sc, sps, cpp) {
       vq_SoilNO3[i_Layer] = soilColumn[i_Layer].vs_SoilNO3;
 
       vq_LayerThickness[i_Layer] = soilColumn[0].vs_LayerThickness;
-      vc_NUptakeFromLayer[i_Layer] = crop ? crop.get_NUptakeFromLayer(i_Layer) : 0;
+      vc_NUptakeFromLayer[i_Layer] = crop ? crop.nitrogenUptake(i_Layer) : 0;
 
       // disabled
       /* crop.js: remove NH4 from uptake and update NH4 in solution */
@@ -22838,9 +23017,9 @@ var SoilTemperature = function (sc, mm, cpp) {
     var shading_coefficient = dampingFactor;
 
     var soil_coverage = 0.0;
-    if (monica.cropGrowth()) {
-      soil_coverage = monica.cropGrowth().get_SoilCoverage();
-    }
+    if (monica.cropGrowth())
+      soil_coverage = monica.cropGrowth().soilCoverage();
+
     shading_coefficient =  0.1 + ((soil_coverage * dampingFactor) + ((1-soil_coverage) * (1-dampingFactor)));
 
 
@@ -23241,7 +23420,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       } else {
 
-        var fieldcrop = new FieldCrop(crop.name);
+        var fieldcrop = new GenericCrop(crop.name);
         fieldcrop.setSeedAndHarvestDate(sd, hd);
         cropRotation[c] = new ProductionProcess(crop.name, fieldcrop);
       
@@ -23569,46 +23748,37 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       // progress = {
       //     date: { value: date.toISOString(), unit: '[date]' }
-      //   , CropName: { value: isCropPlanted ? mcg.get_CropName() : '', unit: '-' }
-      //   , TranspirationDeficit: { value: isCropPlanted ? mcg.get_TranspirationDeficit() : 0, unit: '[0;1]' }
-      //   , ActualTranspiration: { value: isCropPlanted ? mcg.get_ActualTranspiration() : 0, unit: '[mm]' } 
-      //   , CropNRedux: { value: isCropPlanted ? mcg.get_CropNRedux() : 0, unit: '[0;1]' }
-      //   , HeatStressRedux: { value: isCropPlanted ? mcg.get_HeatStressRedux() : 0, unit: '[0;1]' }
-      //   , OxygenDeficit: { value: isCropPlanted ? mcg.get_OxygenDeficit() : 0, unit: '[0;1]' }
-      //   , DevelopmentalStage: { value: isCropPlanted ? mcg.get_DevelopmentalStage() + 1 : 0, unit: '[#]' }
-      //   , CurrentTemperatureSum: { value: isCropPlanted ? mcg.get_CurrentTemperatureSum() : 0, unit: '°C' }
-      //   , VernalisationFactor: { value: isCropPlanted ? mcg.get_VernalisationFactor() : 0, unit: '[0;1]' }
+      //   , CropName: { value: isCropPlanted ? mcg.name() : '', unit: '-' }
+      //   , WaterStress: { value: isCropPlanted ? mcg.waterStress() : 0, unit: '[0;1]' }
+      //   , Transpiration: { value: isCropPlanted ? mcg.transpiration() : 0, unit: '[mm]' } 
+      //   , NitrogenStress: { value: isCropPlanted ? mcg.nitrogenStress() : 0, unit: '[0;1]' }
+      //   , HeatStress: { value: isCropPlanted ? mcg.heatStress() : 0, unit: '[0;1]' }
+      //   , OxygenStress: { value: isCropPlanted ? mcg.oxygenStress() : 0, unit: '[0;1]' }
+      //   , DevelopmentalStage: { value: isCropPlanted ? mcg.developmentalStage() + 1 : 0, unit: '[#]' }
+      //   , CurrentTemperatureSum: { value: isCropPlanted ? mcg.currentTemperatureSum() : 0, unit: '°C' }
+      //   , VernalisationFactor: { value: isCropPlanted ? mcg.vernalisationFactor() : 0, unit: '[0;1]' }
       //   , DaylengthFactor: { value: isCropPlanted ? mcg.get_DaylengthFactor() : 0, unit: '[0;1]' }
-      //   , OrganGrowthIncrementRoot: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(0) : 0, unit: '[kg (DM) ha-1]' }
-      //   , OrganGrowthIncrementLeaf: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(1) : 0, unit: '[kg (DM) ha-1]' }
-      //   , OrganGrowthIncrementShoot: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(2) : 0, unit: '[kg (DM) ha-1]' }
-      //   , OrganGrowthIncrementFruit: { value: isCropPlanted ? mcg.get_OrganGrowthIncrement(3) : 0, unit: '[kg (DM) ha-1]' }
-      //   , RelativeTotalDevelopment: { value: isCropPlanted ? mcg.get_RelativeTotalDevelopment() : 0, unit: '[0;1]' }
-      //   , OrganBiomassRoot: { value: isCropPlanted ? mcg.get_OrganBiomass(0) : 0, unit: '[kg (DM) ha-1]' }
-      //   , OrganBiomassLeaf: { value: isCropPlanted ? mcg.get_OrganBiomass(1) : 0, unit: '[kg (DM) ha-1]' }
-      //   , OrganBiomassShoot: { value: isCropPlanted ? mcg.get_OrganBiomass(2) : 0, unit: '[kg (DM) ha-1]' }
-      //   , OrganBiomassFruit: { value: isCropPlanted ? mcg.get_OrganBiomass(3) : 0, unit: '[kg (DM) ha-1]' }
-      //   , PrimaryCropYield: { value: isCropPlanted ? mcg.get_PrimaryCropYield() : 0, unit: '[kg (DM) ha-1]' }
-      //   , LeafAreaIndex: { value:  isCropPlanted ? mcg.get_LeafAreaIndex() : 0, unit: '[m-2 m-2]' }
-      //   , GrossPhotosynthesisHaRate: { value: isCropPlanted ? mcg.get_GrossPhotosynthesisHaRate() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
-      //   , NetPhotosynthesis: { value: isCropPlanted ? mcg.get_NetPhotosynthesis() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
-      //   , MaintenanceRespirationAS: { value: isCropPlanted ? mcg.get_MaintenanceRespirationAS() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
-      //   , GrowthRespirationAS: { value: isCropPlanted ? mcg.get_GrowthRespirationAS() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
-      //   , StomataResistance: { value: isCropPlanted ? mcg.get_StomataResistance() : 0, unit: '[s m-1]' }
-      //   , CropHeight: { value: isCropPlanted ? mcg.get_CropHeight() : 0, unit: '[m]' }
-      //   , LeafAreaIndex: { value: isCropPlanted ? mcg.get_LeafAreaIndex() : 0, unit: '[m2 m-2]' }
-      //   , RootingDepth: { value: isCropPlanted ? mcg.get_RootingDepth() : 0, unit: '[layer #]' }
-      //   , AbovegroundBiomass: { value: isCropPlanted ? mcg.get_AbovegroundBiomass() : 0, unit: '[kg ha-1]' }
-      //   , TotalBiomassNContent: { value: isCropPlanted ? mcg.get_TotalBiomassNContent() : 0, unit: '[?]' }
-      //   , SumTotalNUptake: { value: isCropPlanted ? mcg.get_SumTotalNUptake() : 0, unit: '[kg (N) ha-1]' }
-      //   , ActNUptake: { value: isCropPlanted ? mcg.get_ActNUptake() : 0, unit: '[kg (N) ha-1]' }
-      //   , PotNUptake: { value: isCropPlanted ? mcg.get_PotNUptake() : 0, unit: '[kg (N) ha-1]' }
-      //   , TargetNConcentration: { value: isCropPlanted ? mcg.get_TargetNConcentration() : 0, unit: '[kg (N) ha-1]' }
-      //   , CriticalNConcentration: { value: isCropPlanted ? mcg.get_CriticalNConcentration() : 0, unit: '[kg (N) ha-1]' }
-      //   , AbovegroundBiomassNConcentration: { value: isCropPlanted ? mcg.get_AbovegroundBiomassNConcentration() : 0, unit: '[kg (N) ha-1]' }
-      //   , NetPrimaryProduction: { value: isCropPlanted ? mcg.get_NetPrimaryProduction() : 0, unit: '[kg (N) ha-1]' }
-      //   , GrossPrimaryProduction: { value: isCropPlanted ? mcg.get_GrossPrimaryProduction() : 0, unit: '[kg (N) ha-1]' }
-      //   , AutotrophicRespiration: { value: isCropPlanted ? mcg.get_AutotrophicRespiration() : 0, unit: '[kg (C) ha-1]' }
+      //   , GrowthIncrementRoot: { value: isCropPlanted ? mcg.growthIncrement(0) : 0, unit: '[kg (DM) ha-1]' }
+      //   , GrowthIncrementLeaf: { value: isCropPlanted ? mcg.growthIncrement(1) : 0, unit: '[kg (DM) ha-1]' }
+      //   , GrowthIncrementShoot: { value: isCropPlanted ? mcg.growthIncrement(2) : 0, unit: '[kg (DM) ha-1]' }
+      //   , GrowthIncrementFruit: { value: isCropPlanted ? mcg.growthIncrement(3) : 0, unit: '[kg (DM) ha-1]' }
+      //   , RelativeTotalDevelopment: { value: isCropPlanted ? mcg.relativeTotalDevelopment() : 0, unit: '[0;1]' }
+      //   , BiomassRoot: { value: isCropPlanted ? mcg.biomass(0) : 0, unit: '[kg (DM) ha-1]' }
+      //   , BiomassLeaf: { value: isCropPlanted ? mcg.biomass(1) : 0, unit: '[kg (DM) ha-1]' }
+      //   , BiomassShoot: { value: isCropPlanted ? mcg.biomass(2) : 0, unit: '[kg (DM) ha-1]' }
+      //   , BiomassFruit: { value: isCropPlanted ? mcg.biomass(3) : 0, unit: '[kg (DM) ha-1]' }
+      //   , PrimaryYieldDryMatter: { value: isCropPlanted ? mcg.primaryYieldDryMatter() : 0, unit: '[kg (DM) ha-1]' }
+      //   , LeafAreaIndex: { value:  isCropPlanted ? mcg.leafAreaIndex() : 0, unit: '[m-2 m-2]' }
+      //   , NetPhotosynthesis: { value: isCropPlanted ? mcg.netPhotosynthesis() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
+      //   , StomataResistance: { value: isCropPlanted ? mcg.stomataResistance() : 0, unit: '[s m-1]' }
+      //   , CropHeight: { value: isCropPlanted ? mcg.height() : 0, unit: '[m]' }
+      //   , RootingDepth: { value: isCropPlanted ? mcg.rootingDepth() : 0, unit: '[layer #]' }
+      //   , ShootBiomass: { value: isCropPlanted ? mcg.shootBiomass() : 0, unit: '[kg ha-1]' }
+      //   , AccumulatedNitrogenUptake: { value: isCropPlanted ? mcg.accumulatedNitrogenUptake() : 0, unit: '[kg (N) ha-1]' }
+      //   , NitrogenUptake: { value: isCropPlanted ? mcg.nitrogenUptake() : 0, unit: '[kg (N) ha-1]' }
+      //   , PotentialNitrogenUptake: { value: isCropPlanted ? mcg.potentialNitrogenUptake() : 0, unit: '[kg (N) ha-1]' }
+      //   , ShootBiomassNitrogenConcentration: { value: isCropPlanted ? mcg.shootBiomassNitrogenConcentration() : 0, unit: '[kg (N) ha-1]' }
+      //   , NetPrimaryProduction: { value: isCropPlanted ? mcg.netPrimaryProduction() : 0, unit: '[kg (N) ha-1]' }
       // };
 
       // var outLayers = 20;
@@ -23635,7 +23805,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       // progress['ActualEvaporation'] = { value: msm.get_ActualEvaporation(), unit: '[mm]' };
       // progress['Evapotranspiration'] = { value: msm.get_Evapotranspiration(), unit: '[mm]' };
       // progress['ET0'] = { value: msm.get_ET0(), unit: '[mm]' };
-      // progress['KcFactor'] = { value: msm.get_KcFactor(), unit: '[?]' };
+      // progress['KcFactor'] = { value: msm.kcFactor(), unit: '[?]' };
       // progress['AtmosphericCO2Concentration'] = { value: model.get_AtmosphericCO2Concentration(), unit: '[ppm]' };
       // progress['GroundwaterDepth'] = { value: model.get_GroundwaterDepth(), unit: '[m]' };
       // progress['GroundwaterRecharge'] = { value: msm.get_GroundwaterRecharge(), unit: '[mm]' };
