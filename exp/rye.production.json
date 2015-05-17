@@ -1,7 +1,12 @@
 {
+  "model": "generic",
   "crops": [
     {
-      "name": "winter rye",
+      "species": [
+        {
+          "name": "winter rye"
+        }
+      ],
       "sowingDate": "1996-10-01",
       "plantDryWeight": 225,
       "percNTRansplant": 0.07,

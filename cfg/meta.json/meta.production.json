@@ -1,4 +1,11 @@
 {
+  "model": {
+    "desc": "The model that implements the species",
+    "enum": [
+      "generic",
+      "grassland"
+    ]        
+  },
   "crops": [
     {
       "species": [
@@ -15,32 +22,9 @@
           }
         }
       ],
-      "model": {
-        "desc": "The model that implements the species",
-        "enum": [
-          "generic",
-          "grassland"
-        ]        
-      },
       "sowingDate": {
         "desc": "Date at which the crop is sown or transplanted",
         "unit": "date"
-      },
-      "rowWidth": {
-        "desc": "Row width",
-        "unit": "cm",
-        "min": 0,
-        "max": 5000,
-        "default": 14.5,
-        "advanced": true
-      },
-      "plantSpace": {
-        "desc": "Plant spacing",
-        "unit": "cm",
-        "min": 0,
-        "max": 5000,
-        "default": 0,
-        "advanced": true
       },
       "plantDryWeight": {
         "desc": "Initial dry weight or at planting, seeding",

@@ -144,7 +144,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       /* crops */
       var cropRotation = [];
-      if (!createProcesses(cropRotation, prod.crops, startDate)) {
+      if (!createProcesses(cropRotation, prod, startDate)) {
         logger(MSG.ERROR, 'Error fetching crop data.');
         return;
       }
@@ -276,18 +276,19 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
   }
 
 
-  function createProcesses(cropRotation, crops, startDate) {
+  function createProcesses(cropRotation, production, startDate) {
     
     var ok = true;
+    var crops = production.crops;
     var cs = crops.length;
+    var isGrassland = (production.model === 'grassland');
+    var isPermanentGrassland = (isGrassland && cs === 1);
     
     logger(MSG.INFO, 'Fetching ' + cs + ' crops.');
 
     for (var c = 0; c < cs; c++) {
 
       var crop = crops[c];
-      var isGrassland = (crop.name === 'grassland');
-      var isPermanentGrassland = (isGrassland && cs === 1);
 
       if (isGrassland) {
         /* we can not start at day 0 and therefor start at day 0 + 2 since model's general step is executed *after* cropStep */
@@ -311,12 +312,12 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       } else {
 
-        var fieldcrop = new GenericCrop(crop.name);
-        fieldcrop.setSeedAndHarvestDate(sd, hd);
-        cropRotation[c] = new ProductionProcess(crop.name, fieldcrop);
+        /* choose the first (and only) name in species array (mixtures not implemented in generic crop model) */
+        var genericCrop = new GenericCrop(crop.species[0].name);
+        genericCrop.setSeedAndHarvestDate(sd, hd);
+        cropRotation[c] = new ProductionProcess(crop.name, genericCrop);
       
       }
-
 
       /* tillage */
       var tillageOperations = crop.tillageOperations;
