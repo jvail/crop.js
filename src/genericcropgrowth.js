@@ -2821,7 +2821,6 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
     numberOfOrgans: { value: get_NumberOfOrgans },
     soilCoverage: { value: get_SoilCoverage },
     stomataResistance: { value: get_StomataResistance },
-    vernalisationFactor: { value: get_VernalisationFactor },
     rootingDepth: { value: get_RootingDepth },
     nitrogenStress: { value: get_CropNRedux },
     heatStress: { value: get_HeatStressRedux },
@@ -2862,7 +2861,10 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
     developmentalStage: { value: get_DevelopmentalStage },
     relativeTotalDevelopment: { value: get_RelativeTotalDevelopment },
     heatSumIrrigationEnd: { value: get_HeatSumIrrigationEnd },
-    heatSumIrrigationStart: { value: get_HeatSumIrrigationStart }
+    heatSumIrrigationStart: { value: get_HeatSumIrrigationStart },
+
+    /* custom */
+    vernalisationFactor: { value: get_VernalisationFactor }
   });
 
 };
