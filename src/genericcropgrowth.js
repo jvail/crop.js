@@ -2520,7 +2520,7 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
   };
 
   var get_PotNUptake = function () {
-    return vc_CropNDemand * 10000.0;
+    return vc_CropNDemand;
   };
 
   var get_AutotrophicRespiration = function () {
@@ -2773,12 +2773,12 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
   };
 
   var get_SumTotalNUptake = function () {
-    return vc_SumTotalNUptake;
+    return vc_SumTotalNUptake / 10000;  //[kg ha-1] --> [kg m-2];
   };
 
   var get_ActNUptake = function (layer) {
     if (layer === undefined)
-      return vc_TotalNUptake;
+      return vc_TotalNUptake / 10000;  //[kg ha-1] --> [kg m-2]
     else
       return get_NUptakeFromLayer(layer)
   };

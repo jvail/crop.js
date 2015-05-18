@@ -648,7 +648,6 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       //   , OxygenStress: { value: isCropPlanted ? mcg.oxygenStress() : 0, unit: '[0;1]' }
       //   , DevelopmentalStage: { value: isCropPlanted ? mcg.developmentalStage() + 1 : 0, unit: '[#]' }
       //   , CurrentTemperatureSum: { value: isCropPlanted ? mcg.currentTemperatureSum() : 0, unit: '°C' }
-      //   , VernalisationFactor: { value: isCropPlanted ? mcg.vernalisationFactor() : 0, unit: '[0;1]' }
       //   , DaylengthFactor: { value: isCropPlanted ? mcg.get_DaylengthFactor() : 0, unit: '[0;1]' }
       //   , GrowthIncrementRoot: { value: isCropPlanted ? mcg.growthIncrement(0) : 0, unit: '[kg (DM) ha-1]' }
       //   , GrowthIncrementLeaf: { value: isCropPlanted ? mcg.growthIncrement(1) : 0, unit: '[kg (DM) ha-1]' }
@@ -666,10 +665,10 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       //   , CropHeight: { value: isCropPlanted ? mcg.height() : 0, unit: '[m]' }
       //   , RootingDepth: { value: isCropPlanted ? mcg.rootingDepth() : 0, unit: '[layer #]' }
       //   , ShootBiomass: { value: isCropPlanted ? mcg.shootBiomass() : 0, unit: '[kg ha-1]' }
-      //   , AccumulatedNitrogenUptake: { value: isCropPlanted ? mcg.accumulatedNitrogenUptake() : 0, unit: '[kg (N) ha-1]' }
-      //   , NitrogenUptake: { value: isCropPlanted ? mcg.nitrogenUptake() : 0, unit: '[kg (N) ha-1]' }
-      //   , PotentialNitrogenUptake: { value: isCropPlanted ? mcg.potentialNitrogenUptake() : 0, unit: '[kg (N) ha-1]' }
-      //   , ShootBiomassNitrogenConcentration: { value: isCropPlanted ? mcg.shootBiomassNitrogenConcentration() : 0, unit: '[kg (N) ha-1]' }
+      //   , AccumulatedNitrogenUptake: { value: isCropPlanted ? mcg.accumulatedNitrogenUptake() : 0, unit: '[kg (N) m-2]' }
+      //   , NitrogenUptake: { value: isCropPlanted ? mcg.nitrogenUptake() : 0, unit: '[kg (N)  m-2]' }
+      //   , PotentialNitrogenUptake: { value: isCropPlanted ? mcg.potentialNitrogenUptake() : 0, unit: '[kg (N)  m-2]' }
+      //   , ShootBiomassNitrogenConcentration: { value: isCropPlanted ? mcg.shootBiomassNitrogenConcentration() : 0, unit: '[kg (N) kg-1 (DM)]' }
       //   , NetPrimaryProduction: { value: isCropPlanted ? mcg.netPrimaryProduction() : 0, unit: '[kg (N) ha-1]' }
       // };
 
