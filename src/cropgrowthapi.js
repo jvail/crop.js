@@ -16,7 +16,7 @@
     var myHeightFunction = function (species) {
       
       var height = 0;
-      if (species === undefiend) { // return max. height
+      if (species === undefined) { // return max. height
         for (var i = 0; i < noSpecies; i++)
           height = (heights[i] > height ? heights[i] : height);
       } else {
@@ -62,7 +62,7 @@ CropGrowthAPI.prototype = {
 
   /* 
     name      [string]
-    species   [# or undefiend] 
+    species   [# or undefined] 
   */
   name: function (species) { return 'unknown'; },
   
@@ -71,37 +71,37 @@ CropGrowthAPI.prototype = {
 
   /* 
     height    [m] 
-    species   [# or undefiend]
+    species   [# or undefined]
   */
   height: function (species) { return 0; },
 
   /* 
     kcFactor  [-] 
-    species   [# or undefiend]
+    species   [# or undefined]
   */
   kcFactor: function (species) { return 0; },
   
   /* 
     leafAreaIndex  [m2 m-2] 
-    species        [# or undefiend]
+    species        [# or undefined]
   */
   leafAreaIndex: function (species) { return 0; },
 
   /* 
     numberOfOrgans  [#] 
-    species         [# or undefiend]
+    species         [# or undefined]
   */
   numberOfOrgans: function (species) { return 0; },
   
   /* 
     soilCoverage    [m2 m-2] 
-    species         [# or undefiend]
+    species         [# or undefined]
   */
   soilCoverage: function (species) { return 0; },
 
   /* 
     stomataResistance [s m-1] 
-    species           [# or undefiend]
+    species           [# or undefined]
   */
   stomataResistance: function (species) { return 0; },
 
@@ -110,154 +110,154 @@ CropGrowthAPI.prototype = {
 
   /* 
     rootingDepth  [#]              soillayer index 
-    species       [# or undefiend]
+    species       [# or undefined]
   */  
   rootingDepth: function (species) { return 0; },
 
   /* 
     nitrogenStress  [0-1]             1 = no stess 
-    species         [# or undefiend]
+    species         [# or undefined]
   */
   nitrogenStress: function (species) { return 1; },
 
   /* 
     heatStress  [0-1]                 1 = no stess 
-    species     [# or undefiend]
+    species     [# or undefined]
   */
   heatStress: function (species) { return 1; },
 
   /* 
     oxygenStress  [0-1]               1 = no stess 
-    species       [# or undefiend]
+    species       [# or undefined]
   */
   oxygenStress: function (species) { return 1; },
 
   /* 
     waterStress  [0-1]                1 = no stess 
-    species      [# or undefiend]
+    species      [# or undefined]
   */
   waterStress: function (species) { return 1; },
 
   /* 
     biomass   [kg (DM) ha-1]
-    organ     [# or undefiend]
-    species   [# or undefiend]
+    organ     [# or undefined]
+    species   [# or undefined]
   */
   biomass: function (organ, species) { return 0; },
   
   /* 
     growthIncrement   [kg (DM) ha-1]
-    organ             [# or undefiend]
-    species           [# or undefiend]
+    organ             [# or undefined]
+    species           [# or undefined]
   */
   growthIncrement: function (organ, species) { return 0; },
   
   /* 
     shootBiomass  [kg (DM) ha-1]
-    species       [# or undefiend]
+    species       [# or undefined]
   */
   shootBiomass: function (species) { return 0; },
   
   /* 
     shootBiomassNitrogenConcentration  [kg (N) kg-1 (DM)]
-    species                            [# or undefiend]
+    species                            [# or undefined]
   */
   shootBiomassNitrogenConcentration: function (species) { return 0; },
 
   /* 
     rootBiomass   [kg (DM) ha-1]
-    species       [# or undefiend]
+    species       [# or undefined]
   */  
   rootBiomass: function (species) { return 0; },
 
   /* 
     rootNitrogenConcentration   [kg (N) kg-1 (DM)]
-    species                     [# or undefiend]
+    species                     [# or undefined]
   */  
   rootNitrogenConcentration: function (species) { return 0; },
 
   /* 
     netPrimaryProduction   [kg (C) ha-1]
-    species                [# or undefiend]
+    species                [# or undefined]
   */  
   netPrimaryProduction: function (species) { return 0; },
 
   /* 
     netPhotosynthesis   [kg (CH2O) ha-1]
-    species             [# or undefiend]
+    species             [# or undefined]
   */  
   netPhotosynthesis: function (species) { return 0; },
 
   /* 
     grossPhotosynthesis [kg (CH2O) ha-1]
-    species             [# or undefiend]
+    species             [# or undefined]
   */  
   grossPhotosynthesis: function (species) { return 0; },
 
   /* 
     primaryYield  [kg (DM) ha-1]
-    species       [# or undefiend]
+    species       [# or undefined]
   */  
   primaryYield: function (species) { return 0; },
 
   /* 
     primaryYieldFreshMatter  [kg (FM) ha-1]
-    species                  [# or undefiend]
+    species                  [# or undefined]
   */  
   primaryYieldFreshMatter: function (species) { return 0; },
   
   /* 
     primaryYieldNitrogenConcentration   [kg (N) kg-1 (DM)]
-    species                             [# or undefiend]
+    species                             [# or undefined]
   */  
   primaryYieldNitrogenConcentration: function (species) { return 0; },
   
   /* 
     primaryYieldNitrogenContent   [kg (N) ha-1]
-    species                       [# or undefiend]
+    species                       [# or undefined]
   */  
   primaryYieldNitrogenContent: function (species) { return 0; },
 
   /* 
     primaryYieldCrudeProteinConcentration   [kg (P) kg-1 (DM)]
-    species                                 [# or undefiend]
+    species                                 [# or undefined]
   */  
   primaryYieldCrudeProteinConcentration: function (species) { return 0; },
 
   /* 
     secondaryYield  [kg (DM) ha-1]
-    species         [# or undefiend]
+    species         [# or undefined]
   */
   secondaryYield: function (species) { return 0; },
 
   /* 
     secondaryYieldNitrogenConcentration   [kg (N) kg-1 (DM)]
-    species                               [# or undefiend]
+    species                               [# or undefined]
   */  
   secondaryYieldNitrogenConcentration: function (species) { return 0; },
 
   /* 
     secondaryYieldNitrogenContent   [kg (N) ha-1]
-    species                         [# or undefiend]
+    species                         [# or undefined]
   */  
   secondaryYieldNitrogenContent: function (species) { return 0; },
 
   /* 
     residueBiomass      [kg (DM) ha-1]
     useSecondaryYields  [bool]
-    species             [# or undefiend]
+    species             [# or undefined]
   */ 
   residueBiomass: function (useSecondaryYields, species) { return 0; },
 
   /* 
     residuesNitrogenConcentration   [kg (N) kg-1 (DM)]
-    species                         [# or undefiend]
+    species                         [# or undefined]
   */  
   residuesNitrogenConcentration: function (species) { return 0; },
 
   /* 
     residuesNitrogenContent   [kg (N) ha-1]
-    species                   [# or undefiend]
+    species                   [# or undefined]
   */  
   residuesNitrogenContent: function (species) { return 0; },
 
@@ -303,38 +303,38 @@ CropGrowthAPI.prototype = {
 
   /* 
     nitrogenUptake [kg (N) m-2]
-    layer          [unit or undefiend]
-    species        [unit or undefiend]
+    layer          [unit or undefined]
+    species        [unit or undefined]
   */  
   nitrogenUptake: function (layer, species) { return 0; },
 
   /* 
     potentialNitrogenUptake [kg (N) m-2]
-    species                 [unit or undefiend]
+    species                 [unit or undefined]
   */  
   potentialNitrogenUptake: function (species) { return 0; },
   
   /* 
     accumulatedNitrogenUptake [kg (N) m-2]
-    species                   [unit or undefiend]
+    species                   [unit or undefined]
   */  
   accumulatedNitrogenUptake: function (species) { return 0; },
 
   /* 
     currentTemperatureSum [d °C]
-    species               [unit or undefiend]
+    species               [unit or undefined]
   */  
   currentTemperatureSum: function (species) { return 0; },
 
   /* 
     developmentalStage [#]
-    species            [unit or undefiend]
+    species            [unit or undefined]
   */  
   developmentalStage: function (species) { return 1; },
 
   /* 
     relativeTotalDevelopment  [-]
-    species                   [unit or undefiend]
+    species                   [unit or undefined]
   */  
   relativeTotalDevelopment: function (species) { return 0; },
 
