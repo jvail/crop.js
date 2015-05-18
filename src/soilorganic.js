@@ -136,23 +136,26 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
     addedOrganicMatter = false;
 
     /* add senescenced root */
-    if (crop && crop.hasOwnProperty('senescencedTissue')) { // not implemented in generic crop
+    if (crop) {
 
       var AOM = crop.senescencedTissue();
       var nools = soilColumn.vs_NumberOfOrganicLayers();
     
-      for (var i_Layer = 0; i_Layer < nools; i_Layer++) {
-        var aom_senescence = soilColumn[i_Layer].vo_AOM_Pool[0];
-        var aom = AOM[i_Layer];
-        if (aom.vo_CN_Ratio_AOM_Slow > 0) {
-          aom_senescence.vo_CN_Ratio_AOM_Slow = (
-            (aom_senescence.vo_AOM_Slow + aom.vo_AOM_Slow) /
-            ((1 / aom_senescence.vo_CN_Ratio_AOM_Slow * aom_senescence.vo_AOM_Slow) + (1 / aom.vo_CN_Ratio_AOM_Slow * aom.vo_AOM_Slow))
-          );
+      /* currently not implemented in generic crop */
+      if (Array.isArray(AOM) && AOM.length === nools) {
+        for (var i_Layer = 0; i_Layer < nools; i_Layer++) {
+          var aom_senescence = soilColumn[i_Layer].vo_AOM_Pool[0];
+          var aom = AOM[i_Layer];
+          if (aom.vo_CN_Ratio_AOM_Slow > 0) {
+            aom_senescence.vo_CN_Ratio_AOM_Slow = (
+              (aom_senescence.vo_AOM_Slow + aom.vo_AOM_Slow) /
+              ((1 / aom_senescence.vo_CN_Ratio_AOM_Slow * aom_senescence.vo_AOM_Slow) + (1 / aom.vo_CN_Ratio_AOM_Slow * aom.vo_AOM_Slow))
+            );
+          }
+          aom_senescence.vo_AOM_Slow += aom.vo_AOM_Slow;
         }
-        aom_senescence.vo_AOM_Slow += aom.vo_AOM_Slow;
-
       }
+
     }
 
 

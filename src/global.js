@@ -18,7 +18,7 @@ var MSG = {
 
 var ROOT = 0
   , LEAF = 1
-  , SHOOT = 2 /* seems not correct: means stem */
+  , SHOOT = 2 /* TODO: seems not correct in MONICA: means stem */
   , STORAGE_ORGAN = 3
   ;
 

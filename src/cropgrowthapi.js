@@ -32,6 +32,9 @@
     });
 
   };
+
+  TODO:
+    - rename .."biomass".. in dry or organic matter
 */
 
 function CropGrowthAPI() {};
@@ -105,7 +108,7 @@ CropGrowthAPI.prototype = {
   */
   stomataResistance: function (species) { return 0; },
 
-  /* numberOfSpecies  [unit] */  
+  /* numberOfSpecies  [#] */  
   numberOfSpecies: function () { return 1; },
 
   /* 
@@ -183,16 +186,16 @@ CropGrowthAPI.prototype = {
   netPrimaryProduction: function (species) { return 0; },
 
   /* 
-    netPhotosynthesis   [kg (CH2O) ha-1]
+    netPhotosynthate   [kg (CH2O) ha-1]
     species             [# or undefined]
   */  
-  netPhotosynthesis: function (species) { return 0; },
+  netPhotosynthate: function (species) { return 0; },
 
   /* 
-    grossPhotosynthesis [kg (CH2O) ha-1]
+    grossPhotosynthate [kg (CH2O) ha-1]
     species             [# or undefined]
   */  
-  grossPhotosynthesis: function (species) { return 0; },
+  grossPhotosynthate: function (species) { return 0; },
 
   /* 
     primaryYield  [kg (DM) ha-1]
@@ -303,38 +306,38 @@ CropGrowthAPI.prototype = {
 
   /* 
     nitrogenUptake [kg (N) m-2]
-    layer          [unit or undefined]
-    species        [unit or undefined]
+    layer          [# or undefined]
+    species        [# or undefined]
   */  
   nitrogenUptake: function (layer, species) { return 0; },
 
   /* 
     potentialNitrogenUptake [kg (N) m-2]
-    species                 [unit or undefined]
+    species                 [# or undefined]
   */  
   potentialNitrogenUptake: function (species) { return 0; },
   
   /* 
     accumulatedNitrogenUptake [kg (N) m-2]
-    species                   [unit or undefined]
+    species                   [# or undefined]
   */  
   accumulatedNitrogenUptake: function (species) { return 0; },
 
   /* 
     currentTemperatureSum [d °C]
-    species               [unit or undefined]
+    species               [# or undefined]
   */  
   currentTemperatureSum: function (species) { return 0; },
 
   /* 
     developmentalStage [#]
-    species            [unit or undefined]
+    species            [# or undefined]
   */  
   developmentalStage: function (species) { return 1; },
 
   /* 
     relativeTotalDevelopment  [-]
-    species                   [unit or undefined]
+    species                   [# or undefined]
   */  
   relativeTotalDevelopment: function (species) { return 0; },
 
@@ -342,6 +345,9 @@ CropGrowthAPI.prototype = {
   heatSumIrrigationEnd: function () { return 0; },
 
   /* heatSumIrrigationStart [°C] */  
-  heatSumIrrigationStart: function () { return 0; }
+  heatSumIrrigationStart: function () { return 0; },
+
+  /* array of AOM_Properties, per organic soil layer */
+  senescencedTissue: function () { return null; }
 
 };

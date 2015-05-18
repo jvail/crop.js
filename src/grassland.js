@@ -39,6 +39,10 @@
   Important (somewhat experimental) deviations from the original approach:
 
   - Added a different (simpler) height(lai) function to better capture dm removal by height. 
+
+
+  TODO
+    - sort out DM vs OM
 */
 
 var Grass = function (seedDate, harvestDates, species) {
@@ -143,8 +147,9 @@ var Grass = function (seedDate, harvestDates, species) {
       , Ω_water: 1.0            // [0-1]              growth limiting factor water (1 = no stress)
       , τ_T_low: 1.0            // [0-1]              growth limiting factor low temperature (1 = no stress)     
       , τ_T_high: 1.0           // [0-1]              growth limiting factor high temperature (1 = no stress)  
-      , ζ_T_low: 0.0            // [0-1]  low temperature stress recovery coefficient 
-      , ζ_T_high: 0.0           // [0-1]  low temperature stress recovery coefficient       , P_g_day: 0.0            // [kg (C) m-2]       daily canopy gross photosynthesis
+      , ζ_T_low: 0.0            // [0-1]              low temperature stress recovery coefficient 
+      , ζ_T_high: 0.0           // [0-1]              low temperature stress recovery coefficient       
+      , P_g_day: 0.0            // [kg (C) m-2]       daily canopy gross photosynthesis
       , R_m: 0.0                // [kg (C) m-2]       daily maintenance respiration
       , R_N: 0                  // [kg (C) m-2]       daily N uptake cost
       , G: 0.0                  // [kg (C) m-2]       daily net growth rate
@@ -988,6 +993,21 @@ var Grass = function (seedDate, harvestDates, species) {
     
     };
 
+
+    /* f_N_live_shoot_DM [kg (N) kg (DM)] */
+    this.f_N_live_shoot_DM = function () {
+
+      return (that.N_live_stem() + that.N_live_leaf()) / (that.DM_live_stem() + that.DM_live_leaf());
+
+    };
+
+    /* f_N_root_DM [kg (N) kg (DM)] */
+    this.f_N_root_DM = function () {
+
+      return that.N_root() / that.DM_root();
+
+    };
+
   }; // Species end
 
 
@@ -1270,17 +1290,37 @@ var Grass = function (seedDate, harvestDates, species) {
 
     };
 
+    /* f_N_live_shoot_DM [kg (N) kg-1 (OM) m-2] */
+    mixture.f_N_live_shoot_DM = function () {
+
+      var N_live_shoot = 0
+        , DM_live_shoot = 0
+        , species = null
+        ;
+
+      for (var s = 0, ps = this.length; s < ps; s++) {
+        species = this[s];
+        N_live_shoot += species.N_live_stem() + species.N_live_leaf();
+        DM_live_shoot += species.DM_live_stem() + species.DM_live_leaf();
+      }
+
+      return N_live_shoot / DM_live_shoot;
+
+    };
+
 
     /* f_N_root_DM [kg (N) kg-1 (OM) m-2] */
     mixture.f_N_root_DM = function () {
 
       var N_root = 0
         , DM_root = 0
+        , species = null
         ;
 
       for (var s = 0, ps = this.length; s < ps; s++) {
-        N_root += this[s].N_root();
-        DM_root += this[s].DM_root();
+        species = this[s];
+        N_root += species.N_root();
+        DM_root += species.DM_root();
       }
 
       return N_root / DM_root;

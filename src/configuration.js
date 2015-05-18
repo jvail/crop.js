@@ -660,7 +660,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       //   , BiomassFruit: { value: isCropPlanted ? mcg.biomass(3) : 0, unit: '[kg (DM) ha-1]' }
       //   , PrimaryYieldDryMatter: { value: isCropPlanted ? mcg.primaryYieldDryMatter() : 0, unit: '[kg (DM) ha-1]' }
       //   , LeafAreaIndex: { value:  isCropPlanted ? mcg.leafAreaIndex() : 0, unit: '[m-2 m-2]' }
-      //   , NetPhotosynthesis: { value: isCropPlanted ? mcg.netPhotosynthesis() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
+      //   , NetPhotosynthesis: { value: isCropPlanted ? mcg.netPhotosynthate() : 0, unit: '[kg (CH2O) ha-1 d-1]' }
       //   , StomataResistance: { value: isCropPlanted ? mcg.stomataResistance() : 0, unit: '[s m-1]' }
       //   , CropHeight: { value: isCropPlanted ? mcg.height() : 0, unit: '[m]' }
       //   , RootingDepth: { value: isCropPlanted ? mcg.rootingDepth() : 0, unit: '[layer #]' }
