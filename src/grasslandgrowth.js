@@ -2509,7 +2509,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     height: { value: height },
     kcFactor: { value: kcFactor },
     leafAreaIndex: { value: LAI },
-    numberOfOrgans: { value: value: function () { return 3; } },
+    numberOfOrgans: { value: function () { return 3; } },
     numberOfSpecies: { value: function () { return numberOfSpecies; } },
     soilCoverage: { value: soilCoverage },
     stomataResistance: { value: stomataResistance },
