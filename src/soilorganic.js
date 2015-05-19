@@ -142,7 +142,7 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       var nools = soilColumn.vs_NumberOfOrganicLayers();
     
       /* currently not implemented in generic crop */
-      if (Array.isArray(AOM) && AOM.length === nools) {
+      if (AOM.length === nools) {
         for (var i_Layer = 0; i_Layer < nools; i_Layer++) {
           var aom_senescence = soilColumn[i_Layer].vo_AOM_Pool[0];
           var aom = AOM[i_Layer];

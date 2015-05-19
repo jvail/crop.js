@@ -44,17 +44,17 @@ var Model = function (env) {
 
     /* if for some reason there are no applications (no nothing) in the production process: quit */
     if(!nextProductionProcessApplicationDate.isValid()) {
-      // logger(MSG.ERROR, "start of production-process: " + currentProductionProcess.toString() + " is not valid");
+      // logger(MSG_ERROR, "start of production-process: " + currentProductionProcess.toString() + " is not valid");
       return;
     }
 
-    logger(MSG.INFO, "next app-date: " + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+    logger(MSG_INFO, "next app-date: " + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
 
     /* is there something to apply today? */
     if (nextProductionProcessApplicationDate.setHours(0,0,0,0) === currentDate.setHours(0,0,0,0)) {
       
       currentProductionProcess.apply(nextProductionProcessApplicationDate, this);
-      logger(MSG.INFO, 'applied at: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+      logger(MSG_INFO, 'applied at: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
 
       /* get the next application date to wait for */
       nextProductionProcessApplicationDate = currentProductionProcess.nextDate(nextProductionProcessApplicationDate);
@@ -74,13 +74,13 @@ var Model = function (env) {
         if (productionProcessIdx < env.cropRotation.length) {
           currentProductionProcess = env.cropRotation[productionProcessIdx];
           nextProductionProcessApplicationDate = currentProductionProcess.start();
-          logger(MSG.INFO, 'new valid next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+          logger(MSG_INFO, 'new valid next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
         }
 
       } else {
 
         if (nextProductionProcessApplicationDate.isValid())
-          logger(MSG.INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+          logger(MSG_INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
       
       }
 
@@ -92,7 +92,7 @@ var Model = function (env) {
   var run = function (progressCallbacks) {
 
     if (env.cropRotation.length === 0) {
-      logger(MSG.ERROR, "rotation is empty");
+      logger(MSG_ERROR, "rotation is empty");
       return;
     }
 
@@ -100,11 +100,11 @@ var Model = function (env) {
       , totalNoDays = env.da.noOfStepsPossible()
       ;
 
-    logger(MSG.INFO, "next app-date: " + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+    logger(MSG_INFO, "next app-date: " + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
 
     /* if for some reason there are no applications (no nothing) in the production process: quit */
     if(!nextProductionProcessApplicationDate.isValid()) {
-      logger(MSG.ERROR, "start of production-process: " + currentProductionProcess.toString() + " is not valid");
+      logger(MSG_ERROR, "start of production-process: " + currentProductionProcess.toString() + " is not valid");
       return;
     }
 
@@ -112,7 +112,7 @@ var Model = function (env) {
 
       currentDate.setDate(currentDate.getDate() + 1);
 
-      logger(MSG.INFO, currentDate.toISOString().split('T')[0]);
+      logger(MSG_INFO, currentDate.toISOString().split('T')[0]);
       
       resetDailyCounter();
 
@@ -125,7 +125,7 @@ var Model = function (env) {
         
         /* apply everything to do at current day */
         currentProductionProcess.apply(nextProductionProcessApplicationDate, this);
-        logger(MSG.INFO, 'applied at: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+        logger(MSG_INFO, 'applied at: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
 
         /* get the next application date to wait for */
         var prevPPApplicationDate = nextProductionProcessApplicationDate;
@@ -150,13 +150,13 @@ var Model = function (env) {
 
             currentProductionProcess = env.cropRotation[productionProcessIdx];
             nextProductionProcessApplicationDate = currentProductionProcess.start();
-            logger(MSG.INFO, 'new valid next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+            logger(MSG_INFO, 'new valid next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
           
           }
 
         } else {
           if (nextProductionProcessApplicationDate.isValid())
-            logger(MSG.INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+            logger(MSG_INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
         }
 
       }
@@ -175,7 +175,7 @@ var Model = function (env) {
 
     }
 
-    logger(MSG.INFO, "returning from runModel");
+    logger(MSG_INFO, "returning from runModel");
     
     /* if progressCallbacks is provided send null i.e. we are done*/
     if (progressCallbacks) {
@@ -199,6 +199,7 @@ var Model = function (env) {
     p_accuHeatStress = 0.0;
     p_accuOxygenStress = 0.0;
 
+    /* TODO: factory for growth model instanciation? */
     if(_currentCrop.isValid() && _currentCrop.type === 'generic') {
 
       cps = _currentCrop.cropParameters();
@@ -209,11 +210,11 @@ var Model = function (env) {
       _soilMoisture.put_Crop(that._currentCropGrowth);
       _soilOrganic.put_Crop(that._currentCropGrowth);
 
-      logger(MSG.INFO, 'seeding crop: ' + crop.name());
+      logger(MSG_INFO, 'seeding crop: ' + crop.name());
 
       if (_env.useNMinMineralFertilisingMethod && _currentCrop.seedDate().dayOfYear() <= _currentCrop.harvestDate().dayOfYear()) {
 
-        logger(MSG.INFO, "N_min fertilising summer crop");
+        logger(MSG_INFO, "N_min fertilising summer crop");
 
         var fert_amount = applyMineralFertiliserViaNMinMethod(
           _env.nMinFertiliserPartition,
@@ -238,9 +239,13 @@ var Model = function (env) {
       _soilMoisture.put_Crop(that._currentCropGrowth);
       _soilOrganic.put_Crop(that._currentCropGrowth);
 
-      logger(MSG.INFO, 'seeding crop: ' + crop.name());
+      // TODO: permanent grassland
+      logger(MSG_INFO, 'seeding crop: ' + crop.name());
 
     }
+
+    if (!(that._currentCropGrowth instanceof CropGrowthAPI))
+      logger(MSG_ERROR, 'Crop growth (' + crop.name() + ') not instance of CropGrowthAPI.');
 
   };
 
@@ -254,8 +259,8 @@ var Model = function (env) {
       var rootBiomass = that._currentCropGrowth.biomass(0);
       var rootNConcentration = that._currentCropGrowth.rootNitrogenConcentration();
 
-      logger(MSG.INFO, 'Harvest: adding organic matter from root to soilOrganic');
-      logger(MSG.INFO, 'Root biomass: ' + rootBiomass + ' Root N concentration: ' + rootNConcentration);
+      logger(MSG_INFO, 'Harvest: adding organic matter from root to soilOrganic');
+      logger(MSG_INFO, 'Root biomass: ' + rootBiomass + ' Root N concentration: ' + rootNConcentration);
 
       _soilOrganic.addOrganicMatter(_currentCrop.residueParameters(), rootBiomass, rootNConcentration);
 
@@ -264,13 +269,13 @@ var Model = function (env) {
       /* TODO: das hier noch berechnen (???) */
       var residueNConcentration = that._currentCropGrowth.residuesNitrogenConcentration();
 
-      logger(MSG.INFO, 'Adding organic matter from residues to soilOrganic');
-      logger(MSG.INFO, 'Residue biomass: ' + residueBiomass + ' Residue N concentration: ' + residueNConcentration);
-      logger(MSG.INFO, 'Primary yield biomass: ' + that._currentCropGrowth.primaryYield()
+      logger(MSG_INFO, 'Adding organic matter from residues to soilOrganic');
+      logger(MSG_INFO, 'Residue biomass: ' + residueBiomass + ' Residue N concentration: ' + residueNConcentration);
+      logger(MSG_INFO, 'Primary yield biomass: ' + that._currentCropGrowth.primaryYield()
           + ' Primary yield N concentration: ' + that._currentCropGrowth.primaryYieldNitrogenConcentration());
-      logger(MSG.INFO, 'Secondary yield biomass: ' + that._currentCropGrowth.secondaryYield()
+      logger(MSG_INFO, 'Secondary yield biomass: ' + that._currentCropGrowth.secondaryYield()
           + ' Secondary yield N concentration: ' + '??');
-      logger(MSG.INFO, 'Residues N content: ' + that._currentCropGrowth.residuesNitrogenContent()
+      logger(MSG_INFO, 'Residues N content: ' + that._currentCropGrowth.residuesNitrogenContent()
           + ' Primary yield N content: ' + that._currentCropGrowth.primaryYieldNitrogenContent()
           + ' Secondary yield N content: ' + that._currentCropGrowth.secondaryYieldNitrogenContent());
 
@@ -297,8 +302,8 @@ var Model = function (env) {
       var totalBiomass = that._currentCropGrowth.biomass();
       var totalNConcentration = that._currentCropGrowth.shootBiomassNitrogenConcentration() + that._currentCropGrowth.rootNitrogenConcentration();
 
-      logger(MSG.INFO, "Incorporation: adding organic matter from total biomass of crop to soilOrganic");
-      logger(MSG.INFO, "Total biomass: " + totalBiomass + " Total N concentration: " + totalNConcentration);
+      logger(MSG_INFO, "Incorporation: adding organic matter from total biomass of crop to soilOrganic");
+      logger(MSG_INFO, "Total biomass: " + totalBiomass + " Total N concentration: " + totalNConcentration);
 
       _soilOrganic.addOrganicMatter(_currentCrop.residueParameters(), totalBiomass, totalNConcentration);
     
@@ -319,7 +324,7 @@ var Model = function (env) {
 
     if (!_env.useNMinMineralFertilisingMethod) {
 
-      logger(MSG.INFO, 'Apply mineral fertiliser. Amount: ' + amount);
+      logger(MSG_INFO, 'Apply mineral fertiliser. Amount: ' + amount);
 
       _soilColumn.applyMineralFertiliser(partition, amount);
       addDailySumFertiliser(amount);
@@ -331,7 +336,7 @@ var Model = function (env) {
   
   var applyOrganicFertiliser = function (params, amount, doIncorporate) {
 
-    logger(MSG.INFO, 'apply organic fertiliser: amount: ' + amount + ', vo_NConcentration: ' + params.vo_NConcentration);
+    logger(MSG_INFO, 'apply organic fertiliser: amount: ' + amount + ', vo_NConcentration: ' + params.vo_NConcentration);
 
     _soilOrganic.setIncorporation(doIncorporate);
     _soilOrganic.addOrganicMatter(params, amount, params.vo_NConcentration);
@@ -366,7 +371,7 @@ var Model = function (env) {
     /* if the production process has still some defined manual irrigation dates */
     if (!_env.useAutomaticIrrigation) {
 
-      logger(MSG.INFO, 'apply irrigation: amount: ' + amount + ', nitrateConcentration: ' + nitrateConcentration);
+      logger(MSG_INFO, 'apply irrigation: amount: ' + amount + ', nitrateConcentration: ' + nitrateConcentration);
 
       _soilOrganic.addIrrigationWater(amount);
       _soilColumn.applyIrrigation(amount, nitrateConcentration);
@@ -439,7 +444,7 @@ var Model = function (env) {
         && _currentCrop.seedDate().dayOfYear() > _currentCrop.harvestDate().dayOfYear()
         && julday == pc_JulianDayAutomaticFertilising) {
 
-      logger(MSG.INFO, "N_min fertilising winter crop");
+      logger(MSG_INFO, "N_min fertilising winter crop");
 
       var cps = _currentCrop.cropParameters();
       var fert_amount = applyMineralFertiliserViaNMinMethod(

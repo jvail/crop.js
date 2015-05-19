@@ -20,8 +20,8 @@
     , date          [date string]   array, ISO date strings
     , doy           [#]             array, day of year
   }
-  doDebug           [bool]          debug model and print MSG.DEBUG output
-  isVerbose         [bool]          print MSG.INFO output
+  doDebug           [bool]          debug model and print MSG_DEBUG output
+  isVerbose         [bool]          print MSG_INFO output
   callbacks         [array]         function or array of functions, access model variables at each time step 
                                     (write an output file, change model variables etc.)
 */
@@ -71,11 +71,11 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     /* weather */
     var weather = new Weather(startDate, endDate);
     if (!createWeather(weather, weatherData, Date.parse(sim.time.startDate), Date.parse(sim.time.endDate))) {
-      logger(MSG.ERROR, 'Error fetching weather data.');
+      logger(MSG_ERROR, 'Error fetching weather data.');
       return;
     }
     
-    logger(MSG.INFO, 'Fetched weather data.');
+    logger(MSG_INFO, 'Fetched weather data.');
 
     models = new ModelCollection(weather);
 
@@ -86,7 +86,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
     for (var sp = 0, sps = siteAndProd.length; sp < sps; sp++) {
 
-      logger(MSG.INFO, 'Fetching parameter for site + ' + sp);
+      logger(MSG_INFO, 'Fetching parameter for site + ' + sp);
       
       var site = siteAndProd[sp].site;
       var prod = siteAndProd[sp].production;
@@ -112,7 +112,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       generalParameters.pc_EmergenceMoistureControlOn = getValue(sim.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
       generalParameters.pc_EmergenceFloodingControlOn = getValue(sim.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
 
-      logger(MSG.INFO, 'Fetched simulation data.');
+      logger(MSG_INFO, 'Fetched simulation data.');
       
       /* site */
       siteParameters.vs_Latitude = site.latitude;
@@ -127,7 +127,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       parameterProvider.userEnvironmentParameters.p_WindSpeedHeight = getValue(site, 'windSpeedHeight', parameterProvider.userEnvironmentParameters.p_WindSpeedHeight);  
       parameterProvider.userEnvironmentParameters.p_LeachingDepth = getValue(site, 'leachingDepth', parameterProvider.userEnvironmentParameters.p_LeachingDepth);
 
-      logger(MSG.INFO, 'Fetched site data.');
+      logger(MSG_INFO, 'Fetched site data.');
 
       /* soil */
       var lThicknessCm = 100.0 * parameterProvider.userEnvironmentParameters.p_LayerThickness;
@@ -136,20 +136,20 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       var layers = [];
       if (!createLayers(layers, site.horizons, lThicknessCm, maxNoOfLayers)) {
-        logger(MSG.ERROR, 'Error fetching soil data.');
+        logger(MSG_ERROR, 'Error fetching soil data.');
         return;
       }
       
-      logger(MSG.INFO, 'Fetched soil data.');
+      logger(MSG_INFO, 'Fetched soil data.');
 
       /* crops */
       var cropRotation = [];
       if (!createProcesses(cropRotation, prod, startDate)) {
-        logger(MSG.ERROR, 'Error fetching crop data.');
+        logger(MSG_ERROR, 'Error fetching crop data.');
         return;
       }
       
-      logger(MSG.INFO, 'Fetched crop data.');
+      logger(MSG_INFO, 'Fetched crop data.');
 
       var env = new Environment(layers, parameterProvider);
       env.general = generalParameters;
@@ -175,7 +175,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     
     } // for each input
     
-    logger(MSG.INFO, 'Start model run.');
+    logger(MSG_INFO, 'Start model run.');
     
     return models.run(callbacks);
 
@@ -197,7 +197,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     var hs = horizons.length;
     var depth = 0;
     
-    logger(MSG.INFO, 'Fetching ' + hs + ' horizons.');
+    logger(MSG_INFO, 'Fetching ' + hs + ' horizons.');
 
     for (var h = 0; h < hs; ++h ) {
       
@@ -213,7 +213,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
         /* stop if we reach max. depth */
         if (depth === maxNoOfLayers * lThicknessCm) {
-          logger(MSG.WARN, 'Maximum soil layer depth (' + (maxNoOfLayers * lThicknessCm) + ' cm) reached. Remaining layers in horizon ' + h + ' ignored.');
+          logger(MSG_WARN, 'Maximum soil layer depth (' + (maxNoOfLayers * lThicknessCm) + ' cm) reached. Remaining layers in horizon ' + h + ' ignored.');
           break;
         }
 
@@ -261,15 +261,15 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
         /* TODO: hinter readJSON verschieben */ 
         if (!soilParameters.isValid()) {
           ok = false;
-          logger(MSG.ERROR, 'Error in soil parameters.');
+          logger(MSG_ERROR, 'Error in soil parameters.');
         }
 
         layers.push(soilParameters);
-        logger(MSG.INFO, 'Fetched layer ' + layers.length + ' in horizon ' + h + '.');
+        logger(MSG_INFO, 'Fetched layer ' + layers.length + ' in horizon ' + h + '.');
 
       }
 
-      logger(MSG.INFO, 'Fetched horizon ' + h + '.');
+      logger(MSG_INFO, 'Fetched horizon ' + h + '.');
     }  
 
     return ok;
@@ -281,14 +281,15 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     var ok = true;
     var crops = production.crops;
     var cs = crops.length;
-    var isGrassland = (production.model === 'grassland');
-    var isPermanentGrassland = (isGrassland && cs === 1);
     
-    logger(MSG.INFO, 'Fetching ' + cs + ' crops.');
+    logger(MSG_INFO, 'Fetching ' + cs + ' crops.');
 
     for (var c = 0; c < cs; c++) {
 
       var crop = crops[c];
+      var isGrassland = (crop.model === 'grassland');
+      /* assume perm. grassland if there is only one crop in the rotation array and sowing date has not been specified */
+      var isPermanentGrassland = (isGrassland && cs === 1 && (crop.sowingDate === null || crop.sowingDate === undefined));
 
       if (isGrassland) {
         /* we can not start at day 0 and therefor start at day 0 + 2 since model's general step is executed *after* cropStep */
@@ -301,13 +302,13 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
         var hd = new Date(Date.parse(crop.finalHarvestDate));
         if (!sd.isValid() || !hd.isValid()) {
           ok = false;
-          logger(MSG.ERROR, 'Invalid sowing or harvest date in ' + crop.name);
+          logger(MSG_ERROR, 'Invalid sowing or harvest date in ' + crop.name);
         }
       }
 
       if (isGrassland) {
 
-        var grass = new Grass(sd, hds, crop.species);
+        var grass = new Grass(sd, hds, crop.species, isPermanentGrassland);
         cropRotation[c] = new ProductionProcess('grassland', grass);
 
       } else {
@@ -324,7 +325,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       if (tillageOperations) { /* in case no tillage has been added */
         if (!addTillageOperations(cropRotation[c], tillageOperations)) {
           ok = false;
-          logger(MSG.ERROR, 'Error adding tillages.');
+          logger(MSG_ERROR, 'Error adding tillages.');
         }
       }
 
@@ -333,7 +334,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       if (mineralFertilisers) { /* in case no min fertilizer has been added */
         if (!addFertilizers(cropRotation[c], mineralFertilisers, false)) {
           ok = false;
-          logger(MSG.ERROR, 'Error adding mineral fertilisers.');
+          logger(MSG_ERROR, 'Error adding mineral fertilisers.');
         }
       }
 
@@ -342,7 +343,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       if (organicFertilisers) { /* in case no org fertilizer has been added */ 
         if (!addFertilizers(cropRotation[c], organicFertilisers, true)) {
           ok = false;
-          logger(MSG.ERROR, 'Error adding organic fertilisers.');
+          logger(MSG_ERROR, 'Error adding organic fertilisers.');
         }
       }
 
@@ -351,7 +352,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       if (irrigations) {  /* in case no irrigation has been added */
         if (!addIrrigations(cropRotation[c], irrigations)) {
           ok = false;
-          logger(MSG.ERROR, 'Error adding irrigations.');
+          logger(MSG_ERROR, 'Error adding irrigations.');
         }
       }
 
@@ -360,11 +361,11 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       if (cuttings) { /* in case no tillage has been added */
         if (!addCuttings(cropRotation[c], cuttings)) {
           ok = false;
-          logger(MSG.ERROR, 'Error adding cuttings.');
+          logger(MSG_ERROR, 'Error adding cuttings.');
         }
       }
 
-      logger(MSG.INFO, 'Fetched crop ' + c + ': ' + crop.name);
+      logger(MSG_INFO, 'Fetched crop ' + c + ': ' + crop.name);
 
     }
 
@@ -377,7 +378,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     var ok = true;
     var ts = tillageOperations.length;
 
-    logger(MSG.INFO, 'Fetching ' + ts + ' tillages.');
+    logger(MSG_INFO, 'Fetching ' + ts + ' tillages.');
 
     for (var t = 0; t < ts; ++t) {
 
@@ -385,7 +386,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       /* ignore if any value is null */
       if (till.date === null || till.depth === null || till.method === null) {
-        logger(MSG.WARN, 'At least one tillage parameter null: tillage ' + t + ' ignored.');
+        logger(MSG_WARN, 'At least one tillage parameter null: tillage ' + t + ' ignored.');
         continue;
       }
 
@@ -395,12 +396,12 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       if (!tDate.isValid()) {
         ok = false;
-        logger(MSG.ERROR, 'Invalid tillage date in tillage no. ' + t + '.');
+        logger(MSG_ERROR, 'Invalid tillage date in tillage no. ' + t + '.');
       }
 
       productionProcess.addApplication(new TillageApplication(tDate, depth));
 
-      logger(MSG.INFO, 'Fetched tillage ' + t + '.');
+      logger(MSG_INFO, 'Fetched tillage ' + t + '.');
 
     }
 
@@ -441,7 +442,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     var ok = true;
     var fs = fertilizers.length;
 
-    logger(MSG.INFO, 'Fetching ' + fs + ' ' + (isOrganic ? 'organic' : 'mineral') + ' fertilisers.');
+    logger(MSG_INFO, 'Fetching ' + fs + ' ' + (isOrganic ? 'organic' : 'mineral') + ' fertilisers.');
 
     for (var f = 0; f < fs; ++f) {
       
@@ -449,7 +450,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       /* ignore if any value is null */
       if (fertilizer.date === null || fertilizer.method === null || fertilizer.amount === null) {
-        logger(MSG.WARN, 'At least one fertiliser parameter null: ' + (isOrganic ? 'organic' : 'mineral') + ' fertiliser ' + f + 'ignored.');
+        logger(MSG_WARN, 'At least one fertiliser parameter null: ' + (isOrganic ? 'organic' : 'mineral') + ' fertiliser ' + f + 'ignored.');
         continue;
       }
 
@@ -465,7 +466,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       if (!fDate.isValid()) {
         ok = false;
-        logger(MSG.ERROR, 'Invalid fertilization date in ' + f + '.');
+        logger(MSG_ERROR, 'Invalid fertilization date in ' + f + '.');
       }
 
       if (isOrganic)
@@ -473,7 +474,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       else
         productionProcess.addApplication(new MineralFertiliserApplication(fDate, new MineralFertilizer(name, carbamid, no3, nh4), amount));
 
-      logger(MSG.INFO, 'Fetched ' + (isOrganic ? 'organic' : 'mineral') + ' fertiliser ' + f + '.');
+      logger(MSG_INFO, 'Fetched ' + (isOrganic ? 'organic' : 'mineral') + ' fertiliser ' + f + '.');
 
     }
      
@@ -520,7 +521,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
     var is = irrigations.length;
     
-    logger(MSG.INFO, 'Fetching ' + is + ' irrigations.');
+    logger(MSG_INFO, 'Fetching ' + is + ' irrigations.');
 
     for (var i = 0; i < is; ++i) {
       
@@ -529,7 +530,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       /* ignore if any value is null */
       if (irrigation.date === null || irrigation.method  === null || irrigation.eventType  === null || irrigation.threshold  === null
           || irrigation.amount === null || irrigation.NConc === null) {
-        logger(MSG.WARN, 'At least one irrigation parameter null: irrigation ' + i + ' ignored.');
+        logger(MSG_WARN, 'At least one irrigation parameter null: irrigation ' + i + ' ignored.');
         continue;
       }
 
@@ -543,12 +544,12 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       if (!iDate.isValid()) {
         ok = false;
-        logger(MSG.ERROR, 'Invalid irrigation date in ' + i + '.');
+        logger(MSG_ERROR, 'Invalid irrigation date in ' + i + '.');
       }
 
       productionProcess.addApplication(new IrrigationApplication(iDate, amount, new IrrigationParameters(NConc, 0.0)));
 
-      logger(MSG.INFO, 'Fetched irrigation ' + i + '.');
+      logger(MSG_INFO, 'Fetched irrigation ' + i + '.');
 
     }
 
@@ -564,7 +565,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
   //   var ok = true;
   //   var cs = cutArr.length;
 
-  //   logger(MSG.INFO, 'Fetching ' + cs + ' cuttings.');
+  //   logger(MSG_INFO, 'Fetching ' + cs + ' cuttings.');
 
   //   for (var c = 0; c < cs; ++c) {
   //     var cutObj = cutArr[c];
@@ -725,7 +726,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     }
 
     if (done) 
-      logger(MSG.INFO, 'done');
+      logger(MSG_INFO, 'done');
   
   };  
 

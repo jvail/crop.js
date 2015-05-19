@@ -89,7 +89,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
       // vm_WaterFlux[i] = 0.0;
     }
 
-    logger(MSG.INFO, "Constructor: SoilMoisture");
+    logger(MSG_INFO, "Constructor: SoilMoisture");
 
   var snowComponent = new SnowComponent(centralParameterProvider),
       frostComponent = new FrostComponent(soilColumn, centralParameterProvider),
@@ -291,7 +291,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
       if (siteParameters.vs_Slope < 0.0 || siteParameters.vs_Slope > 1.0) {
 
         // no valid slope
-        logger(MSG.WARN, "Slope value out ouf boundary");
+        logger(MSG_WARN, "Slope value out ouf boundary");
 
       } else if (siteParameters.vs_Slope == 0.0) {
 
@@ -369,7 +369,7 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
     if (abs((vm_SurfaceWaterStorageOld + vm_WaterToInfiltrate) - (vm_SurfaceRunOff + vm_Infiltration
         + vm_SurfaceWaterStorage)) > 0.01) {
 
-      logger(MSG.WARN, "water balance wrong!");
+      logger(MSG_WARN, "water balance wrong!");
     }
 
     // water flux of next layer equals percolation rate of layer above

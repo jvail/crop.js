@@ -7,11 +7,31 @@
 
   REFERENCES
 
+  Johnson I. R. , Lodge G. M. , White R. E. (2003) The Sustainable Grazing Systems Pasture Model: description, philosophy 
+  and application to the SGS National Experiment. Australian Journal of Experimental Agriculture 43 , 711–728.
+
   Johnson IR (2008). Biophysical pasture model documentation: model documentation for DairyMod. EcoMod and the SGS Pasture
   Model. (IMJ Consultants: Dorrigo, NSW)
 
   Johnson IR (2013). DairyMod and the SGS Pasture Model: a mathematical description of the biophysical model structure.
   IMJ Consultants, Dorrigo, NSW, Australia.
+
+
+  README
+
+  - Ideally the model should implement phenology routines describing e.g. mean stage count (MSC), leaf appearance rate etc.. 
+    But no phenology model applicable to a wide range of species and geographic locations seem to exist. Therefore the model 
+    is unaware of any phenological development exept a GDD based flowering date which is simply a proxy for the turing point 
+    of photosynthate partitiong to leafs (i.e. max LAI reached and partitioning to leaf <= 0.5).
+
+  Important (somewhat experimental or missing feature) deviations from the original approach:
+
+  - Added a 'homogeneity' factor to capture the spatial homogeneity of species in a sward and avoid the complete disappearence 
+    of species due to light interception (competition).
+  - Added a 'coverage' factor that captures how much of a sqm is covered by a species to avoid inconsistencies in the height 
+    calculations.
+  - For consistency NH4 uptake was removed (implemented in SGS) because it is not implemented in MONICA's generic crops.
+  - Annual species not implemented
 
 
   TODO
@@ -20,17 +40,6 @@
   - tests with N-Ireland ryegrass data suggest that growthg is systematically under-(over)-estimated in spring (autum).
     Potential solution: There is currently no ("locked") pool to accumulate reserves in autum stored in roots (or in 
     case of clover above the root) that will be released in spring to support initial growth.
-
-
-  README
-
-  Important (somewhat experimental) deviations from the original approach:
-
-  - Added a homogeneity factor to capture the homogeneity of the sward and avoid the complete disappearence of species due
-    to light interception (competition).
-  - Added a coverage factor that captures how much of a sqm is covered by a species to avoid inconsistencies in the height 
-    calculations
-  - for consistency removed NH4 uptake (implemented in SGS) because it is not implemented in MONICA's crops
 */
 
 var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes additional grassland param
@@ -82,7 +91,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
 
   /*
-    (3.58ff) cumulative low temperature stress function 
+    (3.58ff) cumulative low and high temperature stress function 
 
     T     [C°]  mean daily temperature
     T_mn  [C°]  minimum daily temperature
@@ -101,7 +110,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         , T_mx_high = cons.T_mx_high
         , T_mx_low = cons.T_mx_low
         , ξ_T_low = 1.0               // [0-1]  low temperature stress coefficient      
-        , ξ_T_high= 1.0               // [0-1]  low temperature stress coefficient     
+        , ξ_T_high = 1.0              // [0-1]  low temperature stress coefficient     
         ;
 
       /* low temp. stress and recovery */
@@ -201,7 +210,6 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       , T_I_mn = T
       ;
 
-    /* TODO: implement homogeneity */
     if (numberOfSpecies > 1) { 
 
       // array
@@ -262,7 +270,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
       // check (1.21)
       if (f_C_m >= λ / (2 - λ)) {
         f_C_m = λ / (2 - λ) - 1e-10; // make sure it is smaller
-        logger(MSG.WARN, 'Adjusted f_C_m to ' + f_C_m + ' since f_C_m >= λ / (2 - λ)');
+        logger(MSG_WARN, 'Adjusted f_C_m to ' + f_C_m + ' since f_C_m >= λ / (2 - λ)');
       }
   
       var f_C = 1
@@ -669,9 +677,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         };
 
         var ordering = [
-          { organ: LEAF, N: f_N_live.leaf / N_ref_opt },
-          { organ: SHOOT, N: f_N_live.stem / (N_ref_opt * 0.5) }, 
-          { organ: ROOT, N: f_N_live.root / (N_ref_opt * 0.5) } 
+          { organ: ORGAN_LEAF, N: f_N_live.leaf / N_ref_opt },
+          { organ: ORGAN_STEM, N: f_N_live.stem / (N_ref_opt * 0.5) }, 
+          { organ: ORGAN_ROOT, N: f_N_live.root / (N_ref_opt * 0.5) } 
         ];
 
         /* sort in ascending order by N level */
@@ -690,21 +698,21 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
             , N_ref_opt_organ = 0
             ; 
 
-          if (ordering[organ].organ === LEAF) {
+          if (ordering[organ].organ === ORGAN_LEAF) {
 
             ρ = ρ_shoot * ρ_l;
             f_sc = 0.50; // fix stucture fraction [kg (C,structure) kg-1 (C,tissue)]
             N_ref_opt_organ = N_ref_opt;
             f_pn = N_ref_max / fN_pn * fC_pn;
           
-          } else if (ordering[organ].organ === SHOOT) {
+          } else if (ordering[organ].organ === ORGAN_STEM) {
             
             ρ = ρ_shoot * ρ_s;
             f_sc = 0.70; // fix stucture fraction [kg (C,structure) kg-1 (C,tissue)]
             N_ref_opt_organ = N_ref_opt * 0.5;
             f_pn = (N_ref_max * 0.5) / fN_pn * fC_pn;
           
-          } else if (ordering[organ].organ === ROOT) {
+          } else if (ordering[organ].organ === ORGAN_ROOT) {
 
             ρ = ρ_root;
             f_sc = 0.70; // fix stucture fraction [kg (C,structure) kg-1 (C,tissue)]
@@ -781,21 +789,21 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           N_assim += N_assimilated;
 
           // update variables
-          if (ordering[organ].organ === LEAF) {
+          if (ordering[organ].organ === ORGAN_LEAF) {
             vars.Y_leaf = Y;
             vars.G_leaf = C_assimilated;
             // update composition of new growth to leaf
             vars.G_l_fC_om.sc = f_sc;
             vars.G_l_fC_om.nc = f_nc;
             vars.G_l_fC_om.pn = f_pn;
-          } else if (ordering[organ].organ === SHOOT) {
+          } else if (ordering[organ].organ === ORGAN_STEM) {
             vars.Y_stem = Y;
             vars.G_stem = C_assimilated;
             // update composition of new growth to stem
             vars.G_s_fC_om.sc = f_sc;
             vars.G_s_fC_om.nc = f_nc;
             vars.G_s_fC_om.pn = f_pn;
-          } else if (ordering[organ].organ === ROOT) {
+          } else if (ordering[organ].organ === ORGAN_ROOT) {
             vars.Y_root = Y;
             vars.G_root = C_assimilated;
             // update composition of new growth to root
@@ -819,7 +827,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         
           if (N_up_pool > 0) {
             
-            if (ordering[organ].organ === LEAF && f_N_live.leaf < N_ref_opt) {
+            if (ordering[organ].organ === ORGAN_LEAF && f_N_live.leaf < N_ref_opt) {
 
               var N_req_add = fN_ass_add * (N_ref_opt - f_N_live.leaf) * species.C_live_leaf();
               var N_ass_add = min(N_req_add, N_up_pool);
@@ -834,7 +842,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
               vars.N_assim += N_ass_add;
               vars.N_ass_add += N_ass_add;
 
-            } else if (ordering[organ].organ === SHOOT && f_N_live.stem < N_ref_opt * 0.5) {
+            } else if (ordering[organ].organ === ORGAN_STEM && f_N_live.stem < N_ref_opt * 0.5) {
 
               var N_req_add = fN_ass_add * (N_ref_opt * 0.5 - f_N_live.stem) * species.C_live_stem();
               var N_ass_add = min(N_req_add, N_up_pool);
@@ -849,7 +857,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
               vars.N_assim += N_ass_add;
               vars.N_ass_add += N_ass_add;
             
-            } else if (ordering[organ].organ === ROOT && f_N_live.root < N_ref_opt * 0.5) {
+            } else if (ordering[organ].organ === ORGAN_ROOT && f_N_live.root < N_ref_opt * 0.5) {
 
               var N_req_add = fN_ass_add * (N_ref_opt * 0.5 - f_N_live.root) * species.C_root();
               var N_ass_add = min(N_req_add, N_up_pool);
@@ -1629,11 +1637,11 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     if (organIdx === undefined && speciesIdx === undefined) {
       increment = mixture.dDM_shoot() + mixture.dDM_root();
     } else if (organIdx !== undefined && speciesIdx !== undefined) {
-      if (organIdx === ROOT)
+      if (organIdx === ORGAN_ROOT)
         increment = mixture[speciesIdx].dDM_root();
-      else if (organIdx === LEAF)
+      else if (organIdx === ORGAN_LEAF)
         increment = mixture[speciesIdx].dDM_leaf();
-      else if (organIdx === SHOOT)
+      else if (organIdx === ORGAN_STEM)
         increment = mixture[speciesIdx].dDM_stem();
       else
         increment = 0;
@@ -1642,11 +1650,11 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         var species = mixture[speciesIdx];
         increment = species.dDM_leaf() + species.dDM_stem() + species.dDM_root();
       } else {
-        if (organIdx === ROOT)
+        if (organIdx === ORGAN_ROOT)
           increment = mixture.dDM_root();
-        else if (organIdx === LEAF)
+        else if (organIdx === ORGAN_LEAF)
           increment = mixture.dDM_leaf();
-        else if (organIdx === SHOOT)
+        else if (organIdx === ORGAN_STEM)
           increment = mixture.dDM_stem();
         else
           increment = 0;
@@ -1799,11 +1807,11 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     if (organIdx === undefined && speciesIdx === undefined) {
       mass = mixture.DM_shoot() + mixture.DM_root();
     } else if (organIdx !== undefined && speciesIdx !== undefined) {
-      if (organIdx === ROOT)
+      if (organIdx === ORGAN_ROOT)
         mass = mixture[speciesIdx].DM_root();
-      else if (organIdx === LEAF)
+      else if (organIdx === ORGAN_LEAF)
         mass = mixture[speciesIdx].DM_leaf();
-      else if (organIdx === SHOOT)
+      else if (organIdx === ORGAN_STEM)
         mass = mixture[speciesIdx].DM_stem();
       else
         mass = 0;
@@ -1812,11 +1820,11 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         var species = mixture[speciesIdx];
         mass = species.DM_leaf() + species.DM_stem() + species.DM_root();
       } else {
-        if (organIdx === ROOT)
+        if (organIdx === ORGAN_ROOT)
           mass = mixture.DM_root();
-        else if (organIdx === LEAF)
+        else if (organIdx === ORGAN_LEAF)
           mass = mixture.DM_leaf();
-        else if (organIdx === SHOOT)
+        else if (organIdx === ORGAN_STEM)
           mass = mixture.DM_stem();
         else
           mass = 0;

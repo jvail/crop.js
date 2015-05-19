@@ -48,7 +48,7 @@ var ModelCollection = function (weather) {
 
     for (dayOfSimulation; dayOfSimulation < totalNoDays; dayOfSimulation++) {
 
-      logger(MSG.INFO, currentDateString + ' / ' + dayOfSimulation);
+      logger(MSG_INFO, currentDateString + ' / ' + dayOfSimulation);
 
       leapYear = currentDate.isLeapYear();
       year = year = currentDate.getFullYear();

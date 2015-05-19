@@ -45,11 +45,12 @@
     - sort out DM vs OM
 */
 
-var Grass = function (seedDate, harvestDates, species) {
+var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
   
   this.mixture = null;
   this._seedDate = seedDate;
   this._harvestDates = harvestDates;
+  this.isPermanentGrassland = isPermanentGrassland;
 
   var _accumulatedETa = 0.0
     , _appliedAmountIrrigation = 0

@@ -1,13 +1,13 @@
 {
-  "model": {
-    "desc": "The model that implements the species",
-    "enum": [
-      "generic",
-      "grassland"
-    ]        
-  },
   "crops": [
     {
+      "model": {
+        "desc": "The model that implements species",
+        "enum": [
+          "generic",
+          "grassland"
+        ]        
+      },
       "species": [
         {
           "name": {

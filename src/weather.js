@@ -17,14 +17,13 @@ var Weather = function (startDate, endDate) {
     
     if (this._offset < 0) {
       this._numberOfSteps = 0;
-      logger(MSG.ERROR, 'Start date not valid: no. of steps is 0');
-      throw new Error('Start date not valid: no. of steps is 0');
+      logger(MSG_ERROR, 'Start date not valid: no. of steps is 0');
     }
 
     if (endIdx < 0) {
       endIdx = this._data[WEATHER.ISODATESTRING].length - 1;
       this._endDate = new Date(Date.parse(this._data[WEATHER.ISODATESTRING][endIdx]));
-      logger(MSG.WARN, 'End date not found: end date adjusted to ' + this._endDate.toISOString().split('T')[0]);
+      logger(MSG_WARN, 'End date not found: end date adjusted to ' + this._endDate.toISOString().split('T')[0]);
     }
 
     for (var i = 0; i < this._numberOfSteps; i++)

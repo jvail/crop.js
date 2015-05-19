@@ -1,25 +1,24 @@
 /* math, constants and helper functions */
 
-var ENVIRONMENT_IS_NODE = typeof process === 'object' && typeof require === 'function'
-  , ENVIRONMENT_IS_WEB = typeof window === 'object'
-  , ENVIRONMENT_IS_WORKER = typeof importScripts === 'function'
+var ENVIRONMENT_IS_NODE = (typeof process === 'object' && typeof require === 'function')
+  , ENVIRONMENT_IS_WEB = (typeof window === 'object')
+  , ENVIRONMENT_IS_WORKER = (typeof importScripts === 'function')
   ;
 
-var DEBUG = false
+var DEBUG   = false
   , VERBOSE = true 
   ;
 
-var MSG = {
-    INFO: 0
-  , WARN: 1
-  , ERROR: 2
-  , DEBUG: 3
-};
+var MSG_INFO  = 0
+  , MSG_WARN  = 1
+  , MSG_ERROR = 2
+  , MSG_DEBUG = 3
+  ;
 
-var ROOT = 0
-  , LEAF = 1
-  , SHOOT = 2 /* TODO: seems not correct in MONICA: means stem */
-  , STORAGE_ORGAN = 3
+var ORGAN_ROOT    = 0
+  , ORGAN_LEAF    = 1
+  , ORGAN_STEM    = 2
+  , ORGAN_STORAGE = 3
   ;
 
 var abs    = Math.abs
@@ -142,51 +141,50 @@ Date.prototype.isLeapYear = function () {
 /* log function */
 var logger = function (type, msg) {
 
-
   if (ENVIRONMENT_IS_WORKER) {
 
-    if (!(type === MSG.INFO && !VERBOSE)) {
+    if (!(type === MSG_INFO && !VERBOSE)) {
 
       if (typeof msg === 'object')
         msg = JSON.stringify(msg, null, 2);
 
       switch(type) {
-        case MSG.INFO:
-          postMessage({ info: msg });
+        case MSG_INFO:
+          postMessage({ msg: msg, type: 'info' });
           break;
-        case MSG.WARN:
-          postMessage({ warn: msg });
+        case MSG_WARN:
+          postMessage({ msg: msg, type: 'warn' });
           break;
-        case MSG.ERROR:
-          postMessage({ error: msg });
+        case MSG_ERROR:
+          postMessage({ msg: msg, type: 'error' });
           break;
-        case MSG.DEBUG:
-          postMessage({ debug: msg });
+        case MSG_DEBUG:
+          postMessage({ msg: msg, type: 'debug' });
           break;
         default:
-          postMessage({ msg: msg });
+          postMessage({ msg: msg, type: 'info' });
       }
 
     }
 
   } else {
 
-    if (!(type === MSG.INFO && !VERBOSE)) {
+    if (!(type === MSG_INFO && !VERBOSE)) {
 
       if (typeof msg === 'object')
         msg = JSON.stringify(msg, null, 2);
 
       switch(type) {
-        case MSG.INFO:
+        case MSG_INFO:
           console.log('info: ' + msg);
           break;
-        case MSG.WARN:
+        case MSG_WARN:
           console.log('warn: ' + msg);
           break;
-        case MSG.ERROR:
+        case MSG_ERROR:
           console.log('error: ' + msg);
           break;
-        case MSG.DEBUG:
+        case MSG_DEBUG:
           console.log('debug: ' + msg);
           break;
         default:
@@ -195,6 +193,13 @@ var logger = function (type, msg) {
 
     }
 
+  }
+
+  if (type === MSG_ERROR) {
+    throw new Error(
+      ((typeof msg === 'object' && msg !== null) ?
+      JSON.stringify(msg, null, 2) : msg)
+    );
   }
 
 };

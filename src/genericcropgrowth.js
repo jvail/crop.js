@@ -781,7 +781,7 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
       }
 
     } else {
-      logger(MSG.WARN, "irregular developmental stage");
+      logger(MSG_WARN, "irregular developmental stage");
     }
 
   };
@@ -1602,62 +1602,62 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
                 //! TODO: hard coded organ ids; must be more generalized because in database organ_ids can be mixed
                 vc_OrganBiomass[i_Organ];
 
-                if (i_Organ == LEAF) { // leaf
+                if (i_Organ == ORGAN_LEAF) { // leaf
 
                     var incr = assimilate_partition_leaf * vc_NetPhotosynthesis;
                     if (abs(incr) <= vc_OrganBiomass[i_Organ]){
-                      logger(MSG.INFO, "LEAF - Reducing organ biomass - default case (" + (vc_OrganBiomass[i_Organ] + vc_OrganGrowthIncrement[i_Organ]) + ")");
+                      logger(MSG_INFO, "ORGAN_LEAF - Reducing organ biomass - default case (" + (vc_OrganBiomass[i_Organ] + vc_OrganGrowthIncrement[i_Organ]) + ")");
                       vc_OrganGrowthIncrement[i_Organ] = incr;
                     } else {
                         // temporary hack because complex algorithm produces questionable results
-                        logger(MSG.INFO, "LEAF - Not enough biomass for reduction - Reducing only what is available ");
+                        logger(MSG_INFO, "ORGAN_LEAF - Not enough biomass for reduction - Reducing only what is available ");
                         vc_OrganGrowthIncrement[i_Organ] = (-1) * vc_OrganBiomass[i_Organ];
 
 
-    //                      debug() << "LEAF - Not enough biomass for reduction; Need to calculate new partition coefficient" << endl;
+    //                      debug() << "ORGAN_LEAF - Not enough biomass for reduction; Need to calculate new partition coefficient" << endl;
     //                      // calculate new partition coefficient to detect, how much of organ biomass
     //                      // can be reduced
     //                      assimilate_partition_leaf = abs(vc_OrganBiomass[i_Organ] / vc_NetPhotosynthesis);
     //                      assimilate_partition_shoot = 1.0 - assimilate_partition_leaf;
-    //                      debug() << "LEAF - New Partition: " << assimilate_partition_leaf << endl;
+    //                      debug() << "ORGAN_LEAF - New Partition: " << assimilate_partition_leaf << endl;
     //
     //                      // reduce biomass for leaf
     //                      incr = assimilate_partition_leaf * vc_NetPhotosynthesis; // should be negative, therefor the addition
     //                      vc_OrganGrowthIncrement[i_Organ] = incr;
-    //                      debug() << "LEAF - Reducing organ by " << incr << " (" << vc_OrganBiomass[i_Organ] + vc_OrganGrowthIncrement[i_Organ] << ")"<< endl;
+    //                      debug() << "ORGAN_LEAF - Reducing organ by " << incr << " (" << vc_OrganBiomass[i_Organ] + vc_OrganGrowthIncrement[i_Organ] << ")"<< endl;
                     }
 
-                } else if (i_Organ == SHOOT) { // shoot
+                } else if (i_Organ == ORGAN_STEM) { // shoot
                     // JV! Why not (1 - assimilate_partition_leaf)?
                     var incr = assimilate_partition_leaf * vc_NetPhotosynthesis; // should be negative
 
                     if (abs(incr) <= vc_OrganBiomass[i_Organ]){
                         vc_OrganGrowthIncrement[i_Organ] = incr;
-                        logger(MSG.INFO, "SHOOT - Reducing organ biomass - default case (" + (vc_OrganBiomass[i_Organ] + vc_OrganGrowthIncrement[i_Organ]) + ")");
+                        logger(MSG_INFO, "ORGAN_STEM - Reducing organ biomass - default case (" + (vc_OrganBiomass[i_Organ] + vc_OrganGrowthIncrement[i_Organ]) + ")");
                     } else {
                         // temporary hack because complex algorithm produces questionable results
-                        logger(MSG.INFO, "SHOOT - Not enough biomass for reduction - Reducing only what is available");
+                        logger(MSG_INFO, "ORGAN_STEM - Not enough biomass for reduction - Reducing only what is available");
                         vc_OrganGrowthIncrement[i_Organ] = (-1) * vc_OrganBiomass[i_Organ];
 
 
-    //                      debug() << "SHOOT - Not enough biomass for reduction; Need to calculate new partition coefficient" << endl;
+    //                      debug() << "ORGAN_STEM - Not enough biomass for reduction; Need to calculate new partition coefficient" << endl;
     //
     //                      assimilate_partition_shoot = abs(vc_OrganBiomass[i_Organ] / vc_NetPhotosynthesis);
     //                      assimilate_partition_leaf = 1.0 - assimilate_partition_shoot;
-    //                      debug() << "SHOOT - New Partition: " << assimilate_partition_shoot << endl;
+    //                      debug() << "ORGAN_STEM - New Partition: " << assimilate_partition_shoot << endl;
     //
     //                      incr = assimilate_partition_shoot * vc_NetPhotosynthesis;
     //                      vc_OrganGrowthIncrement[i_Organ] = incr;
-    //                      debug() << "SHOOT - Reducing organ (" << vc_OrganBiomass[i_Organ] + vc_OrganGrowthIncrement[i_Organ] << ")"<< endl;
+    //                      debug() << "ORGAN_STEM - Reducing organ (" << vc_OrganBiomass[i_Organ] + vc_OrganGrowthIncrement[i_Organ] << ")"<< endl;
     //
     //                      // test if there is the possibility to reduce biomass of leaf
     //                      // for remaining assimilates
     //                      incr = assimilate_partition_leaf * vc_NetPhotosynthesis;
-    //                      double available_leaf_biomass = vc_OrganBiomass[LEAF] + vc_OrganGrowthIncrement[LEAF];
+    //                      double available_leaf_biomass = vc_OrganBiomass[ORGAN_LEAF] + vc_OrganGrowthIncrement[ORGAN_LEAF];
     //                      if (incr<available_leaf_biomass) {
     //                          // leaf biomass is big enough, so reduce biomass furthermore
-    //                          vc_OrganGrowthIncrement[LEAF] += incr; // should be negative, therefor the addition
-    //                          debug() << "LEAF - Reducing leaf biomasse further (" << vc_OrganBiomass[LEAF] + vc_OrganGrowthIncrement[LEAF] << ")"<< endl;
+    //                          vc_OrganGrowthIncrement[ORGAN_LEAF] += incr; // should be negative, therefor the addition
+    //                          debug() << "ORGAN_LEAF - Reducing leaf biomasse further (" << vc_OrganBiomass[ORGAN_LEAF] + vc_OrganGrowthIncrement[ORGAN_LEAF] << ")"<< endl;
     //                      } else {
     //                          // worst case - there is not enough biomass available to reduce
     //                          // maintenaince respiration requires more assimilates that can be
@@ -2551,14 +2551,14 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
     var old_above_biomass = vc_AbovegroundBiomass;
     var removing_biomass = 0.0;
 
-    logger(MSG.INFO, "apply cutting");
+    logger(MSG_INFO, "apply cutting");
 
     var new_OrganBiomass = [];      //! old WORG
     for (var organ=1; organ<pc_NumberOfOrgans+1; organ++) {
 
         var cut_organ_count = cropParams.organIdsForCutting.length;
         var biomass = vc_OrganBiomass[organ - 1];
-        logger(MSG.INFO, "old biomass: " + biomass  + "\tOrgan: " + organ);
+        logger(MSG_INFO, "old biomass: " + biomass  + "\tOrgan: " + organ);
         for (var cut_organ=0; cut_organ<cut_organ_count; cut_organ++) {
 
             var yc = new YieldComponent(cropParams.organIdsForCutting[cut_organ]);
@@ -2571,7 +2571,7 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
             }
         }
         new_OrganBiomass.push(biomass);
-        logger(MSG.INFO, "new biomass: " + biomass);
+        logger(MSG_INFO, "new biomass: " + biomass);
     }
 
     vc_TotalBiomassNContent = (removing_biomass / old_above_biomass) * vc_TotalBiomassNContent;

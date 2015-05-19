@@ -44,7 +44,7 @@ var Seed = function (date, crop) {
   };
 
   this.apply = function (model) {
-    logger(MSG.INFO, "seeding crop: " + this._crop.name() + " at: " + this.date().toISOString().split('T')[0]);
+    logger(MSG_INFO, "seeding crop: " + this._crop.name() + " at: " + this.date().toISOString().split('T')[0]);
     model.seedCrop(this._crop);
   };
 
@@ -78,7 +78,7 @@ var Harvest = function (at, crop) {
   
     if (model.cropGrowth()) {
 
-      logger(MSG.INFO, "harvesting crop: " + this._crop.name() + " at: " + this.date().toString());
+      logger(MSG_INFO, "harvesting crop: " + this._crop.name() + " at: " + this.date().toString());
 
       if (model.currentCrop() == this._crop) {
 
@@ -104,7 +104,7 @@ var Harvest = function (at, crop) {
         model.harvestCurrentCrop();
 
       } else {
-          logger(MSG.INFO, "Crop: " + model.currentCrop().toString()
+          logger(MSG_INFO, "Crop: " + model.currentCrop().toString()
             + " to be harvested isn't actual crop of this Harvesting action: "
             + this._crop.toString());
       }
@@ -135,7 +135,7 @@ var Cutting = function (at, crop, cropResult) {
 
   this.apply = function (model) {
   
-    logger(MSG.INFO, "Cutting crop: " + this._crop.name() + " at: " + this.date().toString());
+    logger(MSG_INFO, "Cutting crop: " + this._crop.name() + " at: " + this.date().toString());
     if (model.currentCrop() == this._crop) {
       // if (model.cropGrowth()) {
         // this._crop.setHarvestYields(

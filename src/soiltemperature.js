@@ -62,7 +62,7 @@ var SoilTemperature = function (sc, mm, cpp) {
 
     vt_MatrixPrimaryDiagonal[i + 1] = 0.0;
 
-  logger(MSG.INFO, "Constructor: SoilTemperature");
+  logger(MSG_INFO, "Constructor: SoilTemperature");
 
   var user_temp = cpp.userSoilTemperatureParameters;
 
@@ -135,7 +135,7 @@ var SoilTemperature = function (sc, mm, cpp) {
 
   // initialising heat state variables
   for (var i_Layer = 0; i_Layer < vs_NumberOfLayers; i_Layer++) {
-    // logger(MSG.INFO, "layer: " + i_Layer);
+    // logger(MSG_INFO, "layer: " + i_Layer);
 
     ///////////////////////////////////////////////////////////////////////////////////////
     // Calculate heat conductivity following Neusypina 1979
@@ -147,8 +147,8 @@ var SoilTemperature = function (sc, mm, cpp) {
     var sbdi = soilColumn.at(i_Layer).vs_SoilBulkDensity();
     var smi = vs_SoilMoisture_const[i_Layer];
 
-    // logger(MSG.INFO, "sbdi: " + sbdi);  
-    // logger(MSG.INFO, "smi: " + smi);  
+    // logger(MSG_INFO, "sbdi: " + sbdi);  
+    // logger(MSG_INFO, "smi: " + smi);  
 
     vt_HeatConductivity[i_Layer] = ((3.0 * (sbdi / 1000.0) - 1.7) * 0.001) /
            (1.0 + (11.5 - 5.0 * (sbdi / 1000.0)) *
@@ -158,8 +158,8 @@ var SoilTemperature = function (sc, mm, cpp) {
            * 4.184; // gives result in [J]
            // --> [J m-1 d-1 K-1]
 
-    // logger(MSG.INFO, "vt_HeatConductivity");       
-    // logger(MSG.INFO, vt_HeatConductivity);      
+    // logger(MSG_INFO, "vt_HeatConductivity");       
+    // logger(MSG_INFO, vt_HeatConductivity);      
 
     ///////////////////////////////////////////////////////////////////////////////////////
     // Calculate specific heat capacity following DAISY
@@ -204,7 +204,7 @@ var SoilTemperature = function (sc, mm, cpp) {
 
   // Calculation of the mean heat conductivity per layer
   vt_HeatConductivityMean[0] = vt_HeatConductivity[0];
-  // logger(MSG.INFO, vt_HeatConductivityMean);
+  // logger(MSG_INFO, vt_HeatConductivityMean);
 
   for (var i_Layer = 1; i_Layer < vt_NumberOfLayers; i_Layer++) {
 
@@ -215,7 +215,7 @@ var SoilTemperature = function (sc, mm, cpp) {
 
     // @todo <b>Claas: </b>Formel nochmal durchgehen
     vt_HeatConductivityMean[i_Layer] = ((lti_1 * hci_1) + (lti * hci)) / (lti + lti_1);
-    // logger(MSG.INFO, vt_HeatConductivityMean);
+    // logger(MSG_INFO, vt_HeatConductivityMean);
 
   } // for
 
@@ -277,11 +277,11 @@ var SoilTemperature = function (sc, mm, cpp) {
        + (vt_VolumeMatrix[0] - vt_VolumeMatrixOld[0]) / soilColumn[0].vs_LayerThickness)
         * vt_SoilTemperature[0] + vt_HeatFlow;
 
-    // logger(MSG.INFO, "f_SoilSurfaceTemperature(tmin, tmax, globrad): " + f_SoilSurfaceTemperature(tmin, tmax, globrad));
-    // logger(MSG.INFO, "vt_B[0]: " + vt_B[0]);
-    // logger(MSG.INFO, "vt_HeatConductivityMean[0]: " + vt_HeatConductivityMean[0]);
-    // logger(MSG.INFO, "vt_HeatFlow: " + vt_HeatFlow);
-    // logger(MSG.INFO, "vt_Solution[0]: " + vt_Solution[0]);
+    // logger(MSG_INFO, "f_SoilSurfaceTemperature(tmin, tmax, globrad): " + f_SoilSurfaceTemperature(tmin, tmax, globrad));
+    // logger(MSG_INFO, "vt_B[0]: " + vt_B[0]);
+    // logger(MSG_INFO, "vt_HeatConductivityMean[0]: " + vt_HeatConductivityMean[0]);
+    // logger(MSG_INFO, "vt_HeatFlow: " + vt_HeatFlow);
+    // logger(MSG_INFO, "vt_Solution[0]: " + vt_Solution[0]);
 
     for (var i_Layer = 1; i_Layer < vt_NumberOfLayers; i_Layer++) {
 
@@ -291,7 +291,7 @@ var SoilTemperature = function (sc, mm, cpp) {
           * vt_SoilTemperature[i_Layer];
     } // for
 
-      // logger(MSG.INFO, vt_Solution);
+      // logger(MSG_INFO, vt_Solution);
 
     // end subroutine NumericalSolution
 

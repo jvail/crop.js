@@ -552,7 +552,7 @@ var tools = {
   ,
     soilCharacteristicsKA5: function (soilParameter) {
 
-      logger(MSG.INFO, 'Read soil characteristics from KA5');
+      logger(MSG_INFO, 'Read soil characteristics from KA5');
 
       var texture = soilParameter.vs_SoilTexture;
       var stoneContent = soilParameter.vs_SoilStoneContent;

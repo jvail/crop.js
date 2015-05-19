@@ -4,7 +4,7 @@
   functions may be added.
 
   Function parameters are optional. If not provided by callee return the sum over the index. E.g.
-  if 'species' argument is not set (i.e. species === undefined) return sum over all species. 
+  if 'speciesIdx' argument is not set (i.e. speciesIdx === undefined) return sum over all species. 
   Otherwise return the specific species value.
 
   Example:
@@ -13,21 +13,21 @@
 
     var name = 'my crop';
 
-    var myHeightFunction = function (species) {
+    var myHeightFunction = function (speciesIdx) {
       
       var height = 0;
-      if (species === undefined) { // return max. height
-        for (var i = 0; i < noSpecies; i++)
+      if (speciesIdx === undefined) { // return max. height
+        for (var i = 0; i < noOfspecies; i++)
           height = (heights[i] > height ? heights[i] : height);
       } else {
-        height = heights[species];
+        height = heights[speciesIdx];
       }
       return height;
     
     };
 
     return Object.create(CropGrowthAPI.prototype, {
-      name: { value: name },
+      name: { value: function () { return name; } },
       height: { value: myHeightFunction }
     });
 
@@ -64,205 +64,205 @@ CropGrowthAPI.prototype = {
   step: function (/* parameters */) {},
 
   /* 
-    name      [string]
-    species   [# or undefined] 
+    name        [string]
+    speciesIdx  [# or undefined] 
   */
-  name: function (species) { return 'unknown'; },
+  name: function (speciesIdx) { return 'unknown'; },
   
   /* isDying  [bool] */
   isDying: function () { return false; },
 
   /* 
-    height    [m] 
-    species   [# or undefined]
+    height      [m] 
+    speciesIdx  [# or undefined]
   */
-  height: function (species) { return 0; },
+  height: function (speciesIdx) { return 0; },
 
   /* 
-    kcFactor  [-] 
-    species   [# or undefined]
+    kcFactor    [-] 
+    speciesIdx  [# or undefined]
   */
-  kcFactor: function (species) { return 0; },
+  kcFactor: function (speciesIdx) { return 0; },
   
   /* 
     leafAreaIndex  [m2 m-2] 
-    species        [# or undefined]
+    speciesIdx     [# or undefined]
   */
-  leafAreaIndex: function (species) { return 0; },
+  leafAreaIndex: function (speciesIdx) { return 0; },
 
   /* 
     numberOfOrgans  [#] 
-    species         [# or undefined]
+    speciesIdx      [# or undefined]
   */
-  numberOfOrgans: function (species) { return 0; },
+  numberOfOrgans: function (speciesIdx) { return 0; },
   
   /* 
     soilCoverage    [m2 m-2] 
-    species         [# or undefined]
+    speciesIdx      [# or undefined]
   */
-  soilCoverage: function (species) { return 0; },
+  soilCoverage: function (speciesIdx) { return 0; },
 
   /* 
     stomataResistance [s m-1] 
-    species           [# or undefined]
+    speciesIdx        [# or undefined]
   */
-  stomataResistance: function (species) { return 0; },
+  stomataResistance: function (speciesIdx) { return 0; },
 
   /* numberOfSpecies  [#] */  
   numberOfSpecies: function () { return 1; },
 
   /* 
     rootingDepth  [#]              soillayer index 
-    species       [# or undefined]
+    speciesIdx    [# or undefined]
   */  
-  rootingDepth: function (species) { return 0; },
+  rootingDepth: function (speciesIdx) { return 0; },
 
   /* 
     nitrogenStress  [0-1]             1 = no stess 
-    species         [# or undefined]
+    speciesIdx      [# or undefined]
   */
-  nitrogenStress: function (species) { return 1; },
+  nitrogenStress: function (speciesIdx) { return 1; },
 
   /* 
     heatStress  [0-1]                 1 = no stess 
-    species     [# or undefined]
+    speciesIdx  [# or undefined]
   */
-  heatStress: function (species) { return 1; },
+  heatStress: function (speciesIdx) { return 1; },
 
   /* 
     oxygenStress  [0-1]               1 = no stess 
-    species       [# or undefined]
+    speciesIdx    [# or undefined]
   */
-  oxygenStress: function (species) { return 1; },
+  oxygenStress: function (speciesIdx) { return 1; },
 
   /* 
     waterStress  [0-1]                1 = no stess 
-    species      [# or undefined]
+    speciesIdx   [# or undefined]
   */
-  waterStress: function (species) { return 1; },
+  waterStress: function (speciesIdx) { return 1; },
 
   /* 
-    biomass   [kg (DM) ha-1]
-    organ     [# or undefined]
-    species   [# or undefined]
+    biomass     [kg (DM) ha-1]
+    organIdx    [# or undefined]
+    speciesIdx  [# or undefined]
   */
-  biomass: function (organ, species) { return 0; },
+  biomass: function (organIdx, speciesIdx) { return 0; },
   
   /* 
     growthIncrement   [kg (DM) ha-1]
-    organ             [# or undefined]
-    species           [# or undefined]
+    organIdx          [# or undefined]
+    speciesIdx        [# or undefined]
   */
-  growthIncrement: function (organ, species) { return 0; },
+  growthIncrement: function (organIdx, speciesIdx) { return 0; },
   
   /* 
     shootBiomass  [kg (DM) ha-1]
-    species       [# or undefined]
+    speciesIdx    [# or undefined]
   */
-  shootBiomass: function (species) { return 0; },
+  shootBiomass: function (speciesIdx) { return 0; },
   
   /* 
     shootBiomassNitrogenConcentration  [kg (N) kg-1 (DM)]
-    species                            [# or undefined]
+    speciesIdx                         [# or undefined]
   */
-  shootBiomassNitrogenConcentration: function (species) { return 0; },
+  shootBiomassNitrogenConcentration: function (speciesIdx) { return 0; },
 
   /* 
     rootBiomass   [kg (DM) ha-1]
-    species       [# or undefined]
+    speciesIdx    [# or undefined]
   */  
-  rootBiomass: function (species) { return 0; },
+  rootBiomass: function (speciesIdx) { return 0; },
 
   /* 
     rootNitrogenConcentration   [kg (N) kg-1 (DM)]
-    species                     [# or undefined]
+    speciesIdx                  [# or undefined]
   */  
-  rootNitrogenConcentration: function (species) { return 0; },
+  rootNitrogenConcentration: function (speciesIdx) { return 0; },
 
   /* 
     netPrimaryProduction   [kg (C) ha-1]
-    species                [# or undefined]
+    speciesIdx             [# or undefined]
   */  
-  netPrimaryProduction: function (species) { return 0; },
+  netPrimaryProduction: function (speciesIdx) { return 0; },
 
   /* 
     netPhotosynthate   [kg (CH2O) ha-1]
-    species             [# or undefined]
+    speciesIdx         [# or undefined]
   */  
-  netPhotosynthate: function (species) { return 0; },
+  netPhotosynthate: function (speciesIdx) { return 0; },
 
   /* 
-    grossPhotosynthate [kg (CH2O) ha-1]
-    species             [# or undefined]
+    grossPhotosynthate  [kg (CH2O) ha-1]
+    speciesIdx          [# or undefined]
   */  
-  grossPhotosynthate: function (species) { return 0; },
+  grossPhotosynthate: function (speciesIdx) { return 0; },
 
   /* 
     primaryYield  [kg (DM) ha-1]
-    species       [# or undefined]
+    speciesIdx    [# or undefined]
   */  
-  primaryYield: function (species) { return 0; },
+  primaryYield: function (speciesIdx) { return 0; },
 
   /* 
     primaryYieldFreshMatter  [kg (FM) ha-1]
-    species                  [# or undefined]
+    speciesIdx               [# or undefined]
   */  
-  primaryYieldFreshMatter: function (species) { return 0; },
+  primaryYieldFreshMatter: function (speciesIdx) { return 0; },
   
   /* 
     primaryYieldNitrogenConcentration   [kg (N) kg-1 (DM)]
-    species                             [# or undefined]
+    speciesIdx                          [# or undefined]
   */  
-  primaryYieldNitrogenConcentration: function (species) { return 0; },
+  primaryYieldNitrogenConcentration: function (speciesIdx) { return 0; },
   
   /* 
     primaryYieldNitrogenContent   [kg (N) ha-1]
-    species                       [# or undefined]
+    speciesIdx                    [# or undefined]
   */  
-  primaryYieldNitrogenContent: function (species) { return 0; },
+  primaryYieldNitrogenContent: function (speciesIdx) { return 0; },
 
   /* 
     primaryYieldCrudeProteinConcentration   [kg (P) kg-1 (DM)]
-    species                                 [# or undefined]
+    speciesIdx                              [# or undefined]
   */  
-  primaryYieldCrudeProteinConcentration: function (species) { return 0; },
+  primaryYieldCrudeProteinConcentration: function (speciesIdx) { return 0; },
 
   /* 
     secondaryYield  [kg (DM) ha-1]
-    species         [# or undefined]
+    speciesIdx      [# or undefined]
   */
-  secondaryYield: function (species) { return 0; },
+  secondaryYield: function (speciesIdx) { return 0; },
 
   /* 
     secondaryYieldNitrogenConcentration   [kg (N) kg-1 (DM)]
-    species                               [# or undefined]
+    speciesIdx                            [# or undefined]
   */  
-  secondaryYieldNitrogenConcentration: function (species) { return 0; },
+  secondaryYieldNitrogenConcentration: function (speciesIdx) { return 0; },
 
   /* 
     secondaryYieldNitrogenContent   [kg (N) ha-1]
-    species                         [# or undefined]
+    speciesIdx                      [# or undefined]
   */  
-  secondaryYieldNitrogenContent: function (species) { return 0; },
+  secondaryYieldNitrogenContent: function (speciesIdx) { return 0; },
 
   /* 
     residueBiomass      [kg (DM) ha-1]
     useSecondaryYields  [bool]
-    species             [# or undefined]
+    speciesIdx          [# or undefined]
   */ 
-  residueBiomass: function (useSecondaryYields, species) { return 0; },
+  residueBiomass: function (useSecondaryYields, speciesIdx) { return 0; },
 
   /* 
     residuesNitrogenConcentration   [kg (N) kg-1 (DM)]
-    species                         [# or undefined]
+    speciesIdx                      [# or undefined]
   */  
-  residuesNitrogenConcentration: function (species) { return 0; },
+  residuesNitrogenConcentration: function (speciesIdx) { return 0; },
 
   /* 
     residuesNitrogenContent   [kg (N) ha-1]
-    species                   [# or undefined]
+    speciesIdx                [# or undefined]
   */  
-  residuesNitrogenContent: function (species) { return 0; },
+  residuesNitrogenContent: function (speciesIdx) { return 0; },
 
   /* 
     referenceEvapotranspiration [mm]
@@ -281,18 +281,22 @@ CropGrowthAPI.prototype = {
 
   /* 
     remainingEvapotranspiration [mm]
+    speciesIdx                  [# or undefined]
   */  
-  remainingEvapotranspiration: function (species) { return 0; },
+  remainingEvapotranspiration: function (speciesIdx) { return 0; },
 
   /* 
-    transpiration [mm]
+    transpiration   [mm]
+    layerIdx        [# or undefined]
+    speciesIdx      [# or undefined]
   */  
-  transpiration: function (layer, species) { return 0; },
+  transpiration: function (layerIdx, speciesIdx) { return 0; },
 
   /* 
     potentialTranspiration [mm]
+    speciesIdx             [# or undefined]
   */  
-  potentialTranspiration: function (species) { return 0; },
+  potentialTranspiration: function (speciesIdx) { return 0; },
 
   /* 
     evaporatedFromIntercept [mm]
@@ -306,40 +310,40 @@ CropGrowthAPI.prototype = {
 
   /* 
     nitrogenUptake [kg (N) m-2]
-    layer          [# or undefined]
-    species        [# or undefined]
+    layerIdx       [# or undefined]
+    speciesIdx     [# or undefined]
   */  
-  nitrogenUptake: function (layer, species) { return 0; },
+  nitrogenUptake: function (layerIdx, speciesIdx) { return 0; },
 
   /* 
     potentialNitrogenUptake [kg (N) m-2]
-    species                 [# or undefined]
+    speciesIdx              [# or undefined]
   */  
-  potentialNitrogenUptake: function (species) { return 0; },
+  potentialNitrogenUptake: function (speciesIdx) { return 0; },
   
   /* 
     accumulatedNitrogenUptake [kg (N) m-2]
-    species                   [# or undefined]
+    speciesIdx                [# or undefined]
   */  
-  accumulatedNitrogenUptake: function (species) { return 0; },
+  accumulatedNitrogenUptake: function (speciesIdx) { return 0; },
 
   /* 
     currentTemperatureSum [d °C]
-    species               [# or undefined]
+    speciesIdx            [# or undefined]
   */  
-  currentTemperatureSum: function (species) { return 0; },
+  currentTemperatureSum: function (speciesIdx) { return 0; },
 
   /* 
     developmentalStage [#]
-    species            [# or undefined]
+    speciesIdx         [# or undefined]
   */  
-  developmentalStage: function (species) { return 1; },
+  developmentalStage: function (speciesIdx) { return 1; },
 
   /* 
     relativeTotalDevelopment  [-]
-    species                   [# or undefined]
+    speciesIdx                [# or undefined]
   */  
-  relativeTotalDevelopment: function (species) { return 0; },
+  relativeTotalDevelopment: function (speciesIdx) { return 0; },
 
   /* heatSumIrrigationEnd [°C] */  
   heatSumIrrigationEnd: function () { return 0; },
@@ -348,6 +352,6 @@ CropGrowthAPI.prototype = {
   heatSumIrrigationStart: function () { return 0; },
 
   /* array of AOM_Properties, per organic soil layer */
-  senescencedTissue: function () { return null; }
+  senescencedTissue: function () { return []; }
 
 };
