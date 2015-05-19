@@ -5,7 +5,7 @@ var ENVIRONMENT_IS_NODE = (typeof process === 'object' && typeof require === 'fu
   , ENVIRONMENT_IS_WORKER = (typeof importScripts === 'function')
   ;
 
-var DEBUG   = false
+var DEBUG   = false /* strip debug in minified code */
   , VERBOSE = true 
   ;
 
