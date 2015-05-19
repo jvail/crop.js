@@ -77,7 +77,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
     /* defaults */
     this.isLegume = false;
     this.isC4 = false;
-    this.type = 'generic grass';
+    this.name = 'generic grass';
 
     this.cons = {               //                             generic grass constants
         index: 0                // [#]                         index in mixture array at initialization (stored to restore orig. sorting)
@@ -270,14 +270,14 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
 
 
     /* initialze constants with pre-defined values by type; defaults to generic grass */
-    if (options && options.type) {
+    if (options && options.name) {
     
-      switch (options.type) {
+      switch (options.name) {
 
       case 'white clover':
 
         this.isLegume = true;
-        this.type = 'white clover';
+        this.name = 'white clover';
 
         this.cons.h_m = 0.5;
         this.cons.L_half = 2.0;
@@ -306,7 +306,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
       case 'red clover':
 
         this.isLegume = true;
-        this.type = 'red clover';
+        this.name = 'red clover';
 
         this.cons.h_m = 0.3;
         this.cons.L_half = 2.0;
@@ -335,7 +335,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
       case 'ryegrass':
 
         this.isLegume = false;
-        this.type = 'ryegrass';
+        this.name = 'ryegrass';
 
         this.cons.h_m = 0.5;
         this.cons.L_half = 2.0;
@@ -1521,22 +1521,23 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
   }; // Mixture end
 
   /* initialization of Species & Mixture */
-  var spec = [], dm = [];
+  var mix = [], dm = [];
   for (var s = 0; s < species.length; s++) {
 
-    spec.push(
+    mix.push(
       new Species({
-        type: species[s].type,
+        name: species[s].name,
         constants: species[s].constants
       })
     );
-    dm.push(species[s].dryMatter);
+    dm.push(species[s].dryMatterFraction);
 
-    spec[s].cons.index = s;
+    /* store the inital index because we we might want to sort the mixture array during the simulation */
+    mix[s].cons.index = s;
   
   }
 
-  this.mixture = new Mixture(spec, { DM: dm });
+  this.mixture = new Mixture(mix, { DM: dm });
   
   this.seedDate = function () {
     return this._seedDate;

@@ -1,11 +1,11 @@
 {
   "crops": [
     {
-      "name": "grassland",
+      "model": "grassland",
       "species": [
         {
-          "type": "pasture grass",
-          "dryMatter": 1,
+          "name": "pasture grass",
+          "dryMatterFraction": 1,
           "constants": {}
         }
       ],
