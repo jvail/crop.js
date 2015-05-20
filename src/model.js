@@ -1,7 +1,7 @@
 /*
   TODO:
 
-    - CO2 eq.?
+    - CO2 eq. source?
 
 */
 
@@ -353,30 +353,21 @@ var Model = function (env) {
   /* execute next production process step */
   var prodProcessStep = function (currentDate) {
 
-    /* if for some reason there are no applications (no nothing) in the production process: quit */
-    // if(!nextProductionProcessApplicationDate.isValid()) {
-    //   logger(MSG_ERROR, "start of production-process: " + currentProductionProcess.toString() + " is not valid");
-    //   return;
-    // }
-
-    logger(MSG_INFO, "next app-date: " + nextProductionProcessApplicationDate.toISODateString());
-
     /* is there something to apply today? */
-    if (nextProductionProcessApplicationDate.setHours(0,0,0,0) === currentDate.setHours(0,0,0,0)) {
+    if (nextProductionProcessApplicationDate.toISODateString() === currentDate.toISODateString()) {
       
       currentProductionProcess.apply(nextProductionProcessApplicationDate, this);
-      logger(MSG_INFO, 'applied at: ' + nextProductionProcessApplicationDate.toISODateString());
 
       /* get the next application date to wait for */
       nextProductionProcessApplicationDate = currentProductionProcess.nextDate(nextProductionProcessApplicationDate);
 
       /* if application date was not valid, we're (probably) at the end of the application list of this production 
          process -> go to the next one in the crop rotation */
-      if (!nextProductionProcessApplicationDate.isValid() /* && _currentCrop instanceof FieldCrop*/) {
+      if (!nextProductionProcessApplicationDate.isValid()) {
 
+        // TODO: keep in JS?
         /* to count the applied fertiliser for the next production process */
         resetFertiliserCounter();
-
         /* resets crop values for use in next year */
         currentProductionProcess.crop().reset();
 
@@ -385,14 +376,9 @@ var Model = function (env) {
         if (productionProcessIdx < env.cropRotation.length) {
           currentProductionProcess = env.cropRotation[productionProcessIdx];
           nextProductionProcessApplicationDate = currentProductionProcess.start();
-          logger(MSG_INFO, 'new valid next app-date: ' + nextProductionProcessApplicationDate.toISODateString());
+          logger(MSG_INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISODateString());
         }
 
-      } else {
-
-        if (nextProductionProcessApplicationDate.isValid())
-          logger(MSG_INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISODateString());
-      
       }
 
     }
@@ -400,11 +386,7 @@ var Model = function (env) {
   };     
 
 
-  /* 
-    Simulating the soil processes for one time step.
-
-    stepNo [#]  Number of current processed step
-  */
+  /* Simulating the soil processes for one time step. */
   var generalStep = function (
     julday,
     year,
@@ -546,15 +528,19 @@ var Model = function (env) {
 
   };
 
-  /* Returns atmospheric CO2 concentration for date [ppm] */
-  var CO2ForDate = function (year, julianday, leapYear) {
+  /* 
+    RCP 8.5—A scenario of comparatively high greenhouse gas emissions
+    
+    Returns atmospheric CO2 concentration for date [ppm] 
+  */
+  var CO2ForDate = function (year, doy, leapYear) {
 
     var co2 = 380, decimalDate = 0;
 
     if (leapYear)
-      decimalDate = year + (julianday / 366.0);
+      decimalDate = year + (doy / 366.0);
     else
-      decimalDate = year + (julianday / 365.0);
+      decimalDate = year + (doy / 365.0);
 
     co2 = 222.0 + exp(0.0119 * (decimalDate - 1580.0)) + 2.5 * sin((decimalDate - 0.5) / 0.1592);
 

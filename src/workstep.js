@@ -1,10 +1,8 @@
 /*
-  Changes
-    - Cutting.apply() 
-      prim. yield auskommentiert, p.yield immer 0.00, da organId 0 ????
-      store results
-    - var Cutting = function ()
-      + cropResult
+  TODO:
+
+    - remove workstep.apply ? why call from model: 
+      prod.proc.apply(ws) -> ws.apply and then again model.apply ?
 */
 
 var WorkStep = function (date) {

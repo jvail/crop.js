@@ -76,13 +76,6 @@ ProductionProcess::ProductionProcess(const ProductionProcess& other)
 }
 */
 
-var deepCloneAndClearWorksteps = function () {
-  // TODO:
-  // ProductionProcess clone(name(), CropPtr(new Crop(*(crop().get()))));
-  // clone._cropResult = PVResultPtr(new PVResult(*(_cropResult.get())));
-  // return clone;
-};
-
 var apply = function (date, model) {
   var p = _worksteps.equal_range(date);
   p.forEach(function (ws) {
