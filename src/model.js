@@ -40,55 +40,6 @@ var Model = function (env) {
     ;
 
 
-  var prodProcessStep = function (currentDate) {
-
-    /* if for some reason there are no applications (no nothing) in the production process: quit */
-    if(!nextProductionProcessApplicationDate.isValid()) {
-      // logger(MSG_ERROR, "start of production-process: " + currentProductionProcess.toString() + " is not valid");
-      return;
-    }
-
-    logger(MSG_INFO, "next app-date: " + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
-
-    /* is there something to apply today? */
-    if (nextProductionProcessApplicationDate.setHours(0,0,0,0) === currentDate.setHours(0,0,0,0)) {
-      
-      currentProductionProcess.apply(nextProductionProcessApplicationDate, this);
-      logger(MSG_INFO, 'applied at: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
-
-      /* get the next application date to wait for */
-      nextProductionProcessApplicationDate = currentProductionProcess.nextDate(nextProductionProcessApplicationDate);
-
-      /* if application date was not valid, we're (probably) at the end of the application list of this production 
-         process -> go to the next one in the crop rotation */
-      if (!nextProductionProcessApplicationDate.isValid() /* && _currentCrop instanceof FieldCrop*/) {
-
-        /* to count the applied fertiliser for the next production process */
-        resetFertiliserCounter();
-
-        /* resets crop values for use in next year */
-        currentProductionProcess.crop().reset();
-
-        productionProcessIdx++;
-        /* end of crop rotation? */ 
-        if (productionProcessIdx < env.cropRotation.length) {
-          currentProductionProcess = env.cropRotation[productionProcessIdx];
-          nextProductionProcessApplicationDate = currentProductionProcess.start();
-          logger(MSG_INFO, 'new valid next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
-        }
-
-      } else {
-
-        if (nextProductionProcessApplicationDate.isValid())
-          logger(MSG_INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
-      
-      }
-
-    }
-
-  };   
-
-
   /* not used anymore (see ModelCollection.run) */
   var run = function (progressCallbacks) {
 
@@ -101,7 +52,7 @@ var Model = function (env) {
       , totalNoDays = env.da.noOfStepsPossible()
       ;
 
-    logger(MSG_INFO, "next app-date: " + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+    logger(MSG_INFO, "next app-date: " + nextProductionProcessApplicationDate.toISODateString());
 
     /* if for some reason there are no applications (no nothing) in the production process: quit */
     if(!nextProductionProcessApplicationDate.isValid()) {
@@ -113,7 +64,7 @@ var Model = function (env) {
 
       currentDate.setDate(currentDate.getDate() + 1);
 
-      logger(MSG_INFO, currentDate.toISOString().split('T')[0]);
+      logger(MSG_INFO, currentDate.toISODateString());
       
       resetDailyCounter();
 
@@ -126,7 +77,7 @@ var Model = function (env) {
         
         /* apply everything to do at current day */
         currentProductionProcess.apply(nextProductionProcessApplicationDate, this);
-        logger(MSG_INFO, 'applied at: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+        logger(MSG_INFO, 'applied at: ' + nextProductionProcessApplicationDate.toISODateString());
 
         /* get the next application date to wait for */
         var prevPPApplicationDate = nextProductionProcessApplicationDate;
@@ -151,13 +102,13 @@ var Model = function (env) {
 
             currentProductionProcess = env.cropRotation[productionProcessIdx];
             nextProductionProcessApplicationDate = currentProductionProcess.start();
-            logger(MSG_INFO, 'new valid next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+            logger(MSG_INFO, 'new valid next app-date: ' + nextProductionProcessApplicationDate.toISODateString());
           
           }
 
         } else {
           if (nextProductionProcessApplicationDate.isValid())
-            logger(MSG_INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISOString().split('T')[0]);
+            logger(MSG_INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISODateString());
         }
 
       }
@@ -398,6 +349,55 @@ var Model = function (env) {
   var applyTillage = function (depth) {
     _soilColumn.applyTillage(depth);
   };
+
+  /* execute next production process step */
+  var prodProcessStep = function (currentDate) {
+
+    /* if for some reason there are no applications (no nothing) in the production process: quit */
+    // if(!nextProductionProcessApplicationDate.isValid()) {
+    //   logger(MSG_ERROR, "start of production-process: " + currentProductionProcess.toString() + " is not valid");
+    //   return;
+    // }
+
+    logger(MSG_INFO, "next app-date: " + nextProductionProcessApplicationDate.toISODateString());
+
+    /* is there something to apply today? */
+    if (nextProductionProcessApplicationDate.setHours(0,0,0,0) === currentDate.setHours(0,0,0,0)) {
+      
+      currentProductionProcess.apply(nextProductionProcessApplicationDate, this);
+      logger(MSG_INFO, 'applied at: ' + nextProductionProcessApplicationDate.toISODateString());
+
+      /* get the next application date to wait for */
+      nextProductionProcessApplicationDate = currentProductionProcess.nextDate(nextProductionProcessApplicationDate);
+
+      /* if application date was not valid, we're (probably) at the end of the application list of this production 
+         process -> go to the next one in the crop rotation */
+      if (!nextProductionProcessApplicationDate.isValid() /* && _currentCrop instanceof FieldCrop*/) {
+
+        /* to count the applied fertiliser for the next production process */
+        resetFertiliserCounter();
+
+        /* resets crop values for use in next year */
+        currentProductionProcess.crop().reset();
+
+        productionProcessIdx++;
+        /* end of crop rotation? */ 
+        if (productionProcessIdx < env.cropRotation.length) {
+          currentProductionProcess = env.cropRotation[productionProcessIdx];
+          nextProductionProcessApplicationDate = currentProductionProcess.start();
+          logger(MSG_INFO, 'new valid next app-date: ' + nextProductionProcessApplicationDate.toISODateString());
+        }
+
+      } else {
+
+        if (nextProductionProcessApplicationDate.isValid())
+          logger(MSG_INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISODateString());
+      
+      }
+
+    }
+
+  };     
 
 
   /* 

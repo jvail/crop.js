@@ -20,7 +20,7 @@ var ModelCollection = function (weather) {
     var weather = this.weather
       , totalNoDays = weather.noOfStepsPossible()
       , currentDate = weather.startDate()
-      , currentDateString = currentDate.toISOString().split('T')[0]
+      , currentDateString = currentDate.toISODateString()
       , leapYear = currentDate.isLeapYear()
       , year = year = currentDate.getFullYear()
       , dayOfSimulation = 0
@@ -134,7 +134,7 @@ var ModelCollection = function (weather) {
         callbacks[c](dayOfSimulation, currentDateString, this);
 
       currentDate.setDate(currentDate.getDate() + 1);
-      currentDateString = currentDate.toISOString().split('T')[0];
+      currentDateString = currentDate.toISODateString();
 
     } // for each day
 

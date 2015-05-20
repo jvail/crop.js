@@ -44,7 +44,7 @@ var Seed = function (date, crop) {
   };
 
   this.apply = function (model) {
-    logger(MSG_INFO, "seeding crop: " + this._crop.name() + " at: " + this.date().toISOString().split('T')[0]);
+    logger(MSG_INFO, "seeding crop: " + this._crop.name() + " at: " + this.date().toISODateString());
     model.seedCrop(this._crop);
   };
 

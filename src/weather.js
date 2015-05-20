@@ -11,9 +11,9 @@ var Weather = function (startDate, endDate) {
   this.setData = function (data) {
     
     this._data = data;
-    this._offset = data[WEATHER.ISODATESTRING].indexOf(this._startDate.toISOString().split('T')[0]);
+    this._offset = data[WEATHER.ISODATESTRING].indexOf(this._startDate.toISODateString());
 
-    var endIdx = data[WEATHER.ISODATESTRING].indexOf(this._endDate.toISOString().split('T')[0]);
+    var endIdx = data[WEATHER.ISODATESTRING].indexOf(this._endDate.toISODateString());
     
     if (this._offset < 0) {
       this._numberOfSteps = 0;
@@ -23,7 +23,7 @@ var Weather = function (startDate, endDate) {
     if (endIdx < 0) {
       endIdx = this._data[WEATHER.ISODATESTRING].length - 1;
       this._endDate = new Date(Date.parse(this._data[WEATHER.ISODATESTRING][endIdx]));
-      logger(MSG_WARN, 'End date not found: end date adjusted to ' + this._endDate.toISOString().split('T')[0]);
+      logger(MSG_WARN, 'End date not found: end date adjusted to ' + this._endDate.toISODateString());
     }
 
     for (var i = 0; i < this._numberOfSteps; i++)
