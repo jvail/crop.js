@@ -2813,7 +2813,6 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
 
   return Object.create(CropGrowthAPI.prototype, {
     step: { value: calculateCropGrowthStep },
-    isDying: { value: isDying },
     name: { value: get_CropName },
     height: { value: get_CropHeight },
     kcFactor: { value: get_KcFactor },

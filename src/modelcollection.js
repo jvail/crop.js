@@ -69,7 +69,8 @@ var ModelCollection = function (weather) {
       daylength = weather.dataForTimestep(WEATHER.DAYLENGTH, dayOfSimulation) * SEC_PER_HOUR;
       R_a = weather.dataForTimestep(WEATHER.EXRAD, dayOfSimulation);
 
-      /* update vegetation period: avg. temperature for five consecutive days below or above 5 °C */
+      /* update vegetation period: avg. temperature for five consecutive days below or above 5 °C 
+         TODO: use latitude and min. veg. length?  */
       if (dayOfSimulation > 4 && !isVegPeriod && 
         weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation) > 5 && 
         weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 1) > 5 && 

@@ -89,6 +89,7 @@ var Model = function (env) {
   };   
 
 
+  /* not used anymore (see ModelCollection.run) */
   var run = function (progressCallbacks) {
 
     if (env.cropRotation.length === 0) {
@@ -117,8 +118,8 @@ var Model = function (env) {
       resetDailyCounter();
 
       /* test if model's crop has been dying in previous step if yes, it will be incorporated into soil */
-      if (that._currentCropGrowth && that._currentCropGrowth.isDying())
-        incorporateCurrentCrop();
+      // if (that._currentCropGrowth && that._currentCropGrowth.isDying())
+      //   incorporateCurrentCrop();
 
       /* there's something to apply at this day */
       if (nextProductionProcessApplicationDate.setHours(0,0,0,0) === currentDate.setHours(0,0,0,0)) {

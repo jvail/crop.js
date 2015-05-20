@@ -68,9 +68,6 @@ CropGrowthAPI.prototype = {
     speciesIdx  [# or undefined] 
   */
   name: function (speciesIdx) { return 'unknown'; },
-  
-  /* isDying  [bool] */
-  isDying: function () { return false; },
 
   /* 
     height      [m] 
