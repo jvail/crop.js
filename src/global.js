@@ -5,6 +5,8 @@ var ENVIRONMENT_IS_NODE = (typeof process === 'object' && typeof require === 'fu
   , ENVIRONMENT_IS_WORKER = (typeof importScripts === 'function')
   ;
 
+var MISSING_VALUE = -9999;
+
 var DEBUG   = false /* strip debug in minified code */
   , VERBOSE = true 
   ;

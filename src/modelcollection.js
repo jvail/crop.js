@@ -59,6 +59,7 @@ var ModelCollection = function (weather) {
       tmax = weather.dataForTimestep(WEATHER.TMAX, dayOfSimulation);
       tmin = weather.dataForTimestep(WEATHER.TMIN, dayOfSimulation);
       globrad = weather.dataForTimestep(WEATHER.GLOBRAD, dayOfSimulation);
+      // TODO: set to MISSING_VALUE in Weather
       /* test if data for sunhours are available; if not, value is set to -1.0 */;
       sunhours = weather.isAvailable(WEATHER.SUNHOURS) ? weather.dataForTimestep(WEATHER.SUNHOURS, dayOfSimulation) : -1.0;
       /* test if data for relhumid are available; if not, value is set to -1.0 */;
