@@ -32,6 +32,7 @@
     calculations.
   - For consistency NH4 uptake was removed (implemented in SGS) because it is not implemented in MONICA's generic crops.
   - Annual species not implemented
+  - New tissue composition if nitrogen uptake is not sufficient to satisfy 'demand'. 
 
 
   TODO
@@ -738,7 +739,9 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
               The idea here is that if N is limited the sc and nc fractions are increased (f_sc += 0.8 * (f_pn_old - f_pn)).
               It is unclear if this is a good representation of the underlying physiology but the result is satisfying in terms
               of typical observations in pastures during summer: high growth rates -> insufficient N uptake -> lower protein content -> 
-              higher nc and ndf content */ 
+              higher nc and ndf content.
+              This has been implemented because it is not entirly clear in the SGS documentation what happens with the composition of 
+              new tissue if nitrogen uptake is not sufficient to satisfy 'demand'.*/ 
 
             // recalculate C_assimilated with f_pn exactly depleting N_up_pool; sc is fixed
             // f_pn = (N(available) / (Y(f_sc,f_pn) * P)) * (fC_pn / fN_pn) -> solved for f_pn
