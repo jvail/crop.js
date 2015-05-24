@@ -1,4 +1,4 @@
-
+// TODO: add initial plantDryWeight
 
 var GenericCrop = function (name) {
 

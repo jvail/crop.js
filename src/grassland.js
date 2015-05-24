@@ -2,21 +2,22 @@
   {
     species: [
       {
-        type: 'generic grass',
+        name: 'generic grass',
+        dryMatterFraction: 0.6,
         constants: { 
           h_m: 0.5, 
-          L_half: 2.0 
+          σ: 20 
         } 
-      }
-    , {
-        type: 'generic grass',
+      },
+      {
+        name: 'generic grass',
+        dryMatterFraction: 0.4,
         constants: { 
           h_m: 0.4, 
-          L_half: 2.0 
+          σ: 25 
         } 
       }
-    ],
-    DM: [] inital fraction of total dry matter
+    ]
   }
 
   LICENSE
@@ -45,12 +46,11 @@
     - sort out DM vs OM
 */
 
-var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
+var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
   
   this.mixture = null;
   this._seedDate = seedDate;
   this._harvestDates = harvestDates;
-  this.isPermanentGrassland = isPermanentGrassland;
 
   var _accumulatedETa = 0.0
     , _appliedAmountIrrigation = 0
@@ -79,11 +79,11 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
     this.isC4 = false;
     this.name = 'generic grass';
 
-    this.cons = {               //                             generic grass constants
+    this.cons = {               // generic grass constants
         index: 0                // [#]                         index in mixture array at initialization (stored to restore orig. sorting)
       , f_cover: 1              // [m2 m-2]                    coverage (scales height to a full m2)
       , h_m: 0.5                // [m]                         maximum height 
-      , L_half: 2.0             // [m2 (leaf) m-2 (ground)]    leaf area at half h_m
+      , L_half: 2.0             // [m2 (leaf) m-2 (ground)]    leaf area at half h_m (unused)
       , σ: 20.0                 // [m2 (leaf) kg-1 (DM)]       specific leaf area 
       , d_r_h: 0.15             // [m]                         depth at 50% root mass
       , d_r_mx: 0.4             // [m]                         maximum root depth
@@ -100,8 +100,10 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
       , T_mn_low: 0             // [°C]                        critical temperature at which the low-temperature stress is maximum
       , T_mx_high: 35           // [°C]                        critical temperature at which the high-temperature stress is maximum
       , T_mx_low: 30            // [°C]                        critical temperature above which high-temperature stress will occur
-      , T_sum_low: 100          // [°C]               low temperature stress recovery temperature sum
-      , T_sum_high: 100          // [°C]              high temperature stress recovery temperature sum
+      , T_sum_low: 100          // [°C]                        low temperature stress recovery temperature sum
+      , T_sum_high: 100         // [°C]                        high temperature stress recovery temperature sum
+      , f_GtoD: 0               // [kg (C) kg-1 (C)]           fraction net photosynthates to dormancy pool
+      , f_DtoG: 0               // [kg (C) kg-1 (C)]           fraction carbon from dormancy pool to growth
       , photo: {                // photosynthesis
             T_ref: 20           // [°C]                        reference temperature
           , T_mn: 3             // [°C]                        minimum temperature 
@@ -138,11 +140,11 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
       , fAsh_dm_l_ref: 0.09     // [kg (ash) kg-1 (DM)]       reference ash content leaf
       , fAsh_dm_s_ref: 0.04     // [kg (ash) kg-1 (DM)]       reference ash content stem
       , fAsh_dm_r_ref: 0.04     // [kg (ash) kg-1 (DM)]       reference ash content root
-      , fH2O_fm_l_ref: 0.80     // [kg (H20) kg-1 (FM)]       reference water content leaf
+      , fH2O_fm_l_ref: 0.80     // [kg (H20) kg-1 (FM)]       reference water content leaf (TODO: implement DM content?)
       , fH2O_fm_s_ref: 0.70     // [kg (H20) kg-1 (FM)]       reference water content stem
     };
 
-    this.vars = {               //                    variables
+    this.vars = {               // variables
         GDD: 0                  // [°C day]           growing degree days
       , Ω_N: 1.0                // [0-1]              growth limiting factor nitrogen (1 = no stress)
       , Ω_water: 1.0            // [0-1]              growth limiting factor water (1 = no stress)
@@ -200,8 +202,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
           , live_s_3: 0.0
           , dead_s:   0.0
           , r:        0.0
-        }
-                        
+        }       
       , dSC: {                   // [kg (C) m-2]      daily structural carbon hydrate growth pool
             live_l_1: 0.0
           , live_l_2: 0.0
@@ -213,7 +214,6 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
           , dead_s:   0.0
           , r:        0.0
         }
-        /*  */
       , NC: {                   // [kg (C) m-2]       non-structural carbon hydrate pool  
             l: 0.0
           , dead_l: 0.0
@@ -262,14 +262,16 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
           , nc: 0.0 
         } 
       , Λ_r: {                  // [kg (C) m-2]       senecenced root 
-            sc: 0
-          , pn: 0
+            sc: 0.0
+          , pn: 0.0
           , nc: 0.0 
         }
+      , D_nc:  0.0              // [kg (C) m-2]       dormancy (winter, drought?) non-structural carbon hydrate pool 
+      , dD_nc: 0.0              // [kg (C) m-2]       daily dormancy (winter, drought?) non-structural carbon hydrate pool 
     };
 
 
-    /* initialze constants with pre-defined values by type; defaults to generic grass */
+    /* initialze constants with pre-defined values by name; defaults to generic grass */
     if (options && options.name) {
     
       switch (options.name) {
@@ -279,7 +281,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
         this.isLegume = true;
         this.name = 'white clover';
 
-        this.cons.h_m = 0.5;
+        this.cons.h_m = 0.15;
         this.cons.L_half = 2.0;
         this.cons.σ = 36.8; // Topp (2004)
 
@@ -308,7 +310,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
         this.isLegume = true;
         this.name = 'red clover';
 
-        this.cons.h_m = 0.3;
+        this.cons.h_m = 0.30;
         this.cons.L_half = 2.0;
         this.cons.σ = 24.0; // Topp (2004)
 
@@ -337,7 +339,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
         this.isLegume = false;
         this.name = 'ryegrass';
 
-        this.cons.h_m = 0.5;
+        this.cons.h_m = 0.25;
         this.cons.L_half = 2.0;
         this.cons.σ = 25.8; // Topp (2004)
 
@@ -367,8 +369,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
     /* overwrite initial values with provided (optional) configuration values */
     if (options) {
 
-      this.isLegume = options.isLegume || false;
-      this.isC4 = options.isC4 || false;
+      // this.isC4 = options.isC4 || false;
 
       if (options.hasOwnProperty('constants')) {
         var constants = options.constants;
@@ -603,7 +604,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
       regressions based on feed table data from Finland (MTT) and France (Feedipedia) and data from an Austrian feed
       laboratory (Rosenau). legumes N = 31, R² = 0.73, grass N = 46, R² = 0.78
     */
-    this.CF_shoot= function () {
+    this.CF_shoot = function () {
 
       var SC = that.vars.SC;
       var NDF = 1e3 * ( 
@@ -791,6 +792,13 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
     };
 
 
+    this.OM_shoot = function () {
+
+      return that.OM_leaf() + that.OM_stem();
+
+    };
+
+
     /* live leaf [kg (DM) m-2] */
     this.DM_live_leaf = function () {
 
@@ -825,6 +833,22 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
         (NC.l + NC.dead_l) / fC_nc +
         (PN.l + PN.dead_l) / fC_pn +
         AH.l + AH.dead_l
+      );  
+
+    };
+
+    this.OM_leaf = function () {
+
+      var vars = that.vars
+        , SC = vars.SC
+        , NC = vars.NC
+        , PN = vars.PN
+        ;
+
+      return (
+        (SC.live_l_1 + SC.live_l_2 + SC.live_l_3 + SC.dead_l) / fC_sc + 
+        (NC.l + NC.dead_l) / fC_nc +
+        (PN.l + PN.dead_l) / fC_pn
       );  
 
     };
@@ -886,6 +910,22 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
 
     };
 
+    this.OM_stem = function () {
+
+      var vars = that.vars
+        , SC = vars.SC
+        , NC = vars.NC
+        , PN = vars.PN
+        ;
+
+      return (
+        (SC.live_s_1 + SC.live_s_2 + SC.live_s_3 + SC.dead_s) / fC_sc + 
+        (NC.s + NC.dead_s) / fC_nc +
+        (PN.s + PN.dead_s) / fC_pn
+      ); 
+
+    };
+
 
     this.DM_dead_stem = function () {
 
@@ -936,7 +976,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
     };
 
 
-    /* (3.101) h [m] height relationship between canopy height and leaf area */
+    /* (3.101) h [m] height relationship between canopy height and leaf area (unused) */
     this.h_ = function () {
 
       var h = 0
@@ -954,7 +994,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
 
     };
 
-    /* */
+    /* h [m] height relationship between canopy height and leaf area */
     this.h = function () {
 
       var h = 0
@@ -966,7 +1006,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
         ;
 
       h = (0.01 * h_m) / (0.01 + (h_m - 0.01) * exp(-a * L));
-    
+
       return h;
 
     };
@@ -1029,7 +1069,7 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
       , leaf_share = 0.7
       , stem_share = 1 - leaf_share
       , DM_root = 1000 * 1e-4 // kg ha-1 to kg m-2
-      , DM_shoot = 1000 * 1e-4 // kg ha-1 to kg m-2
+      , DM_shoot = (plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
       , DM = []
       ;
   
@@ -1044,13 +1084,6 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
       mixture.homogeneity = config.hasOwnProperty('homogeneity') ? config.homogeneity : 0.75;
     else
       mixture.homogeneity = 1;
-
-    /*Vergleich der Biomasseproduktion bei Schnittnutzung und Kurzrasenweide
-      unter biologischen Bedingungen im ostalpinen Raum*/;
-    if (config && config.DM_shoot) 
-      DM_shoot = config.DM_shoot * 1e-4 // kg ha-1 to kg m-2
-    if (config && config.DM_root) 
-      DM_root = 1000 * 1e-4 // kg ha-1 to kg m-2
 
     // iterate over species and initialize pools
     for (var s = 0, ps = species.length; s < ps; s++) {
@@ -1524,17 +1557,18 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
   var mix = [], dm = [];
   for (var s = 0; s < species.length; s++) {
 
-    mix.push(
-      new Species({
-        name: species[s].name,
-        constants: species[s].constants
-      })
-    );
-    dm.push(species[s].dryMatterFraction);
+    if (species[s].dryMatterFraction > 0) { // TODO: fix skiped indices
+      mix.push(
+        new Species({
+          name: species[s].name,
+          constants: species[s].constants
+        })
+      );      
+      dm.push(species[s].dryMatterFraction);
+      /* store the inital index because we we might want to sort the mixture array during the simulation */
+      mix[mix.length - 1].cons.index = mix.length - 1;
+    }
 
-    /* store the inital index because we we might want to sort the mixture array during the simulation */
-    mix[s].cons.index = s;
-  
   }
 
   this.mixture = new Mixture(mix, { DM: dm });
@@ -1553,6 +1587,9 @@ var Grass = function (seedDate, harvestDates, species, isPermanentGrassland) {
   };
   this.isValid = function () {
     return true;
+  };
+  this.reset = function () {
+
   };
   this.type = 'grassland';
 };

@@ -81,7 +81,7 @@ var GeneralParameters = function () {
   this.pc_NitrogenResponseOn = true;
   this.pc_WaterDeficitResponseOn = true;
   this.pc_LowTemperatureStressResponseOn = false;
-  this.pc_HighTemperatureStressResponseOn = true;
+  this.pc_HighTemperatureStressResponseOn = false;
   this.pc_EmergenceFloodingControlOn = false;
   this.pc_EmergenceMoistureControlOn = false;
 

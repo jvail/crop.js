@@ -292,23 +292,23 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       var isPermanentGrassland = (isGrassland && cs === 1 && (crop.sowingDate === null || crop.sowingDate === undefined));
 
       if (isGrassland) {
-        /* we can not start at day 0 and therefor start at day 0 + 2 since model's general step is executed *after* cropStep */
-        var sd_ = new Date(startDate.toISOString());
-        sd_.setDate(sd_.getDate() + 2);
-        var sd = getValue(crop, 'sowingDate', sd_);
+        /* if no sowing date provided: we can not start at day 0 and therefor start at day 0 + 1 since model's general step is executed *after* cropStep */
+        var sd = getValue(crop, 'sowingDate', new Date(new Date(startDate).setDate(startDate.getDate() + 1)));
         var hds = getValue(crop, 'harvestDates', []);
+        debug(sd);
+        debug(startDate);
       } else {
         var sd = new Date(Date.parse(crop.sowingDate));
         var hd = new Date(Date.parse(crop.finalHarvestDate));
         if (!sd.isValid() || !hd.isValid()) {
           ok = false;
-          logger(MSG_ERROR, 'Invalid sowing or harvest date in ' + crop.name);
+          logger(MSG_ERROR, 'Invalid sowing or harvest date in ' + crop.species[0].name);
         }
       }
 
       if (isGrassland) {
 
-        var grass = new Grass(sd, hds, crop.species, isPermanentGrassland);
+        var grass = new Grass(sd, hds, crop.plantDryWeight, crop.species);
         cropRotation[c] = new ProductionProcess('grassland', grass);
 
       } else {
@@ -316,7 +316,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
         /* choose the first (and only) name in species array (mixtures not implemented in generic crop model) */
         var genericCrop = new GenericCrop(crop.species[0].name);
         genericCrop.setSeedAndHarvestDate(sd, hd);
-        cropRotation[c] = new ProductionProcess(crop.name, genericCrop);
+        cropRotation[c] = new ProductionProcess(crop.species[0].name, genericCrop);
       
       }
 
@@ -365,7 +365,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
         }
       }
 
-      logger(MSG_INFO, 'Fetched crop ' + c + ': ' + crop.name);
+      logger(MSG_INFO, 'Fetched crop ' + c + ': ' + JSON.stringify(crop.species, null, 2));
 
     }
 

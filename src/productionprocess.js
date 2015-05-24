@@ -17,7 +17,7 @@ var that = this
   _worksteps.equal_range = function (date) {
   var ws = [];
   this.forEach(function (w, i) {
-    if (w.date().setHours(0,0,0,0) === date.setHours(0,0,0,0)) 
+    if (w.date().toISODateString() === date.toISODateString()) 
       ws.push(w)
   });
   return ws;
@@ -25,7 +25,7 @@ var that = this
 
 _worksteps.upper_bound = function (date) {
   for (var i = 0, is = this.length; i < is; i++) {
-    if (this[i].date().setHours(0,0,0,0) > date.setHours(0,0,0,0))
+    if (this[i].date() > date)
       return this[i];
   }
   return null;
@@ -43,12 +43,10 @@ var addApplication = function (app) {
 
 };
 
-if ((crop.seedDate().setHours(0,0,0,0) != new Date(1951, 0, 1).setHours(0,0,0,0)) && (crop.seedDate().setHours(0,0,0,0) != new Date(0,0,0).setHours(0,0,0,0)))
-  addApplication(new Seed(crop.seedDate(), crop));
-if ((crop.harvestDate().isValid() && crop.harvestDate().setHours(0,0,0,0) != new Date(1951, 0, 1).setHours(0,0,0,0)) && (crop.harvestDate().setHours(0,0,0,0) != new Date(0,0,0).setHours(0,0,0,0)))
-{
-  addApplication(new Harvest(crop.harvestDate(), crop , _cropResult));
-}
+addApplication(new Seed(crop.seedDate(), crop));
+debug('pp', crop.seedDate());
+
+addApplication(new Harvest(crop.harvestDate(), crop , _cropResult));
 
 var cuttingDates = crop.getCuttingDates();
 var size = cuttingDates.length;
@@ -91,7 +89,7 @@ var nextDate = function (date) {
 var getWorkstep = function (date) {
   var ws_ = null;
   _worksteps.forEach(function (ws) {
-    if (ws.date().setHours(0, 0, 0, 0) === date.setHours(0, 0, 0, 0))
+    if (ws.date().toISODateString() === date.toISODateString())
       ws_ = ws;
   });
   return ws_;
@@ -124,7 +122,6 @@ var toString = function () {
 
 return {
   getWorkstep: getWorkstep,
-  deepCloneAndClearWorksteps: deepCloneAndClearWorksteps,
   addApplication: addApplication,
   apply: apply,
   nextDate: nextDate,

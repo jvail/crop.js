@@ -140,8 +140,9 @@ Date.prototype.isLeapYear = function () {
   return (ceil((new Date(this.getFullYear() + 1, 0, 1) - new Date(this.getFullYear(), 0, 1)) / MS_PER_DAY) === 366); 
 };
 
-Date.prototype.toISODateString = function () { 
-  return this.toDateString().substr(0, 10);
+Date.prototype.toISODateString = function () {
+  if (this.isValid())
+    return this.toISOString().substr(0, 10);
 };
 
 /* log function */

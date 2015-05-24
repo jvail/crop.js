@@ -39,6 +39,8 @@ var Model = function (env) {
     , nextProductionProcessApplicationDate = currentProductionProcess.start()
     ;
 
+    debug(currentProductionProcess);
+
 
   /* not used anymore (see ModelCollection.run) */
   var run = function (progressCallbacks) {
@@ -484,10 +486,10 @@ var Model = function (env) {
       return;
 
     /* test if model's crop has been dying in previous step if yes, it will be incorporated into soil */
-    if (that._currentCropGrowth.isDying()) {
-      incorporateCurrentCrop();
-      return;
-    }
+    // if (that._currentCropGrowth.isDying()) {
+    //   incorporateCurrentCrop();
+    //   return;
+    // }
 
     p_daysWithCrop++;
 

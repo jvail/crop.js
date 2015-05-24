@@ -31,10 +31,13 @@ var WorkStep = function (date) {
 
 var Seed = function (date, crop) {
 
+  debug('Seed', date);
+
   WorkStep.call(this, date);
 
   this._date = date;
   this._crop = crop;
+  debug('Seed', this._date);
 
   this.setDate = function (date) {
     this._date = date;
@@ -42,7 +45,8 @@ var Seed = function (date, crop) {
   };
 
   this.apply = function (model) {
-    logger(MSG_INFO, "seeding crop: " + this._crop.name() + " at: " + this.date().toISODateString());
+    debug('Seed.apply', this._date);
+    logger(MSG_INFO, "seeding crop: " + this._crop.name() + " at: " + this._date.toISODateString());
     model.seedCrop(this._crop);
   };
 
@@ -51,7 +55,7 @@ var Seed = function (date, crop) {
   };
 
   this.toString = function () {
-    return "seeding at: " + this.date().toString() + " crop: " + this._crop.toString();
+    return "seeding at: " + this._date.toString() + " crop: " + this._crop.toString();
   };
 
 };
