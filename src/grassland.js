@@ -1,25 +1,4 @@
 /*
-  {
-    species: [
-      {
-        name: 'generic grass',
-        dryMatterFraction: 0.6,
-        constants: { 
-          h_m: 0.5, 
-          σ: 20 
-        } 
-      },
-      {
-        name: 'generic grass',
-        dryMatterFraction: 0.4,
-        constants: { 
-          h_m: 0.4, 
-          σ: 25 
-        } 
-      }
-    ]
-  }
-
   LICENSE
 
   The MIT License (MIT)
@@ -46,7 +25,7 @@
     - sort out DM vs OM
 */
 
-var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
+var Grass = function (seedDate, harvestDates, species, options) {
   
   this.mixture = null;
   this._seedDate = seedDate;
@@ -81,8 +60,8 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
 
     this.cons = {               // generic grass constants
         index: 0                // [#]                         index in mixture array at initialization (stored to restore orig. sorting)
-      , f_cover: 1              // [m2 m-2]                    coverage (scales height to a full m2)
-      , h_m: 0.5                // [m]                         maximum height 
+      , f_cover: 1              // [m2 m-2]                    coverage (scales height to a full m2) (unused)
+      , h_m: 0.5                // [m]                         maximum height (unused) 
       , L_half: 2.0             // [m2 (leaf) m-2 (ground)]    leaf area at half h_m (unused)
       , σ: 20.0                 // [m2 (leaf) kg-1 (DM)]       specific leaf area 
       , d_r_h: 0.15             // [m]                         depth at 50% root mass
@@ -104,6 +83,7 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
       , T_sum_high: 100         // [°C]                        high temperature stress recovery temperature sum
       , f_GtoD: 0               // [kg (C) kg-1 (C)]           fraction net photosynthates to dormancy pool
       , f_DtoG: 0               // [kg (C) kg-1 (C)]           fraction carbon from dormancy pool to growth
+      , ξ_N: 200
       , photo: {                // photosynthesis
             T_ref: 20           // [°C]                        reference temperature
           , T_mn: 3             // [°C]                        minimum temperature 
@@ -130,24 +110,24 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
           , ρ_l_max: 0.7        // [-]                         fraction partitioned to leaf
           , GDD_flower: 500     // [C° d]                      growing degree days till flowering
         }
-       /* TODO: remove or rename: */
       , N_leaf: {
-            opt: 0.04 / 0.45
+            opt: 0.035 / 0.45
           , max: 0.045 / 0.45   // [kg (N) kg-1 (C)] AgPasture: 0.05 / 0.4 (NcleafOpt as fraction / C in DM as fraction)
-          , ref: 0.04 / 0.45
+          , ref: 0.035 / 0.45
        }
       , τ_veg: 200
       , fAsh_dm_l_ref: 0.09     // [kg (ash) kg-1 (DM)]       reference ash content leaf
       , fAsh_dm_s_ref: 0.04     // [kg (ash) kg-1 (DM)]       reference ash content stem
       , fAsh_dm_r_ref: 0.04     // [kg (ash) kg-1 (DM)]       reference ash content root
-      , fH2O_fm_l_ref: 0.80     // [kg (H20) kg-1 (FM)]       reference water content leaf (TODO: implement DM content?)
-      , fH2O_fm_s_ref: 0.70     // [kg (H20) kg-1 (FM)]       reference water content stem
+      , fH2O_fm_l_ref: 0.80     // [kg (H20) kg-1 (FM)]       reference water content leaf (unused)
+      , fH2O_fm_s_ref: 0.70     // [kg (H20) kg-1 (FM)]       reference water content stem (unused)
     };
 
     this.vars = {               // variables
         GDD: 0                  // [°C day]           growing degree days
       , Ω_N: 1.0                // [0-1]              growth limiting factor nitrogen (1 = no stress)
       , Ω_water: 1.0            // [0-1]              growth limiting factor water (1 = no stress)
+      , GLF: 1
       , τ_T_low: 1.0            // [0-1]              growth limiting factor low temperature (1 = no stress)     
       , τ_T_high: 1.0           // [0-1]              growth limiting factor high temperature (1 = no stress)  
       , ζ_T_low: 0.0            // [0-1]              low temperature stress recovery coefficient 
@@ -164,7 +144,7 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
       , Y_stem: 0.75            // [-]                stem growth efficiency
       , Y_root: 0.75            // [-]                root growth efficiency
       , d_r: 1.0                // [m]                root depth
-      , τ: 0                    // [days]             no. of days in pheno. phase (e.g. vegetative) TODO: remove?
+      , τ: 0                    // [days]             no. of days in pheno. phase (e.g. vegetative) (unused)
       , k_sum: 0                // [-]                pheno. phase developement (0-1)
       , N_up: 0                 // [kg (N) m-2]       daily N uptake
       , N_fix: 0                // [kg (N) m-2]       daily N fixation
@@ -266,8 +246,8 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
           , pn: 0.0
           , nc: 0.0 
         }
-      , D_nc:  0.0              // [kg (C) m-2]       dormancy (winter, drought?) non-structural carbon hydrate pool 
-      , dD_nc: 0.0              // [kg (C) m-2]       daily dormancy (winter, drought?) non-structural carbon hydrate pool 
+      , D_nc:  0.0              // [kg (C) m-2]       dormancy (winter, drought?) non-structural carbon hydrate pool (unused)
+      , dD_nc: 0.0              // [kg (C) m-2]       daily dormancy (winter, drought?) non-structural carbon hydrate pool (unused)
     };
 
 
@@ -281,17 +261,19 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
         this.isLegume = true;
         this.name = 'white clover';
 
-        this.cons.h_m = 0.15;
-        this.cons.L_half = 2.0;
-        this.cons.σ = 36.8; // Topp (2004)
+        // this.cons.h_m = 0.15;
+        // this.cons.L_half = 2.0;
+        this.cons.σ = 20;
+
+        this.cons.d_r_h = 0.20;
+        this.cons.d_r_mx = 0.50;
 
         /* photosysthesis */
-        this.cons.photo.T_ref = 20;
-        this.cons.photo.T_mn = 3;
+        this.cons.photo.T_ref = 22;
+        this.cons.photo.T_mn = 5;
         this.cons.photo.T_opt_Pm_amb = 23;
         this.cons.photo.ξ = 0.8;
-        this.cons.photo.k = 0.8;
-        this.cons.photo.m = 0.0;
+        this.cons.photo.k = 0.7;
         this.cons.photo.α_amb_15 = 0.05;
         this.cons.photo.P_m_ref = 16;
         this.cons.photo.λ = 1.2;
@@ -301,8 +283,11 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
         this.cons.photo.γ_α = 6;
 
         /* partitioning */
-        this.cons.part.ρ_shoot_ref = 0.71;  // Topp (2004)
-        this.cons.part.ρ_l = 0.33; // Topp (2004)
+        this.cons.part.ρ_shoot_ref = 0.70;
+        this.cons.ρ_l = 0.70;
+        this.cons.ρ_shoot = 0.70;
+
+        this.cons.ξ_N = 100;
 
         break;
       case 'red clover':
@@ -310,46 +295,19 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
         this.isLegume = true;
         this.name = 'red clover';
 
-        this.cons.h_m = 0.30;
-        this.cons.L_half = 2.0;
-        this.cons.σ = 24.0; // Topp (2004)
+        // this.cons.h_m = 0.30;
+        // this.cons.L_half = 2.0;
+        this.cons.σ = 20.0;
+
+        this.cons.d_r_h = 0.25;
+        this.cons.d_r_mx = 0.60;
 
         /* photosysthesis */
-        this.cons.photo.T_ref = 25; // Topp (2004)
-        this.cons.photo.T_mn = 3;
+        this.cons.photo.T_ref = 22;
+        this.cons.photo.T_mn = 7;
         this.cons.photo.T_opt_Pm_amb = 25;
         this.cons.photo.ξ = 0.8;
-        this.cons.photo.k = 1.0; // Topp (2004)
-        this.cons.photo.m = 0.0;
-        this.cons.photo.α_amb_15 = 0.05;
-        this.cons.photo.P_m_ref = 12.9; // Topp (2004)
-        this.cons.photo.λ = 1.2;
-        this.cons.photo.f_C_m = 1.49;
-        this.cons.photo.γ_Pm = 10;
-        this.cons.photo.λ_α = 0.02; 
-        this.cons.photo.γ_α = 6;
-
-        /* partitioning */
-        this.cons.part.ρ_shoot_ref = 0.71;  // Topp (2004)
-        this.cons.part.ρ_l = 0.55; // Topp (2004)
-
-        break;
-      case 'ryegrass':
-
-        this.isLegume = false;
-        this.name = 'ryegrass';
-
-        this.cons.h_m = 0.25;
-        this.cons.L_half = 2.0;
-        this.cons.σ = 25.8; // Topp (2004)
-
-        /* photosysthesis */
-        this.cons.photo.T_ref = 20;
-        this.cons.photo.T_mn = 3;
-        this.cons.photo.T_opt_Pm_amb = 23;
-        this.cons.photo.ξ = 0.8;
-        this.cons.photo.k = 0.5;
-        this.cons.photo.m = 0.0;
+        this.cons.photo.k = 1.0;
         this.cons.photo.α_amb_15 = 0.05;
         this.cons.photo.P_m_ref = 16;
         this.cons.photo.λ = 1.2;
@@ -359,12 +317,44 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
         this.cons.photo.γ_α = 6;
 
         /* partitioning */
-        this.cons.part.ρ_shoot_ref = 0.8;
-        this.cons.part.ρ_l = 0.7;
+        this.cons.part.ρ_shoot_ref = 0.71; 
+        this.cons.part.ρ_l = 0.55;
+
+        this.cons.ξ_N = 100;
+
+        break;
+      case 'ryegrass':
+
+        this.isLegume = false;
+        this.name = 'ryegrass';
+
+        this.cons.h_m = 0.30;
+        this.cons.L_half = 2.0;
+        this.cons.σ = 20;
+
+        /* photosysthesis */
+        this.cons.photo.T_ref = 20;
+        this.cons.photo.T_mn = 5;
+        this.cons.photo.T_opt_Pm_amb = 23;
+        this.cons.photo.ξ = 0.8;
+        this.cons.photo.k = 0.5;
+        this.cons.photo.α_amb_15 = 0.05;
+        this.cons.photo.P_m_ref = 16;
+        this.cons.photo.λ = 1.2;
+        this.cons.photo.f_C_m = 1.49;
+        this.cons.photo.γ_Pm = 10;
+        this.cons.photo.λ_α = 0.02; 
+        this.cons.photo.γ_α = 6;
+
+        /* partitioning */
+        this.cons.part.ρ_shoot_ref = 0.75;
+        this.cons.ρ_l = 0.70;
+        this.cons.ρ_shoot = 0.75;
 
         break;
       }
     }
+
 
     /* overwrite initial values with provided (optional) configuration values */
     if (options) {
@@ -981,7 +971,7 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
 
       var h = 0
         , cons = that.cons
-        , L = that.L() * 1 / cons.f_cover // scale to a full m2
+        , L = that.L() //* 1 / cons.f_cover // scale to a full m2
         , h_m = cons.h_m
         , L_half = cons.L_half
         , ξ = 0.9 // fixed curvatur parameter
@@ -995,14 +985,14 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
     };
 
     /* h [m] height relationship between canopy height and leaf area */
-    this.h = function () {
+    this._EX_h = function () {
 
       var h = 0
         , cons = that.cons
         , L = that.L() * 1 / cons.f_cover // scale to a full m2
         , h_m = cons.h_m
         , L_5 = 1 // LAI at 5 cm height
-        , a = log((100 * h_m - 1) / (20 * h_m - 1)) / L_5 // curvatur parameter
+        , a = 1 + log((100 * h_m - 1) / (20 * h_m - 1)) / L_5 // curvatur parameter
         ;
 
       h = (0.01 * h_m) / (0.01 + (h_m - 0.01) * exp(-a * L));
@@ -1069,7 +1059,7 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
       , leaf_share = 0.7
       , stem_share = 1 - leaf_share
       , DM_root = 1000 * 1e-4 // kg ha-1 to kg m-2
-      , DM_shoot = (plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
+      , DM_shoot = (config.plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
       , DM = []
       ;
   
@@ -1080,10 +1070,10 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
         DM[s] = 1 / ps;
     }
 
-    if (mixture.length > 1)
-      mixture.homogeneity = config.hasOwnProperty('homogeneity') ? config.homogeneity : 0.75;
-    else
-      mixture.homogeneity = 1;
+    // if (mixture.length > 1)
+    //   mixture.homogeneity = config.hasOwnProperty('homogeneity') ? config.homogeneity : 0;
+    // else
+    //   mixture.homogeneity = 1;
 
     // iterate over species and initialize pools
     for (var s = 0, ps = species.length; s < ps; s++) {
@@ -1375,23 +1365,29 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
     };
 
 
-    /* height of tallest species in mixture */
+    /* height of tallest species in mixture (unused) */
     mixture.h_mx = function () {
 
-      var h_mx = 0 
-        , h = 0
-        //, L_tot = this.L_tot()
-        ;
+      // var h_mx = 0 
+      //   , h = 0
+      //   //, L_tot = this.L_tot()
+      //   ;
 
-      for (var s = 0, ps = this.length; s < ps; s++) {
-        h = this[s].h();
-        h_mx = (h > h_mx) ? h : h_mx;
-      }
+      // for (var s = 0, ps = this.length; s < ps; s++) {
+      //   h = this[s].h();
+      //   h_mx = (h > h_mx) ? h : h_mx;
+      // }
 
-      return h_mx;
+      return this.h(); //h_mx;
 
     };
 
+    /* height relationship between canopy height and shoot dry matter */
+    mixture.h = function () {
+      
+      return (this.DM_shoot() > 0.5) ? 0.5 : this.DM_shoot();
+
+    };
     
     /* depth of deepest rooting species in mixture */
     mixture.d_r_mx = function () {
@@ -1407,6 +1403,8 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
 
     };
 
+
+    /* begin: functions used in mixture photosynthesis calculation */
 
     /* (3.105) LAI increment used in photosynthesis calculation */
     mixture.δL = 0.1;
@@ -1424,7 +1422,6 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
     mixture.n_start_p = function (n_L) {
       
       var n_start_p = []
-        , L_tot = this.L_tot()
         , h_mx = this.h_mx()
         ;
       
@@ -1495,6 +1492,126 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
       return k_e_i;
     
     };
+
+    /* end: functions used in mixture photosynthesis calculation */
+
+
+    /* start experimental */
+
+
+    /* (3.107) starting layer for each species */
+    mixture._EX_n_start_p = function (n_L) {
+      
+      var n_start_p = []
+        , h_mx = this.h_mx()
+        ;
+      
+      for (var s = 0, ps = this.length; s < ps; s++) {
+        n_start_p[s] = 1 + ceil((1 - this[s].h() / h_mx) * n_L); 
+      }
+      
+      return n_start_p;
+
+    };
+
+    /* (3.108) LAI increment for each species in each layer */
+    mixture._EX_δL_p = function (n_L) {
+      
+      // TODO: fix start layer issue: n_L - n_start_p[s] === 0
+      var δL_p = [[]];
+      var h_mx = this.h_mx();
+      var sum = [0, 0];
+
+      for (var s = 0, ps = this.length; s < ps; s++)
+        δL_p[0][s] = 0;
+
+      for (var i = 1; i <= n_L; i++) {
+        δL_p[i] = [];
+        for (var s = 0, ps = this.length; s < ps; s++) {
+
+          var L_5 = 1 // LAI at 5 cm height
+            , h_m = this[s].cons.h_m
+            , h = this[s].h()
+            , a = 1 + log((100 * h_m - 1) / (20 * h_m - 1)) / L_5 // curvatur parameter
+            , depth_bottom = (h_mx / n_L) * (n_L - i)
+            , depth_top = (h_mx / n_L) * (n_L - (i - 1))
+            , L_at_depth_bottom = (depth_bottom >= h_m) ? 0 : max(0, log((depth_bottom - 100 * depth_bottom * h_m) / (depth_bottom - h_m)) / a)
+            , L_at_depth_top = (depth_top > h_m && depth_bottom >= h_m) ? 0 : (depth_top === h_m || (depth_top > h_m && depth_bottom < h_m)) ? this[s].L() * 1 / this[s].cons.f_cover : log((depth_top - 100 * depth_top * h_m) / (depth_top - h_m)) / a
+            ;
+
+
+          // if (depth_bottom < h_m && L_at_depth_top > h_m) {
+          //   L_at_depth_top = this[s].L() * 1 / this[s].cons.f_cover;
+          //   L_at_depth_bottom = log((depth_bottom - 100 * depth_bottom * h_m) / (depth_bottom - h_m)) / a;
+          // }
+            
+            
+          // debug('h', h);  
+          // debug('h_m', h_m);  
+          // debug('h_mx', h_m);  
+          // debug('this[s].L()', this[s].L());  
+          // debug('this[s].L() * 1 / this[s].cons.f_cover ', this[s].L() * 1 / this[s].cons.f_cover);  
+          // debug('depth_bottom', depth_bottom);  
+          // debug('depth_top', depth_top);  
+          // debug('L_at_depth_bottom', L_at_depth_bottom);  
+          // debug('L_at_depth_top', L_at_depth_top);
+
+          if (h < depth_bottom || depth_top < 0.01)
+             δL_p[i][s] = 0
+          else
+            δL_p[i][s] = (L_at_depth_top - L_at_depth_bottom) * this[s].cons.f_cover;
+
+          sum[s] += δL_p[i][s];
+
+          
+        }
+
+      }
+
+      // debug('sum', sum);
+
+      return δL_p;
+
+    };
+
+
+    /* (3.113) total LAI in layer i */
+    mixture._EX_δL_i = function (n_L, δL_p) {
+      
+      var δL_i = [0];
+      for (var i = 1; i <= n_L; i++) {
+        δL_i[i] = 0;
+        for (var s = 0, ps = this.length; s < ps; s++) {
+          δL_i[i] += δL_p[i][s];
+        }
+      }
+      return δL_i;
+
+    };
+
+
+    /* (3.109) 'effective' light extinction coefficient for each LAI layer i*/
+    mixture._EX_k_e_i = function (n_L, δL_p)   {
+      
+      var k_e_i = [0]
+        , ΣkδL = 0
+        , ΣδL = 0
+        ;
+      
+      for (var i = 1; i <= n_L; i++) {
+        ΣkδL = ΣδL = 0;
+        for (var s = 0, ps = this.length; s < ps; s++) {
+          ΣkδL += this[s].cons.photo.k * δL_p[i][s];
+          ΣδL += δL_p[i][s];
+        }
+        k_e_i[i] = (ΣδL <= 0) ? 0 : ΣkδL / ΣδL;
+      }
+      
+      return k_e_i;
+    
+    };
+
+    /* end experimental */
 
     mixture.Ω_water = function () {
 
@@ -1571,7 +1688,16 @@ var Grass = function (seedDate, harvestDates, plantDryWeight, species) {
 
   }
 
-  this.mixture = new Mixture(mix, { DM: dm });
+  // make sure homogeneity has a resonable value
+  // if (mix.length === 1)
+  //   options.homogeneity = 1;
+  // else if (options.homogeneity === undefined)
+  //   options.homogeneity = 0;
+
+  this.mixture = new Mixture(mix, { 
+    DM: dm, 
+    plantDryWeight: options.plantDryWeight
+  });
   
   this.seedDate = function () {
     return this._seedDate;

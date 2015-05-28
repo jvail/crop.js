@@ -1,29 +1,26 @@
 /*
-
-  TODO:
-    - date, doy optional?
-    - use date string instead of Date obj?
-    - what if sunhours not available?
-
   weatherData = {                   object
-      tmin          [°C]            array, daily minimum temperature
-    , tmax          [°C]            array, daily maximum temperature
-    , tavg          [°C]            array, daily average temperature
-    , globrad       [MJ m-2]        array, global radiation
-    , exrad         [MJ m-2]        array, extraterrestrial radiation
-    , wind          [m s-1]         array, wind speed
-    , precip        [mm]            array, rainfall
-    , sunhours      [h]             array, sunshine hours, optional (use empty array if not available)
-    , relhumid      [%]             array, relative humidity, optional (use empty array if not available)
-    , daylength     [h]             array, daylength. required by grassland model
-    , f_directrad   [h h-1]         array, fraction direct solar radiation. required by grassland model
-    , date          [date string]   array, ISO date strings
-    , doy           [#]             array, day of year
+      tmin          [°C]            (mandatory) array, daily minimum temperature
+    , tmax          [°C]            (mandatory) array, daily maximum temperature
+    , tavg          [°C]            (optional)  array, daily average temperature
+    , globrad       [MJ m-2]        (optional)  array, global radiation
+    , exrad         [MJ m-2]        (optional)  array, extraterrestrial radiation
+    , wind          [m s-1]         (optional)  array, wind speed
+    , precip        [mm]            (mandatory) array, rainfall
+    , sunhours      [h]             (optional)  array, sunshine hours
+    , relhumid      [%]             (optional)  array, relative humidity
+    , daylength     [h]             (optional)  array, daylength. required by grassland model
+    , f_directrad   [h h-1]         (optional)  array, fraction direct solar radiation. required by grassland model
+    , date          [date string]   (optional)  array, ISO date strings (if not provided assume that date @ index 0 = sim.startDate)
+    , doy           [#]             (optional)  array, day of year
   }
-  doDebug           [bool]          debug model and print MSG_DEBUG output
-  isVerbose         [bool]          print MSG_INFO output
-  callbacks         [array]         function or array of functions, access model variables at each time step 
+  doDebug           [bool]          (mandatory) debug model and print MSG_DEBUG output
+  isVerbose         [bool]          (mandatory) print MSG_INFO output
+  callbacks         [array]         (optional)  function or array of functions, access model variables at each time step 
                                     (write an output file, change model variables etc.)
+  TODO:
+    - add option initialization runs
+    - integrate weather.js
 */
 
 var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
@@ -107,8 +104,8 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       parameterProvider.userEnvironmentParameters.p_UseSecondaryYields = getValue(sim.switches, 'useSecondaryYieldOn', parameterProvider.userEnvironmentParameters.p_UseSecondaryYields);
       generalParameters.pc_NitrogenResponseOn = getValue(sim.switches, 'nitrogenResponseOn', generalParameters.pc_NitrogenResponseOn);
       generalParameters.pc_WaterDeficitResponseOn = getValue(sim.switches, 'waterDeficitResponseOn', generalParameters.pc_WaterDeficitResponseOn);
-      generalParameters.pc_WaterDeficitResponseOn = getValue(sim.switches, 'lowTemperatureStressResponseOn', generalParameters.pc_LowTemperatureStressResponseOn);
-      generalParameters.pc_WaterDeficitResponseOn = getValue(sim.switches, 'highTemperatureStressResponseOn', generalParameters.pc_HighTemperatureStressResponseOn);
+      generalParameters.pc_LowTemperatureStressResponseOn = getValue(sim.switches, 'lowTemperatureStressResponseOn', generalParameters.pc_LowTemperatureStressResponseOn);
+      generalParameters.pc_HighTemperatureStressResponseOn = getValue(sim.switches, 'highTemperatureStressResponseOn', generalParameters.pc_HighTemperatureStressResponseOn);
       generalParameters.pc_EmergenceMoistureControlOn = getValue(sim.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
       generalParameters.pc_EmergenceFloodingControlOn = getValue(sim.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
 
@@ -308,7 +305,9 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       if (isGrassland) {
 
-        var grass = new Grass(sd, hds, crop.plantDryWeight, crop.species);
+        var grass = new Grass(sd, hds, crop.species, { 
+          plantDryWeight: crop.plantDryWeight
+        });
         cropRotation[c] = new ProductionProcess('grassland', grass);
 
       } else {
