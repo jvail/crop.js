@@ -607,12 +607,12 @@ var tools = {
         }
 
         // Boundaries for linear interpolation
-        var lbRes = Tools.readPrincipalSoilCharacteristicData(texture, srd_lowerBound);
+        var lbRes = tools.readPrincipalSoilCharacteristicData(texture, srd_lowerBound);
         var sat_lowerBound = lbRes.sat;
         var fc_lowerBound = lbRes.fc;
         var pwp_lowerBound = lbRes.pwp;
 
-        var ubRes = Tools.readPrincipalSoilCharacteristicData(texture, srd_upperBound);
+        var ubRes = tools.readPrincipalSoilCharacteristicData(texture, srd_upperBound);
         var sat_upperBound = ubRes.sat;
         var fc_upperBound = ubRes.fc;
         var pwp_upperBound = ubRes.pwp;
@@ -672,7 +672,7 @@ var tools = {
           var pwp_mod_lowerBound = 0.0;
           // modifier values are given only for organic matter > 1.0% (class h2)
           if (som_lowerBound !== 0.0) {
-            lbRes = Tools.readSoilCharacteristicModifier(texture, som_lowerBound);
+            lbRes = tools.readSoilCharacteristicModifier(texture, som_lowerBound);
             sat_mod_lowerBound = lbRes.sat;
             fc_mod_lowerBound = lbRes.fc;
             pwp_mod_lowerBound = lbRes.pwp;
@@ -682,7 +682,7 @@ var tools = {
           var sat_mod_upperBound = 0.0;
           var pwp_mod_upperBound = 0.0;
           if (som_upperBound !== 0.0) {
-            ubRes = Tools.readSoilCharacteristicModifier(texture, som_upperBound);
+            ubRes = tools.readSoilCharacteristicModifier(texture, som_upperBound);
             sat_mod_upperBound = ubRes.sat;
             fc_mod_upperBound = ubRes.fc;
             pwp_mod_upperBound = ubRes.pwp;

@@ -16,8 +16,9 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
       vm_Evaporation = new Float64Array(vm_NumberOfLayers), //intern
       vm_Evapotranspiration = new Float64Array(vm_NumberOfLayers), //intern
       vm_FieldCapacity = new Float64Array(vm_NumberOfLayers),
+      vm_GravitationalWater = new Float64Array(vm_NumberOfLayers),
       vm_FluxAtLowerBoundary = 0.0,
-      vm_GravitationalWater = new Float64Array(vm_NumberOfLayers), // Gravitational water in [mm d-1] //intern
+      vm_Gravitationafo_MoistOnDenitrificationlWater = new Float64Array(vm_NumberOfLayers), // Gravitational water in [mm d-1] //intern
       vm_GrossPrecipitation = 0.0, //internal
       vm_GroundwaterAdded = 0,
       //vm_GroundwaterDistance = vm_NumberOfLayers, 0), // map  = joachim)
@@ -565,16 +566,9 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
   };
 
   var fm_GroundwaterReplenishment = function () {
-    
-    var vm_StartLayer;
-
-    // do nothing if groundwater is not within profile
-    if (vm_GroundwaterTable > vs_NumberOfLayers) {
-      return;
-    }
 
     // Auffuellschleife von GW-Oberflaeche in Richtung Oberflaeche
-    vm_StartLayer = vm_GroundwaterTable;
+    var vm_StartLayer = vm_GroundwaterTable;
 
     if (vm_StartLayer > vm_NumberOfLayers - 2) {
       vm_StartLayer = vm_NumberOfLayers - 2;
@@ -608,6 +602,17 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
       }
 
     } // for
+
+    if (pm_LeachingDepthLayer>vm_GroundwaterTable-1) {
+      if (vm_GroundwaterTable-1 < 0){
+        vm_FluxAtLowerBoundary = 0.0;
+      } else {
+        vm_FluxAtLowerBoundary = vm_WaterFlux[vm_GroundwaterTable-1];
+      }
+    } else {
+      vm_FluxAtLowerBoundary = vm_WaterFlux[pm_LeachingDepthLayer];
+    }
+    //cout << "GWN: " << vm_FluxAtLowerBoundary << endl;
   };
 
   var fm_PercolationWithoutGroundwater = function () {

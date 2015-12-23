@@ -12,6 +12,8 @@ var SoilColumn = function (gps, sp, cpp) {
   this._vf_TopDressingDelay = 0;
   this._vs_NumberOfOrganicLayers = 0;
 
+  var pm_CriticalMoistureDepth = cpp.userSoilMoistureParameters.pm_CriticalMoistureDepth;
+
 
   var soilColumnArray = [];
   // public properties and methods
@@ -199,66 +201,6 @@ var SoilColumn = function (gps, sp, cpp) {
      return vf_FertiliserRecommendation;// + _vf_TopDressing);
   };
 
-  /**
-   * Method for calculating irrigation demand from soil moisture status.
-   * The trigger will be activated and deactivated according to crop parameters
-   * (temperature sum)
-   *
-   * @param vi_IrrigationThreshold
-   * @return could irrigation be applied
-   */
-  soilColumnArray.soilColumnArrayapplyIrrigationViaTrigger = function (
-    vi_IrrigationThreshold,
-    vi_IrrigationAmount,
-    vi_IrrigationNConcentration
-  ) {
-
-    // JS: soilLayer(x) === this[x]
-
-
-    //is actually only called from cropStep and thus there should always
-    //be a crop
-    if (that.cropGrowth === null)
-      logger(MSG_ERROR, "crop is null");
-
-    var s = that.cropGrowth.heatSumIrrigationStart();
-    var e = that.cropGrowth.heatSumIrrigationEnd();
-    var cts = that.cropGrowth.currentTemperatureSum();
-
-    if (cts < s || cts > e) return false;
-
-    var vi_CriticalMoistureDepth = that.centralParameterProvider.userSoilMoistureParameters.pm_CriticalMoistureDepth;
-
-    // Initialisation
-    var vi_ActualPlantAvailableWater = 0.0;
-    var vi_MaxPlantAvailableWater = 0.0;
-    var vi_PlantAvailableWaterFraction = 0.0;
-    var vi_CriticalMoistureLayer = toInt(ceil(vi_CriticalMoistureDepth / that[0].vs_LayerThickness));
-
-    for (var i_Layer = 0; i_Layer < vi_CriticalMoistureLayer; i_Layer++){
-      vi_ActualPlantAvailableWater += (this[i_Layer].get_Vs_SoilMoisture_m3()
-                                   - this[i_Layer].get_PermanentWiltingPoint())
-                                   * this.vs_LayerThickness() * 1000.0; // [mm]
-      vi_MaxPlantAvailableWater += (this[i_Layer].get_FieldCapacity()
-                                   - this[i_Layer].get_PermanentWiltingPoint())
-                                   * this.vs_LayerThickness() * 1000.0; // [mm]
-      vi_PlantAvailableWaterFraction = vi_ActualPlantAvailableWater
-                                         / vi_MaxPlantAvailableWater; // []
-    }
-    if (vi_PlantAvailableWaterFraction <= vi_IrrigationThreshold) {
-      this.applyIrrigation(vi_IrrigationAmount, vi_IrrigationNConcentration);
-
-      logger(MSG_INFO, 
-        "applying automatic irrigation treshold: " + vi_IrrigationThreshold +
-        " amount: " + vi_IrrigationAmount +
-        " N concentration: " + vi_IrrigationNConcentration
-      );
-
-      return true;
-    }
-
-    return false;
-  };
 
   /**
    * @brief Applies irrigation
@@ -282,6 +224,81 @@ var SoilColumn = function (gps, sp, cpp) {
     // Adding N from irrigation water to top soil nitrate pool
     this[0].vs_SoilNO3 += vi_NAddedViaIrrigation;
   };
+
+  /**
+ * Method for calculating irrigation demand from soil moisture status.
+ * The trigger will be activated and deactivated according to crop parameters
+ * (temperature sum)
+ *
+ * @param vi_IrrigationThreshold
+ * @return could irrigation be applied
+ */
+soilColumnArray.applyIrrigationViaTrigger = function (
+  vi_IrrigationThreshold,
+  /*vi_IrrigationAmount,*/
+  vi_IrrigationNConcentration
+) {
+  //is actually only called from cropStep and thus there should always
+  //be a crop
+  if (that.cropGrowth === null) {
+    throw new Error('that.cropGrowth === null');
+  }
+
+  // var currentTemperatureSum = cropGrowth->currentTemperatureSum();
+
+  // if (currentTemperatureSum < cropGrowth->heatSumIrrigationStart() || 
+  //   currentTemperatureSum > cropGrowth->heatSumIrrigationEnd()) {
+  //   return false;
+  // }
+
+  var vi_CriticalMoistureDepth = pm_CriticalMoistureDepth;
+  var vi_ActualPlantAvailableWater = 0.0;
+  var vi_MaxPlantAvailableWater = 0.0;
+  var vi_PlantAvailableWaterFraction = 0.0;
+  var vi_IrrigationAmount = 0;
+
+  var vi_CriticalMoistureLayer = toInt(ceil(vi_CriticalMoistureDepth /
+                                          this[0].vs_LayerThickness));
+  for (var i_Layer = 0; i_Layer < vi_CriticalMoistureLayer; i_Layer++) {
+    vi_ActualPlantAvailableWater += 
+      (this[i_Layer].get_Vs_SoilMoisture_m3() - this[i_Layer].vs_PermanentWiltingPoint)
+      * this[0].vs_LayerThickness
+      * 1000.0; // [mm]
+    vi_MaxPlantAvailableWater += (this[i_Layer].vs_FieldCapacity
+                                  - this[i_Layer].vs_PermanentWiltingPoint)
+                                 * this[0].vs_LayerThickness * 1000.0; // [mm]
+
+    // JS!
+    // TODO: upper/lower limit for irri. water?
+    vi_IrrigationAmount += vi_MaxPlantAvailableWater - vi_ActualPlantAvailableWater;
+
+    // monica bug
+    // vi_PlantAvailableWaterFraction = vi_ActualPlantAvailableWater / vi_MaxPlantAvailableWater;
+  }
+  
+  vi_PlantAvailableWaterFraction = vi_ActualPlantAvailableWater / vi_MaxPlantAvailableWater;
+
+  if (vi_PlantAvailableWaterFraction <= vi_IrrigationThreshold) {
+    if (vi_IrrigationAmount < 0) {
+      throw new Error('vi_IrrigationAmount < 0');
+    }
+    this.applyIrrigation(vi_IrrigationAmount, vi_IrrigationNConcentration);
+
+    logger(
+      MSG_INFO,
+      'applying automatic irrigation ' +
+      ' treshold: ' + vi_IrrigationThreshold + 
+      ' amount: ' + vi_IrrigationAmount +
+      ' N concentration: ' + vi_IrrigationNConcentration
+    );
+
+    return vi_IrrigationAmount;
+  }
+
+  return 0;
+}
+
+
 
   /**
    * @brief Checks and deletes AOM pool

@@ -30,6 +30,7 @@ var Grass = function (seedDate, harvestDates, species, options) {
   this.mixture = null;
   this._seedDate = seedDate;
   this._harvestDates = harvestDates;
+  this.autoIrrigationOn = options.autoIrrigationOn || false;
 
   var _accumulatedETa = 0.0
     , _appliedAmountIrrigation = 0
@@ -86,7 +87,7 @@ var Grass = function (seedDate, harvestDates, species, options) {
       , ξ_N: 200
       , photo: {                // photosynthesis
             T_ref: 20           // [°C]                        reference temperature
-          , T_mn: 3             // [°C]                        minimum temperature 
+          , T_mn: 4             // [°C]                        minimum temperature 
           , T_opt_Pm_amb: 23    // [°C]                        optimum temperature
           , ξ: 0.8              // [-]                         non‐rectangular hyperbola curvatur parameter
           , α_amb_15: 0.05      // [mol (CO2) mol-1 (photons)] photosythetic efficiency α at ambient CO2 (C_amb_ref) and 15 °C
@@ -256,6 +257,7 @@ var Grass = function (seedDate, harvestDates, species, options) {
     
       switch (options.name) {
 
+      case 'clover':
       case 'white clover':
 
         this.isLegume = true;
@@ -1058,8 +1060,8 @@ var Grass = function (seedDate, harvestDates, species, options) {
     var noPools = 4
       , leaf_share = 0.7
       , stem_share = 1 - leaf_share
-      , DM_root = 1000 * 1e-4 // kg ha-1 to kg m-2
-      , DM_shoot = (config.plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
+      , DM_root = 0.5 * (config.plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
+      , DM_shoot = 0.5 * (config.plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
       , DM = []
       ;
   
@@ -1718,4 +1720,26 @@ var Grass = function (seedDate, harvestDates, species, options) {
 
   };
   this.type = 'grassland';
+  this.residueParameters = function () {
+    return {
+      vo_AOM_DryMatterContent: 1,
+      vo_AOM_NH4Content: 0,
+      vo_AOM_NO3Content: 0.001,
+      vo_AOM_CarbamidContent: 0,
+      vo_AOM_SlowDecCoeffStandard: 0.012,
+      vo_AOM_FastDecCoeffStandard: 0.05,
+      vo_PartAOM_to_AOM_Slow: 0.61,
+      vo_PartAOM_to_AOM_Fast: 0.39,
+      vo_CN_Ratio_AOM_Slow: 225,
+      vo_CN_Ratio_AOM_Fast: 0,
+      vo_PartAOM_Slow_to_SMB_Slow: 0.5,
+      vo_PartAOM_Slow_to_SMB_Fast: 0.5,
+      vo_NConcentration: 0
+    };
+  };
+
+  this.isAutoIrrigationOn = function () {
+    return this.autoIrrigationOn;
+  };
+
 };

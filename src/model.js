@@ -12,7 +12,6 @@ var Model = function (env) {
   /* this.cropGrowth statt var, um this an SoilX. zu übergeben */
   this._currentCropGrowth = null;
   this.cropGrowth = function () { return that._currentCropGrowth; };
-  this.vw_AtmosphericCO2Concentration;
   this.vs_GroundwaterDepth;
 
   var _env = env
@@ -37,6 +36,10 @@ var Model = function (env) {
     , productionProcessIdx = 0 // iterator through the production processes
     , currentProductionProcess = env.cropRotation[productionProcessIdx] // direct handle to current process
     , nextProductionProcessApplicationDate = currentProductionProcess.start()
+    , yields = []
+    , _year = 0
+    , _julday = 0
+    , vw_AtmosphericCO2Concentration = 380 
     ;
 
     debug(currentProductionProcess);
@@ -234,6 +237,14 @@ var Model = function (env) {
           + ' Secondary yield N content: ' + that._currentCropGrowth.secondaryYieldNitrogenContent());
 
       _soilOrganic.addOrganicMatter(_currentCrop.residueParameters(), residueBiomass, residueNConcentration);
+
+      yields.push({
+        year: _year,
+        julday: _julday,
+        yield: that._currentCropGrowth.primaryYield(),
+        // yield: that._currentCropGrowth.biomass(3),
+        crop: _currentCrop.name()
+      });
     
     }
 
@@ -332,7 +343,7 @@ var Model = function (env) {
       
       if (_currentCrop) {
   
-        _currentCrop.addAppliedIrrigationWater(amount);
+        // _currentCrop.addAppliedIrrigationWater(amount);
         this.addDailySumIrrigationWater(amount);
   
       }
@@ -350,13 +361,14 @@ var Model = function (env) {
   */
   var applyTillage = function (depth) {
     _soilColumn.applyTillage(depth);
+    incorporateCurrentCrop();
   };
 
   /* execute next production process step */
   var prodProcessStep = function (currentDate) {
 
     /* is there something to apply today? */
-    if (nextProductionProcessApplicationDate.toISODateString() === currentDate.toISODateString()) {
+    if (!isNaN(nextProductionProcessApplicationDate) && nextProductionProcessApplicationDate.toISODateString() === currentDate.toISODateString()) {
       
       currentProductionProcess.apply(nextProductionProcessApplicationDate, this);
 
@@ -378,7 +390,8 @@ var Model = function (env) {
         if (productionProcessIdx < env.cropRotation.length) {
           currentProductionProcess = env.cropRotation[productionProcessIdx];
           nextProductionProcessApplicationDate = currentProductionProcess.start();
-          logger(MSG_INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISODateString());
+          if (!isNaN(nextProductionProcessApplicationDate))
+            logger(MSG_INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISODateString());
         }
 
       }
@@ -401,6 +414,9 @@ var Model = function (env) {
     globrad,
     relhumid
   ) {
+
+    _year = year;
+    _julday = julday;
 
     // that.vw_AtmosphericCO2Concentration = (_env.atmosphericCO2 === -1 ? user_env.p_AthmosphericCO2 : _env.atmosphericCO2);
     // if (toInt(that.vw_AtmosphericCO2Concentration) === 0)
@@ -492,6 +508,8 @@ var Model = function (env) {
     //   return;
     // }
 
+    vw_AtmosphericCO2Concentration = C_amb;
+
     p_daysWithCrop++;
 
     that._currentCropGrowth.step(
@@ -512,17 +530,11 @@ var Model = function (env) {
       isVegPeriod
     );
 
-    if (_env.useAutomaticIrrigation) {
-
-      var aips = _env.autoIrrigationParams;
-      if (_soilColumn.applyIrrigationViaTrigger(aips.treshold, aips.amount, aips.nitrateConcentration)) {
-
-        _soilOrganic.addIrrigationWater(aips.amount);
-        _currentCrop.addAppliedIrrigationWater(aips.amount);
-        _dailySumIrrigationWater += aips.amount;
-      
-      }
-    
+    if (isVegPeriod && _currentCrop.isAutoIrrigationOn()) { 
+      var irrigationWater = _soilColumn.applyIrrigationViaTrigger(0.35, 0 /* AutomaticIrrigationParameters */);
+      _soilOrganic.addIrrigationWater(irrigationWater);
+      // _currentCrop.addAppliedIrrigationWater(irrigationWater);
+      _dailySumIrrigationWater += irrigationWater;
     }
 
     p_accuNStress += that._currentCropGrowth.nitrogenStress();
@@ -849,7 +861,7 @@ var Model = function (env) {
   };
 
   var get_AtmosphericCO2Concentration = function () {
-    return that.vw_AtmosphericCO2Concentration;
+    return vw_AtmosphericCO2Concentration;
   };
 
   var get_GroundwaterDepth = function () { 
@@ -918,6 +930,10 @@ var Model = function (env) {
 
   var getIsVegPeriod = function () {
     return Number(isVegPeriod); 
+  };
+
+  var setIsVegPeriod = function (veg) {
+    isVegPeriod = veg; 
   };
 
   return {
@@ -990,7 +1006,9 @@ var Model = function (env) {
     getAccumulatedWaterStress: getAccumulatedWaterStress,
     getAccumulatedHeatStress: getAccumulatedHeatStress,
     getAccumulatedOxygenStress: getAccumulatedOxygenStress,
-    getIsVegPeriod: getIsVegPeriod
+    getIsVegPeriod: getIsVegPeriod,
+    setIsVegPeriod: setIsVegPeriod,
+    yields: function () { return yields; }
   };
 
 };

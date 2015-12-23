@@ -1418,7 +1418,8 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       fo_MoistOnDenitrification = po_Denit1 + (1.0 - po_Denit1)
           * ((d_SoilMoisture_m3 / d_Saturation) - po_Denit3) / (1.0 - po_Denit3);
     } else {
-      throw new Error("irregular soil water content");
+      fo_MoistOnDenitrification = 0.0;
+      logger(MSG_WARN, "Irregular soil water content");
     }
 
     return fo_MoistOnDenitrification;

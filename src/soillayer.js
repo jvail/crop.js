@@ -76,8 +76,11 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
     var vs_SoilTemperature = 0;
     this.vo_AOM_Pool = [];
 
-    if (DEBUG && !((_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001))
+    if (DEBUG && !((_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001)) {
+      logger(MSG_DEBUG, _vs_SoilOrganicCarbon + ' _vs_SoilOrganicCarbon');
+      logger(MSG_DEBUG, _vs_SoilOrganicMatter + ' _vs_SoilOrganicMatter');
       throw new Error("_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001)");
+    }
 
     vs_SoilMoisture_m3 = this.vs_FieldCapacity * cpp.userInitValues.p_initPercentageFC;
     this.vs_SoilMoistureOld_m3 = this.vs_FieldCapacity * cpp.userInitValues.p_initPercentageFC;
@@ -218,7 +221,7 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
     _vs_SoilMoisture_pF = log10(vs_MatricHead);
 
     /* set _vs_SoilMoisture_pF to "small" number in case of vs_Theta "close" to vs_ThetaS (vs_Psi < 1 -> log(vs_Psi) < 0) */
-    _vs_SoilMoisture_pF = (_vs_SoilMoisture_pF < 0.0) ? 5.0E-7 : _vs_SoilMoisture_pF; 
+    _vs_SoilMoisture_pF = (_vs_SoilMoisture_pF < 0.0 || isNaN(_vs_SoilMoisture_pF) || abs(_vs_SoilMoisture_pF) === Infinity ? 0.01 : _vs_SoilMoisture_pF); 
 
   };
 

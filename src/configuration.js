@@ -108,6 +108,8 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       generalParameters.pc_HighTemperatureStressResponseOn = getValue(sim.switches, 'highTemperatureStressResponseOn', generalParameters.pc_HighTemperatureStressResponseOn);
       generalParameters.pc_EmergenceMoistureControlOn = getValue(sim.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
       generalParameters.pc_EmergenceFloodingControlOn = getValue(sim.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
+      
+      generalParameters.ps_MaxMineralisationDepth = 0.4;
 
       logger(MSG_INFO, 'Fetched simulation data.');
       
@@ -116,6 +118,8 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       siteParameters.vs_Slope = site.slope;
       siteParameters.vs_HeightNN = site.heightNN;
       siteParameters.vq_NDeposition = getValue(site, 'NDeposition', siteParameters.vq_NDeposition);
+      siteParameters.vs_Soil_CN_Ratio = 10; //TODO: per layer?
+      siteParameters.vs_DrainageCoeff = -1; //TODO: ?
 
       parameterProvider.userEnvironmentParameters.p_AthmosphericCO2 = getValue(site, 'atmosphericCO2', parameterProvider.userEnvironmentParameters.p_AthmosphericCO2);
       parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepth = getValue(site, 'groundwaterDepthMin', parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepth);
@@ -157,11 +161,6 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       env.cropRotation = cropRotation;
      
       // TODO: implement and test useAutomaticIrrigation & useNMinFertiliser
-      // if (hermes_config->useAutomaticIrrigation()) {
-      //   env.useAutomaticIrrigation = true;
-      //   env.autoIrrigationParams = hermes_config->getAutomaticIrrigationParameters();
-      // }
-
       // if (hermes_config->useNMinFertiliser()) {
       //   env.useNMinMineralFertilisingMethod = true;
       //   env.nMinUserParams = hermes_config->getNMinUserParameters();
@@ -218,7 +217,26 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
         var soilParameters = new SoilParameters();
 
-        soilParameters.set_vs_SoilOrganicMatter(horizon.organicMatter);
+        // soilParameters.set_vs_SoilOrganicCarbon(0.05);
+        // soilParameters.set_vs_SoilBulkDensity(1400);
+        // soilParameters.vs_SoilSandContent = 0.4;
+        // soilParameters.vs_SoilClayContent = 0.2;
+        // soilParameters.vs_SoilStoneContent = 0.02; //TODO: / 100 ?
+        // soilParameters.vs_Lambda = tools.texture2lambda(soilParameters.vs_SoilSandContent, soilParameters.vs_SoilClayContent);
+        // // TODO: Wo wird textureClass verwendet?
+        // soilParameters.vs_SoilTexture = 'Ls2';
+        // soilParameters.vs_SoilpH = 0.69;
+        // /* TODO: ? lambda = drainage_coeff ? */
+        // soilParameters.vs_Lambda = tools.texture2lambda(soilParameters.vs_SoilSandContent, soilParameters.vs_SoilClayContent);
+        // soilParameters.vs_FieldCapacity = 0.33;
+        // /* TODO: name? */
+        // soilParameters.vs_Saturation = 0.45;
+        // soilParameters.vs_PermanentWiltingPoint = 0.2;
+
+
+
+        soilParameters.set_vs_SoilOrganicMatter(getValue(horizon, 'organicMatter', -1));
+        soilParameters.set_vs_SoilOrganicCarbon(getValue(horizon, 'Corg', -1));
         soilParameters.vs_SoilSandContent = horizon.sand;
         soilParameters.vs_SoilClayContent = horizon.clay;
         soilParameters.vs_SoilStoneContent = horizon.sceleton;
@@ -237,7 +255,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
           soilParameters.set_vs_SoilBulkDensity(horizon.bulkDensity);
           soilParameters.vs_FieldCapacity = horizon.fieldCapacity;
-          soilParameters.vs_Saturation = horizon.poreVolume - horizon.fieldCapacity;
+          soilParameters.vs_Saturation = horizon.poreVolume;
           soilParameters.vs_PermanentWiltingPoint = horizon.permanentWiltingPoint;
 
         } else { /* if any is missing */
@@ -247,13 +265,16 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
           // tools.soilCharacteristicsKA5(soilParameters);
 
           /* else use Saxton */
-          var saxton = tools.saxton(horizon.sand, horizon.clay, horizon.organicMatter, horizon.sceleton).saxton_86;
+          var saxton = tools.saxton(horizon.sand, horizon.clay, soilParameters.vs_SoilOrganicMatter(), horizon.sceleton).saxton_86;
           soilParameters.set_vs_SoilBulkDensity(roundN(2, saxton.BD));
           soilParameters.vs_FieldCapacity = roundN(2, saxton.FC);
           soilParameters.vs_Saturation = roundN(2, saxton.SAT);
           soilParameters.vs_PermanentWiltingPoint = roundN(2, saxton.PWP);
 
         }
+
+        // tools.soilCharacteristicsKA5(soilParameters);
+        // console.log(soilParameters);
         
         /* TODO: hinter readJSON verschieben */ 
         if (!soilParameters.isValid()) {
@@ -290,7 +311,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       if (isGrassland) {
         /* if no sowing date provided: we can not start at day 0 and therefor start at day 0 + 1 since model's general step is executed *after* cropStep */
-        var sd = getValue(crop, 'sowingDate', new Date(new Date(startDate).setDate(startDate.getDate() + 1)));
+        var sd = !crop.sowingDate ? new Date(new Date(startDate).setDate(startDate.getDate() + 1)) : new Date(Date.parse(crop.sowingDate));
         var hds = getValue(crop, 'harvestDates', []);
         debug(sd);
         debug(startDate);
@@ -306,14 +327,17 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       if (isGrassland) {
 
         var grass = new Grass(sd, hds, crop.species, { 
-          plantDryWeight: crop.plantDryWeight
+          plantDryWeight: crop.plantDryWeight,
+          autoIrrigationOn: crop.autoIrrigationOn || false
         });
         cropRotation[c] = new ProductionProcess('grassland', grass);
 
       } else {
 
         /* choose the first (and only) name in species array (mixtures not implemented in generic crop model) */
-        var genericCrop = new GenericCrop(crop.species[0].name);
+        var genericCrop = new GenericCrop(crop.species[0].name, {
+          autoIrrigationOn: crop.autoIrrigationOn || false
+        });
         genericCrop.setSeedAndHarvestDate(sd, hd);
         cropRotation[c] = new ProductionProcess(crop.species[0].name, genericCrop);
       
@@ -602,8 +626,10 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     /* check if all arrays are of the same length */
     var length = data[WEATHER.TMIN].length;
     for (var i in WEATHER) { 
-      if (data[WEATHER[i]].length != length)
+      if (data[WEATHER[i]].length != length) {
+        logger(MSG_ERROR, i + ' length != ' + length);
         ok = false;
+      }
     }
     
     if (ok)
@@ -721,8 +747,26 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     else
       console.log(JSON.stringify(results, null, 2));
 
-    if (done) 
+    if (done) {
+      // if (ENVIRONMENT_IS_NODE) {
+      //   fs.writeFileSync('results.csv', '');
+      //   var keys = Object.keys(results[0]);
+      //   for (var i = 0; i < results.length; i++) {
+      //     var res = results[i];
+      //     if (i === 0) {
+      //       keys.forEach(function (e) {
+      //         fs.appendFileSync('results.csv', e + ';');
+      //       });
+      //       fs.appendFileSync('results.csv', '\n');
+      //     }
+      //     keys.forEach(function (e) {
+      //       fs.appendFileSync('results.csv', res[e].value + ';');
+      //     });
+      //     fs.appendFileSync('results.csv', '\n'); 
+      //   }
+      // }
       logger(MSG_INFO, 'done');
+    }
   
   };  
 
