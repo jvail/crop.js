@@ -333,11 +333,8 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
         cropRotation[c] = new ProductionProcess('grassland', grass);
 
       } else {
-
         /* choose the first (and only) name in species array (mixtures not implemented in generic crop model) */
-        var genericCrop = new GenericCrop(crop.species[0].name, {
-          autoIrrigationOn: crop.autoIrrigationOn || false
-        });
+        var genericCrop = new GenericCrop(crop.species[0].name, crop.options);
         genericCrop.setSeedAndHarvestDate(sd, hd);
         cropRotation[c] = new ProductionProcess(crop.species[0].name, genericCrop);
       
