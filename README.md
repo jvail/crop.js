@@ -6,10 +6,8 @@ crop.js is a dynamic, generic crop and grassland growth model in JavaScript. It 
 ## Examples & Usage
 See [examples](https://github.com/jvail/crop.js/tree/master/exp).
 
-## Genealogy
-The (generic) crop and soil model is a JS port of major parts of [MONICA](http://monica.agrosystem-models.com/) - in particular the soil and crop growth sub-models. MONICA is based on [HERMES](http://www.zalf.de/en/forschung/institute/lsa/forschung/oekomod/hermes/Pages/default.aspx) and [DAISY](https://code.google.com/p/daisy-model/). HERMES is based on [SUCROS](http://models.pps.wur.nl/node/3). The grassland model is based on the [SGS Pasture Model](http://imj.com.au/sgs/).
-
-References:
+## Model Genealogy
+[MONICA](http://monica.agrosystem-models.com/) is based on [HERMES](http://www.zalf.de/en/forschung/institute/lsa/forschung/oekomod/hermes/Pages/default.aspx) and [DAISY](https://code.google.com/p/daisy-model/). HERMES is based on [SUCROS](http://models.pps.wur.nl/node/3). The grassland model is based on the [SGS Pasture Model](http://imj.com.au/sgs/).
 
 Nendel, C., M. Berg, K.C. Kersebaum, W. Mirschel, X. Specka, M. Wegehenkel, K.O. Wenkel, R. Wieland (2011). The MONICA model: Testing predictability for crop growth, soil moisture and nitrogen dynamics. Ecol. Model. 222 (9), 1614–1625.
 
