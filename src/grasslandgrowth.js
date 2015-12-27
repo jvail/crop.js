@@ -1,7 +1,4 @@
 /*
-  LICENSE
-
-  The MIT License (MIT)
   Copywrite (c) 2015 Jan Vaillant (jan.vaillant@zalf.de)
 
 
