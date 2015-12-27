@@ -1,9 +1,7 @@
-_work in progress_
-
 crop.js
 =======
 
-crop.js is an effort to build a dynamic (generic) crop and grassland growth model entirly in JavaScript.
+crop.js is a dynamic, generic crop and grassland growth model in JavaScript. It is a JS port of the soil, water and crop processes of [MONICA (C++)](https://github.com/zalf-lsa/monica) and an implementation of [SGS Pasture Model](http://imj.com.au/sgs/) from the publicly available documentation.
 
 ## Examples & Usage
 See [examples](https://github.com/jvail/crop.js/tree/master/exp).
@@ -25,11 +23,6 @@ Johnson I. R., Lodge G. M., White R. E. (2003). The Sustainable Grazing Systems 
 - Add simple rountines for automatic seed, harvest, fertilization, irrigation and tillage date predictions.
 - Simplify MONICA's input parameters, configuration and API.
 - Provide infrastructure and unified API to easily extend crop.js with custom crop growth models
-
-## License & Copywrite
-The library in total is released under GPL (see license file). The grassland model files are released under MIT license.
-
-Copyright (C) 2015, Leibniz Centre for Agricultural Landscape Research (ZALF)
 
 ## Acknowledgements
 
