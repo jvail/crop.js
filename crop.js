@@ -182,10 +182,13 @@ var abs    = Math.abs
   , pow    = Math.pow
   , round  = Math.round
   , fixed  = function (n, x) {
-      if (x === null) return x; 
+      if (x === null || x === undefined)
+        return x; 
       return x.toFixed(n);
     }
-  , roundN = function (n, x) { 
+  , roundN = function (n, x) {
+      if (x === null || x === undefined)
+        return x; 
       return parseFloat(x.toFixed(n));
     }
   , sin    = Math.sin
@@ -341,7 +344,7 @@ var logger = function (type, msg) {
 
   }
 
-  if (type === MSG_ERROR) {
+  if (type === MSG_ERROR && DEBUG) {
     throw new Error(
       ((typeof msg === 'object' && msg !== null) ?
       JSON.stringify(msg, null, 2) : msg)
@@ -350,6 +353,972 @@ var logger = function (type, msg) {
 
 };
 
+var initializeFoutHeader = function (foutFileName) {
+
+  var outLayers = 20, numberOfOrgans = 5;
+  var fout = "", endl = '\n';
+  fout += "Datum     ";
+  fout += "\tCrop";
+  fout += "\tTraDef";
+  fout += "\tTra";
+  fout += "\tNDef";
+  fout += "\tHeatRed";
+  fout += "\tOxRed";
+
+  fout += "\tStage";
+  fout += "\tTempSum";
+  fout += "\tVernF";
+  fout += "\tDaylF";
+  fout += "\tIncRoot";
+  fout += "\tIncLeaf";
+  fout += "\tIncShoot";
+  fout += "\tIncFruit";
+
+  fout += "\tRelDev";
+  fout += "\tAbBiom";
+  
+  fout += "\tRoot";
+  fout += "\tLeaf"; 
+  fout += "\tShoot";
+  fout += "\tFruit";
+  fout += "\tStruct";
+  fout += "\tSugar";
+
+  fout += "\tYield";
+  fout += "\tSumYield";
+
+  fout += "\tGroPhot";
+  fout += "\tNetPhot";
+  fout += "\tMaintR";
+  fout += "\tGrowthR";
+  fout += "\tStomRes";
+  fout += "\tHeight";
+  fout += "\tLAI";
+  fout += "\tRootDep";
+  fout += "\tEffRootDep";
+
+  fout += "\tNBiom";
+  fout += "\tSumNUp";
+  fout += "\tActNup";
+  fout += "\tPotNup";
+  fout += "\tNFixed";
+  fout += "\tTarget";
+
+  fout += "\tCritN";
+  fout += "\tAbBiomN";
+  fout += "\tYieldN";
+  fout += "\tProtein";
+
+  fout += "\tNPP";
+  fout += "\tNPPRoot";
+  fout += "\tNPPLeaf";
+  fout += "\tNPPShoot";
+  fout += "\tNPPFruit";
+  fout += "\tNPPStruct";
+  fout += "\tNPPSugar";
+
+  fout += "\tGPP";
+  fout += "\tRa";
+  fout += "\tRaRoot";
+  fout += "\tRaLeaf";
+  fout += "\tRaShoot";
+  fout += "\tRaFruit";
+  fout += "\tRaStruct";
+  fout += "\tRaSugar";
+
+  for (var i_Layer = 0; i_Layer < outLayers; i_Layer++) {
+    fout += "\tMois" + i_Layer;
+  }
+  fout += "\tPrecip";
+  fout += "\tIrrig";
+  fout += "\tInfilt";
+  fout += "\tSurface";
+  fout += "\tRunOff";
+  fout += "\tSnowD";
+  fout += "\tFrostD";
+  fout += "\tThawD";
+  for (var i_Layer = 0; i_Layer < outLayers; i_Layer++) {
+    fout += "\tPASW-" + i_Layer;
+  }
+  fout += "\tSurfTemp";
+  fout += "\tSTemp0";
+  fout += "\tSTemp1";
+  fout += "\tSTemp2";
+  fout += "\tSTemp3";
+  fout += "\tSTemp4";
+  fout += "\tact_Ev";
+  fout += "\tact_ET";
+  fout += "\tET0";
+  fout += "\tKc";
+  fout += "\tatmCO2";
+  fout += "\tGroundw";
+  fout += "\tRecharge";
+  fout += "\tNLeach";
+
+  for(var i_Layer = 0; i_Layer < outLayers; i_Layer++) {
+    fout += "\tNO3-" + i_Layer;
+  }
+  fout += "\tCarb";
+  for(var i_Layer = 0; i_Layer < outLayers; i_Layer++) {
+    fout += "\tNH4-" + i_Layer;
+  }
+  for(var i_Layer = 0; i_Layer < 4; i_Layer++) {
+    fout += "\tNO2-" + i_Layer;
+  }
+  for(var i_Layer = 0; i_Layer < 6; i_Layer++) {
+    fout += "\tSOC-" + i_Layer;
+  }
+
+  fout += "\tSOC-0-30";
+  fout += "\tSOC-0-200";
+
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\tAOMf-" + i_Layer;
+  }
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\tAOMs-" + i_Layer;
+  }
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\tSMBf-" + i_Layer;
+  }
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\tSMBs-" + i_Layer;
+  }
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\tSOMf-" + i_Layer;
+  }
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\tSOMs-" + i_Layer;
+  }
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\tCBal-" + i_Layer;
+  }
+  for(var i_Layer = 0; i_Layer < 3; i_Layer++) {
+    fout += "\tNmin-" + i_Layer;
+  }
+
+  fout += "\tNetNmin";
+  fout += "\tDenit";
+  fout += "\tN2O";
+  fout += "\tSoilpH";
+  fout += "\tNEP";
+  fout += "\tNEE";
+  fout += "\tRh";
+
+
+  fout += "\ttmin";
+  fout += "\ttavg";
+  fout += "\ttmax";
+  fout += "\twind";
+  fout += "\tglobrad";
+  fout += "\trelhumid";
+  fout += "\tsunhours";
+  fout += endl;
+
+  //**** Second header line ***
+  fout += "TTMMYYY";  // Date
+  fout += "\t[ ]";    // Crop name
+  fout += "\t[0;1]";    // TranspirationDeficit
+  fout += "\t[mm]";     // ActualTranspiration
+  fout += "\t[0;1]";    // CropNRedux
+  fout += "\t[0;1]";    // HeatStressRedux
+  fout += "\t[0;1]";    // OxygenDeficit
+
+  fout += "\t[ ]";      // DevelopmentalStage
+  fout += "\t[°Cd]";    // CurrentTemperatureSum
+  fout += "\t[0;1]";    // VernalisationFactor
+  fout += "\t[0;1]";    // DaylengthFactor
+  fout += "\t[kg/ha]";  // OrganGrowthIncrement root
+  fout += "\t[kg/ha]";  // OrganGrowthIncrement leaf
+  fout += "\t[kg/ha]";  // OrganGrowthIncrement shoot
+  fout += "\t[kg/ha]";  // OrganGrowthIncrement fruit
+
+  fout += "\t[0;1]";    // RelativeTotalDevelopment
+  fout += "\t[kg/ha]";  // AbovegroundBiomass
+
+  for (var i = 0; i < 6; i++) {
+    fout += "\t[kgDM/ha]"; // get_OrganBiomass(i)
+  }
+
+  fout += "\t[kgDM/ha]";    // get_PrimaryCropYield(3)
+  fout += "\t[kgDM/ha]";    // get_AccumulatedPrimaryCropYield(3)
+
+  fout += "\t[kgCH2O/ha]";  // GrossPhotosynthesisHaRate
+  fout += "\t[kgCH2O/ha]";  // NetPhotosynthesis
+  fout += "\t[kgCH2O/ha]";  // MaintenanceRespirationAS
+  fout += "\t[kgCH2O/ha]";  // GrowthRespirationAS
+  fout += "\t[s/m]";        // StomataResistance
+  fout += "\t[m]";          // CropHeight
+  fout += "\t[m2/m2]";      // LeafAreaIndex
+  fout += "\t[layer]";      // RootingDepth
+  fout += "\t[m]";          // Effective RootingDepth
+
+  fout += "\t[kgN/ha]";     // TotalBiomassNContent
+  fout += "\t[kgN/ha]";     // SumTotalNUptake
+  fout += "\t[kgN/ha]";     // ActNUptake
+  fout += "\t[kgN/ha]";     // PotNUptake
+  fout += "\t[kgN/ha]";     // NFixed
+  fout += "\t[kgN/kg]";     // TargetNConcentration
+  fout += "\t[kgN/kg]";     // CriticalNConcentration
+  fout += "\t[kgN/kg]";     // AbovegroundBiomassNConcentration
+  fout += "\t[kgN/kg]";     // PrimaryYieldNConcentration
+  fout += "\t[kg/kg]";      // RawProteinConcentration
+
+  fout += "\t[kg C ha-1]";   // NPP
+  fout += "\t[kg C ha-1]";   // NPP root
+  fout += "\t[kg C ha-1]";   // NPP leaf
+  fout += "\t[kg C ha-1]";   // NPP shoot
+  fout += "\t[kg C ha-1]";   // NPP fruit
+  fout += "\t[kg C ha-1]";   // NPP struct
+  fout += "\t[kg C ha-1]";   // NPP sugar
+
+  fout += "\t[kg C ha-1]";   // GPP
+  fout += "\t[kg C ha-1]";   // Ra
+  fout += "\t[kg C ha-1]";   // Ra root
+  fout += "\t[kg C ha-1]";   // Ra leaf
+  fout += "\t[kg C ha-1]";   // Ra shoot
+  fout += "\t[kg C ha-1]";   // Ra fruit
+  fout += "\t[kg C ha-1]";   // Ra struct
+  fout += "\t[kg C ha-1]";   // Ra sugar
+
+  for (var i_Layer = 0; i_Layer < outLayers; i_Layer++) {
+    fout += "\t[m3/m3]"; // Soil moisture content
+  }
+  fout += "\t[mm]"; // Precipitation
+  fout += "\t[mm]"; // Irrigation
+  fout += "\t[mm]"; // Infiltration
+  fout += "\t[mm]"; // Surface water storage
+  fout += "\t[mm]"; // Surface water runoff
+  fout += "\t[mm]"; // Snow depth
+  fout += "\t[m]"; // Frost front depth in soil
+  fout += "\t[m]"; // Thaw front depth in soil
+  for(var i_Layer = 0; i_Layer < outLayers; i_Layer++) {
+    fout += "\t[m3/m3]"; //PASW
+  }
+
+  fout += "\t[°C]"; //
+  fout += "\t[°C]";
+  fout += "\t[°C]";
+  fout += "\t[°C]";
+  fout += "\t[°C]";
+  fout += "\t[°C]";
+  fout += "\t[mm]";
+  fout += "\t[mm]";
+  fout += "\t[mm]";
+  fout += "\t[ ]";
+  fout += "\t[ppm]";
+  fout += "\t[m]";
+  fout += "\t[mm]";
+  fout += "\t[kgN/ha]";
+
+  // NO3
+  for(var i_Layer = 0; i_Layer < outLayers; i_Layer++) {
+    fout += "\t[kgN/m3]";
+  }
+
+  fout += "\t[kgN/m3]";  // Soil Carbamid
+
+  // NH4
+  for(var i_Layer = 0; i_Layer < outLayers; i_Layer++) {
+    fout += "\t[kgN/m3]";
+  }
+
+  // NO2
+  for(var i_Layer = 0; i_Layer < 4; i_Layer++) {
+    fout += "\t[kgN/m3]";
+  }
+
+  // get_SoilOrganicC
+  for(var i_Layer = 0; i_Layer < 6; i_Layer++) {
+    fout += "\t[kgC/kg]";
+  }
+
+  fout += "\t[gC m-2]";   // SOC-0-30
+  fout += "\t[gC m-2]";   // SOC-0-200
+
+  // get_AOM_FastSum
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\t[kgC/m3]";
+  }
+  // get_AOM_SlowSum
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\t[kgC/m3]";
+  }
+
+  // get_SMB_Fast
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\t[kgC/m3]";
+  }
+  // get_SMB_Slow
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\t[kgC/m3]";
+  }
+
+  // get_SOM_Fast
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\t[kgC/m3]";
+  }
+  // get_SOM_Slow
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\t[kgC/m3]";
+  }
+
+  // get_CBalance
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++) {
+    fout += "\t[kgC/m3]";
+  }
+
+  // NetNMineralisationRate
+  for(var i_Layer = 0; i_Layer < 3; i_Layer++) {
+    fout += "\t[kgN/ha]";
+  }
+
+  fout += "\t[kgN/ha]";  // NetNmin
+  fout += "\t[kgN/ha]";  // Denit
+  fout += "\t[kgN/ha]";  // N2O
+  fout += "\t[ ]";       // SoilpH
+  fout += "\t[kgC/ha]";  // NEP
+  fout += "\t[kgC/ha]";  // NEE
+  fout += "\t[kgC/ha]"; // Rh
+
+  fout += "\t[°C]";     // tmin
+  fout += "\t[°C]";     // tavg
+  fout += "\t[°C]";     // tmax
+  fout += "\t[m/s]";    // wind
+  fout += "\tglobrad";  // globrad
+  fout += "\t[m3/m3]";  // relhumid
+  fout += "\t[h]";      // sunhours
+  fout += endl;
+
+  fs.writeFileSync(foutFileName, fout, { encoding: 'utf8' });
+
+};
+
+/**
+ * Writes header line to gout-Outputfile
+ * @param gout File pointer to smout.dat
+ */
+var initializeGoutHeader = function (goutFileName) {
+
+  var gout = "", endl = '\n';
+  gout += "Datum     ";
+  gout += "\tCrop";
+  gout += "\tStage";
+  gout += "\tHeight";
+  gout += "\tRoot";
+  gout += "\tRoot10";
+  gout += "\tLeaf";
+  gout += "\tShoot";
+  gout += "\tFruit";
+  gout += "\tAbBiom";
+  gout += "\tAbGBiom";
+  gout += "\tYield";
+  gout += "\tEarNo";
+  gout += "\tGrainNo";
+
+  gout += "\tLAI";
+  gout += "\tAbBiomNc";
+  gout += "\tYieldNc";
+  gout += "\tAbBiomN";
+  gout += "\tYieldN";
+
+  gout += "\tTotNup";
+  gout += "\tNGrain";
+  gout += "\tProtein";
+
+
+  gout += "\tBedGrad";
+  gout += "\tM0-10";
+  gout += "\tM10-20";
+  gout += "\tM20-30";
+  gout += "\tM30-40";
+  gout += "\tM40-50";
+  gout += "\tM50-60";
+  gout += "\tM60-70";
+  gout += "\tM70-80";
+  gout += "\tM80-90";
+  gout += "\tM0-30";
+  gout += "\tM30-60";
+  gout += "\tM60-90";
+  gout += "\tM0-60";
+  gout += "\tM0-90";
+  gout += "\tPAW0-200";
+  gout += "\tPAW0-130";
+  gout += "\tPAW0-150";
+  gout += "\tN0-30";
+  gout += "\tN30-60";
+  gout += "\tN60-90";
+  gout += "\tN90-120";
+  gout += "\tN0-60";
+  gout += "\tN0-90";
+  gout += "\tN0-200";
+  gout += "\tN0-130";
+  gout += "\tN0-150";
+  gout += "\tNH430";
+  gout += "\tNH460";
+  gout += "\tNH490";
+  gout += "\tCo0-10";
+  gout += "\tCo0-30";
+  gout += "\tT0-10";
+  gout += "\tT20-30";
+  gout += "\tT50-60";
+  gout += "\tCO2";
+  gout += "\tNH3";
+  gout += "\tN2O";
+  gout += "\tN2";
+  gout += "\tNgas";
+  gout += "\tNFert";
+  gout += "\tIrrig";
+  gout += endl;
+
+  // **** Second header line ****
+
+  gout += "TTMMYYYY";
+  gout += "\t[ ]";
+  gout += "\t[ ]";
+  gout += "\t[m]";
+  gout += "\t[kgDM/ha]";
+  gout += "\t[kgDM/ha]";
+  gout += "\t[kgDM/ha]";
+  gout += "\t[kgDM/ha]";
+  gout += "\t[kgDM/ha]";
+  gout += "\t[kgDM/ha]";
+  gout += "\t[kgDM/ha]";
+  gout += "\t[kgDM/ha]";
+  gout += "\t[ ]";
+  gout += "\t[ ]";
+  gout += "\t[m2/m2]";
+  gout += "\t[kgN/kgDM";
+  gout += "\t[kgN/kgDM]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[-]";
+  gout += "\t[kg/kgDM]";
+
+  gout += "\t[0;1]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[m3/m3]";
+  gout += "\t[mm]";
+  gout += "\t[mm]";
+  gout += "\t[mm]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[kgC/ha]";
+  gout += "\t[kgC/ha]";
+  gout += "\t[°C]";
+  gout += "\t[°C]";
+  gout += "\t[°C]";
+  gout += "\t[kgC/ha]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[-]";
+  gout += "\t[-]";
+  gout += "\t[-]";
+  gout += "\t[kgN/ha]";
+  gout += "\t[mm]";
+  gout += endl;
+
+  fs.writeFileSync(goutFileName, gout, { encoding: 'utf8' });
+
+};
+
+var dumpParametersIntoFile = function (fileName, cpp) {
+
+  var parameter_output = '', endl = '\n';
+
+  //double po_AtmosphericResistance; //0.0025 [s m-1], from Sadeghi et al. 1988
+
+  // userSoilOrganicParameters
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_SOM_SlowDecCoeffStandard" + "\t" + cpp.userSoilOrganicParameters.po_SOM_SlowDecCoeffStandard + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_SOM_FastDecCoeffStandard" + "\t" + cpp.userSoilOrganicParameters.po_SOM_FastDecCoeffStandard + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_SMB_SlowMaintRateStandard" + "\t" + cpp.userSoilOrganicParameters.po_SMB_SlowMaintRateStandard + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_SMB_FastMaintRateStandard" + "\t" + cpp.userSoilOrganicParameters.po_SMB_FastMaintRateStandard + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_SMB_SlowDeathRateStandard" + "\t" + cpp.userSoilOrganicParameters.po_SMB_SlowDeathRateStandard + endl;
+
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_SMB_FastDeathRateStandard" + "\t" + cpp.userSoilOrganicParameters.po_SMB_FastDeathRateStandard + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_SMB_UtilizationEfficiency" + "\t" + cpp.userSoilOrganicParameters.po_SMB_UtilizationEfficiency + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_SOM_SlowUtilizationEfficiency" + "\t" + cpp.userSoilOrganicParameters.po_SOM_SlowUtilizationEfficiency + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_SOM_FastUtilizationEfficiency" + "\t" + cpp.userSoilOrganicParameters.po_SOM_FastUtilizationEfficiency + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_AOM_SlowUtilizationEfficiency" + "\t" + cpp.userSoilOrganicParameters.po_AOM_SlowUtilizationEfficiency + endl;
+
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_AOM_FastUtilizationEfficiency" + "\t" + cpp.userSoilOrganicParameters.po_AOM_FastUtilizationEfficiency + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_AOM_FastMaxC_to_N" + "\t" + cpp.userSoilOrganicParameters.po_AOM_FastMaxC_to_N + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_PartSOM_Fast_to_SOM_Slow" + "\t" + cpp.userSoilOrganicParameters.po_PartSOM_Fast_to_SOM_Slow + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_PartSMB_Slow_to_SOM_Fast" + "\t" + cpp.userSoilOrganicParameters.po_PartSMB_Slow_to_SOM_Fast + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_PartSMB_Fast_to_SOM_Fast" + "\t" + cpp.userSoilOrganicParameters.po_PartSMB_Fast_to_SOM_Fast + endl;
+
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_PartSOM_to_SMB_Slow" + "\t" + cpp.userSoilOrganicParameters.po_PartSOM_to_SMB_Slow + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_PartSOM_to_SMB_Fast" + "\t" + cpp.userSoilOrganicParameters.po_PartSOM_to_SMB_Fast + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_CN_Ratio_SMB" + "\t" + cpp.userSoilOrganicParameters.po_CN_Ratio_SMB + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_LimitClayEffect" + "\t" + cpp.userSoilOrganicParameters.po_LimitClayEffect + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_AmmoniaOxidationRateCoeffStandard" + "\t" + cpp.userSoilOrganicParameters.po_AmmoniaOxidationRateCoeffStandard + endl;
+
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_NitriteOxidationRateCoeffStandard" + "\t" + cpp.userSoilOrganicParameters.po_NitriteOxidationRateCoeffStandard + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_TransportRateCoeff" + "\t" + cpp.userSoilOrganicParameters.po_TransportRateCoeff + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_SpecAnaerobDenitrification" + "\t" + cpp.userSoilOrganicParameters.po_SpecAnaerobDenitrification + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_ImmobilisationRateCoeffNO3" + "\t" + cpp.userSoilOrganicParameters.po_ImmobilisationRateCoeffNO3 + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_ImmobilisationRateCoeffNH4" + "\t" + cpp.userSoilOrganicParameters.po_ImmobilisationRateCoeffNH4 + endl;
+
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_Denit1" + "\t" + cpp.userSoilOrganicParameters.po_Denit1 + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_Denit2" + "\t" + cpp.userSoilOrganicParameters.po_Denit2 + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_Denit3" + "\t" + cpp.userSoilOrganicParameters.po_Denit3 + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_HydrolysisKM" + "\t" + cpp.userSoilOrganicParameters.po_HydrolysisKM + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_ActivationEnergy" + "\t" + cpp.userSoilOrganicParameters.po_ActivationEnergy + endl;
+
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_HydrolysisP1" + "\t" + cpp.userSoilOrganicParameters.po_HydrolysisP1 + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_HydrolysisP2" + "\t" + cpp.userSoilOrganicParameters.po_HydrolysisP2 + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_AtmosphericResistance" + "\t" + cpp.userSoilOrganicParameters.po_AtmosphericResistance + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_N2OProductionRate" + "\t" + cpp.userSoilOrganicParameters.po_N2OProductionRate + endl;
+  parameter_output += "userSoilOrganicParameters" + "\t" + "po_Inhibitor_NH3" + "\t" + cpp.userSoilOrganicParameters.po_Inhibitor_NH3 + endl;
+
+  parameter_output += endl;
+
+  fs.writeFileSync(fileName, parameter_output, { encoding: 'utf8' });
+
+};
+
+
+var writeCropResults = function (mcg, foutFileName, goutFileName, crop_is_planted) {
+
+  var fout = '', gout = '', endl = '\n';
+
+  if (crop_is_planted) {
+    fout += "\t" + mcg.get_CropName();
+    fout += "\t" + fixed(10, mcg.get_TranspirationDeficit());// [0;1]
+    fout += "\t" + fixed(10, mcg.get_ActualTranspiration());
+    fout += "\t" + fixed(10, mcg.get_CropNRedux());// [0;1]
+    fout += "\t" + fixed(10, mcg.get_HeatStressRedux());// [0;1]
+    fout += "\t" + fixed(10, mcg.get_OxygenDeficit());// [0;1]
+
+    fout += "\t" + fixed(10, mcg.get_DevelopmentalStage() + 1);
+    fout += "\t" + fixed(10, mcg.get_CurrentTemperatureSum());
+    fout += "\t" + fixed(10, mcg.get_VernalisationFactor());
+    fout += "\t" + fixed(10, mcg.get_DaylengthFactor());
+    fout += "\t" + fixed(10, mcg.get_OrganGrowthIncrement(0));
+    fout += "\t" + fixed(10, mcg.get_OrganGrowthIncrement(1));
+    fout += "\t" + fixed(10, mcg.get_OrganGrowthIncrement(2));
+    fout += "\t" + fixed(10, mcg.get_OrganGrowthIncrement(3));
+    
+    fout += "\t" + fixed(10, mcg.get_RelativeTotalDevelopment());
+    fout += "\t" + fixed(10, mcg.get_AbovegroundBiomass());
+
+    for (var i = 0, is = mcg.get_NumberOfOrgans(); i < is; i++)
+      fout += "\t" + fixed(10, mcg.get_OrganBiomass(i)); // biomass organs, [kg C ha-1]
+
+    for (var i = 0, is = (6 - mcg.get_NumberOfOrgans()); i < is; i++)
+      fout += "\t" + 0.0; // adding zero fill if biomass organs < 6,
+
+    /* TODO: implement mcg.get_AccumulatedPrimaryCropYield() */
+    fout += "\t" + fixed(10, mcg.get_PrimaryCropYield());
+    fout += "\t" + 0.0/* fixed(10, mcg.get_AccumulatedPrimaryCropYield())*/;
+
+    fout += "\t" + fixed(10, mcg.get_GrossPhotosynthesisHaRate()); // [kg CH2O ha-1 d-1]
+    fout += "\t" + fixed(10, mcg.get_NetPhotosynthesis());  // [kg CH2O ha-1 d-1]
+    fout += "\t" + fixed(10, mcg.get_MaintenanceRespirationAS());// [kg CH2O ha-1]
+    fout += "\t" + fixed(10, mcg.get_GrowthRespirationAS());// [kg CH2O ha-1]
+
+    fout += "\t" + fixed(10, mcg.get_StomataResistance());// [s m-1]
+
+    fout += "\t" + fixed(10, mcg.get_CropHeight());// [m]
+    fout += "\t" + fixed(10, mcg.get_LeafAreaIndex()); //[m2 m-2]
+    fout += "\t" + fixed(10, mcg.get_RootingDepth()); //[layer]
+    fout += "\t" + fixed(10, mcg.getEffectiveRootingDepth()); //[m]
+
+    fout += "\t" + fixed(10, mcg.get_TotalBiomassNContent());
+    fout += "\t" + fixed(10, mcg.get_SumTotalNUptake());
+    fout += "\t" + fixed(10, mcg.get_ActNUptake()); // [kg N ha-1]
+    fout += "\t" + fixed(10, mcg.get_PotNUptake()); // [kg N ha-1]
+    /* TODO: implement get_BiologicalNFixation */
+    fout += "\t" + 0.0/*fixed(10, mcg.get_BiologicalNFixation())*/; // [kg N ha-1]
+    fout += "\t" + fixed(10, mcg.get_TargetNConcentration());//[kg N kg-1]
+
+    fout += "\t" + fixed(10, mcg.get_CriticalNConcentration());//[kg N kg-1]
+    fout += "\t" + fixed(10, mcg.get_AbovegroundBiomassNConcentration());//[kg N kg-1]
+    fout += "\t" + fixed(10, mcg.get_PrimaryYieldNConcentration());//[kg N kg-1]
+    fout += "\t" + fixed(10, mcg.get_RawProteinConcentration());//[kg N kg-1]
+    fout += "\t" + fixed(10, mcg.get_NetPrimaryProduction());//[kg N kg-1]
+
+    for (var i=0; i<mcg.get_NumberOfOrgans(); i++) {
+        fout += "\t" + fixed(10, mcg.get_OrganSpecificNPP(i)); // NPP organs, [kg C ha-1]
+    }
+    // if there less than 4 organs we have to fill the column that
+    // was added in the output header of rmout; in this header there
+    // are statically 4 columns initialised for the organ NPP
+    for (var i=mcg.get_NumberOfOrgans(); i<6; i++) {
+        fout += "\t0.0"; // NPP organs, [kg C ha-1]
+    }
+
+    fout += "\t" + fixed(10, mcg.get_GrossPrimaryProduction()); // GPP, [kg C ha-1]
+
+    fout += "\t" + fixed(10, mcg.get_AutotrophicRespiration()); // Ra, [kg C ha-1]
+    for (var i=0; i<mcg.get_NumberOfOrgans(); i++) {
+      fout += "\t" + fixed(10, mcg.get_OrganSpecificTotalRespired(i)); // Ra organs, [kg C ha-1]
+    }
+    // if there less than 4 organs we have to fill the column that
+    // was added in the output header of rmout; in this header there
+    // are statically 4 columns initialised for the organ RA
+    for (var i=mcg.get_NumberOfOrgans(); i<6; i++) {
+        fout += "\t0.0";
+    }
+
+    gout += "\t" + mcg.get_CropName();
+    gout += "\t" + fixed(10, mcg.get_DevelopmentalStage() + 1);
+    gout += "\t" + fixed(10, mcg.get_CropHeight());
+    gout += "\t" + fixed(10, mcg.get_OrganBiomass(0));
+    gout += "\t" + fixed(10, mcg.get_OrganBiomass(0)); //! @todo
+    gout += "\t" + fixed(10, mcg.get_OrganBiomass(1));
+    gout += "\t" + fixed(10, mcg.get_OrganBiomass(2));
+    gout += "\t" + fixed(10, mcg.get_OrganBiomass(3));
+    gout += "\t" + fixed(10, mcg.get_AbovegroundBiomass());
+    gout += "\t" + fixed(10, mcg.get_AbovegroundBiomass()); //! @todo
+    gout += "\t" + fixed(10, mcg.get_PrimaryCropYield());
+    gout += "\t0"; //! @todo
+    gout += "\t0"; //! @todo
+    gout += "\t" + fixed(10, mcg.get_LeafAreaIndex());
+    gout += "\t" + fixed(10, mcg.get_AbovegroundBiomassNConcentration());
+    gout += "\t" + fixed(10, mcg.get_PrimaryYieldNConcentration());
+    gout += "\t" + fixed(10, mcg.get_AbovegroundBiomassNContent());
+    gout += "\t" + fixed(10, mcg.get_PrimaryYieldNContent());
+    gout += "\t" + fixed(10, mcg.get_TotalBiomassNContent());
+    gout += "\t0"; //! @todo
+    gout += "\t" + fixed(10, mcg.get_RawProteinConcentration());
+
+  } else { // crop is not planted
+
+    fout += "\t"; // Crop Name
+    fout += "\t1.00"; // TranspirationDeficit
+    fout += "\t0.00"; // ActualTranspiration
+    fout += "\t1.00"; // CropNRedux
+    fout += "\t1.00"; // HeatStressRedux
+    fout += "\t1.00"; // OxygenDeficit
+
+    fout += "\t0";      // DevelopmentalStage
+    fout += "\t0.0";    // CurrentTemperatureSum
+    fout += "\t0.00";   // VernalisationFactor
+    fout += "\t0.00";   // DaylengthFactor
+
+    fout += "\t0.00";   // OrganGrowthIncrement root
+    fout += "\t0.00";   // OrganGrowthIncrement leaf
+    fout += "\t0.00";   // OrganGrowthIncrement shoot
+    fout += "\t0.00";   // OrganGrowthIncrement fruit
+    fout += "\t0.00";   // RelativeTotalDevelopment
+
+    fout += "\t0.0";    // AbovegroundBiomass
+    fout += "\t0.0";    // get_OrganBiomass(0)
+    fout += "\t0.0";    // get_OrganBiomass(1)
+    fout += "\t0.0";    // get_OrganBiomass(2)
+    fout += "\t0.0";    // get_OrganBiomass(3)
+    fout += "\t0.0";    // get_OrganBiomass(4)
+    fout += "\t0.0";    // get_OrganBiomass(5)
+    fout += "\t0.0";    // get_PrimaryCropYield(3)
+    fout += "\t0.0";    // get_AccumulatedPrimaryCropYield(3)
+
+    fout += "\t0.000";  // GrossPhotosynthesisHaRate
+    fout += "\t0.00";   // NetPhotosynthesis
+    fout += "\t0.000";  // MaintenanceRespirationAS
+    fout += "\t0.000";  // GrowthRespirationAS
+    fout += "\t0.00";   // StomataResistance
+    fout += "\t0.00";   // CropHeight
+    fout += "\t0.00";   // LeafAreaIndex
+    fout += "\t0";      // RootingDepth
+    fout += "\t0.0";    // EffectiveRootingDepth
+
+    fout += "\t0.0";    // TotalBiomassNContent
+    fout += "\t0.00";   // SumTotalNUptake
+    fout += "\t0.00";   // ActNUptake
+    fout += "\t0.00";   // PotNUptake
+    fout += "\t0.00";   // NFixed
+    fout += "\t0.000";  // TargetNConcentration
+    fout += "\t0.000";  // CriticalNConcentration
+    fout += "\t0.000";  // AbovegroundBiomassNConcentration
+    fout += "\t0.000";  // PrimaryYieldNConcentration
+    fout += "\t0.000";  // RawProteinConcentration
+
+    fout += "\t0.0";    // NetPrimaryProduction
+    fout += "\t0.0"; // NPP root
+    fout += "\t0.0"; // NPP leaf
+    fout += "\t0.0"; // NPP shoot
+    fout += "\t0.0"; // NPP fruit
+    fout += "\t0.0"; // NPP struct
+    fout += "\t0.0"; // NPP sugar
+
+    fout += "\t0.0"; // GrossPrimaryProduction
+    fout += "\t0.0"; // Ra - VcRespiration
+    fout += "\t0.0"; // Ra root - OrganSpecificTotalRespired
+    fout += "\t0.0"; // Ra leaf - OrganSpecificTotalRespired
+    fout += "\t0.0"; // Ra shoot - OrganSpecificTotalRespired
+    fout += "\t0.0"; // Ra fruit - OrganSpecificTotalRespired
+    fout += "\t0.0"; // Ra struct - OrganSpecificTotalRespired
+    fout += "\t0.0"; // Ra sugar - OrganSpecificTotalRespired
+
+    gout += "\t";       // Crop Name
+    gout += "\t0";      // DevelopmentalStage
+    gout += "\t0.00";   // CropHeight
+    gout += "\t0.0";    // OrganBiomass(0)
+    gout += "\t0.0";    // OrganBiomass(0)
+    gout += "\t0.0";    // OrganBiomass(1)
+
+    gout += "\t0.0";    // OrganBiomass(2)
+    gout += "\t0.0";    // OrganBiomass(3)
+    gout += "\t0.0";    // AbovegroundBiomass
+    gout += "\t0.0";    // AbovegroundBiomass
+    gout += "\t0.0";    // PrimaryCropYield
+
+    gout += "\t0";
+    gout += "\t0";
+
+    gout += "\t0.00";   // LeafAreaIndex
+    gout += "\t0.000";  // AbovegroundBiomassNConcentration
+    gout += "\t0.0";    // PrimaryYieldNConcentration
+    gout += "\t0.00";   // AbovegroundBiomassNContent
+    gout += "\t0.0";    // PrimaryYieldNContent
+
+    gout += "\t0.0";    // TotalBiomassNContent
+    gout += "\t0";
+    gout += "\t0.00";   // RawProteinConcentration
+  }
+
+  fs.appendFileSync(goutFileName, gout, { encoding: 'utf8' });
+  fs.appendFileSync(foutFileName, fout, { encoding: 'utf8' });
+
+};
+
+var writeGeneralResults = function (foutFileName, goutFileName, env, model, weather, d) {
+
+  var fout = '', gout = '', endl = '\n';
+  var mst = model.soilTemperature();
+  var msm = model.soilMoisture();
+  var mso = model.soilOrganic();
+  var msc = model.soilColumn();
+
+  //! TODO: schmutziger work-around. Hier muss was eleganteres hin!
+  var msa = model.soilColumnNC();
+  var msq = model.soilTransport();
+
+  var outLayers = 20;
+  for (var i_Layer = 0; i_Layer < outLayers; i_Layer++)
+    fout += "\t" + fixed(10, msm.get_SoilMoisture(i_Layer));
+
+  fout += "\t" + fixed(10, weather.dataForTimestep(WEATHER.PRECIP, d));
+  fout += "\t" + fixed(10, model.dailySumIrrigationWater());
+  fout += "\t" + fixed(10, msm.get_Infiltration()); // {mm]
+  fout += "\t" + fixed(10, msm.get_SurfaceWaterStorage());// {mm]
+  fout += "\t" + fixed(10, msm.get_SurfaceRunOff());// {mm]
+  fout += "\t" + fixed(10, msm.get_SnowDepth()); // [mm]
+  fout += "\t" + fixed(10, msm.get_FrostDepth());
+  fout += "\t" + fixed(10, msm.get_ThawDepth());
+  for(var i_Layer = 0; i_Layer < outLayers; i_Layer++)
+    fout += "\t" + fixed(10, msm.get_SoilMoisture(i_Layer) - msa[i_Layer].get_PermanentWiltingPoint());
+
+  fout += "\t" + fixed(10, mst.get_SoilSurfaceTemperature());
+
+  for(var i_Layer = 0; i_Layer < 5; i_Layer++)
+    fout += "\t" + fixed(10, mst.get_SoilTemperature(i_Layer));// [°C]
+
+  fout += "\t" + fixed(10, msm.get_ActualEvaporation());// [mm]
+  fout += "\t" + fixed(10, msm.get_Evapotranspiration());// [mm]
+  fout += "\t" + fixed(10, msm.get_ET0());// [mm]
+  fout += "\t" + fixed(10, msm.get_KcFactor());
+  fout += "\t" + fixed(10, model.get_AtmosphericCO2Concentration());// [ppm]
+  fout += "\t" + fixed(10, model.get_GroundwaterDepth());// [m]
+  fout += "\t" + fixed(10, msm.get_GroundwaterRecharge());// [mm]
+  fout += "\t" + fixed(10, msq.get_NLeaching()); // [kg N ha-1]
+
+
+  for(var i_Layer = 0; i_Layer < outLayers; i_Layer++)
+    fout += "\t" + fixed(10, msc.soilLayer(i_Layer).get_SoilNO3());// [kg N m-3]
+
+  fout += "\t" + fixed(10, msc.soilLayer(0).get_SoilCarbamid());
+
+  for(var i_Layer = 0; i_Layer < outLayers; i_Layer++)
+    fout += "\t" + fixed(10, msc.soilLayer(i_Layer).get_SoilNH4());
+
+  for(var i_Layer = 0; i_Layer < 4; i_Layer++)
+    fout += "\t" + fixed(10, msc.soilLayer(i_Layer).get_SoilNO2());
+
+  for(var i_Layer = 0; i_Layer < 6; i_Layer++)
+    fout += "\t" + fixed(10, msc.soilLayer(i_Layer).vs_SoilOrganicCarbon()); // [kg C kg-1]
+
+  // SOC-0-30 [g C m-2]
+  var  soc_30_accumulator = 0.0;
+  for (var i_Layer = 0; i_Layer < 3; i_Layer++) {
+      // kg C / kg --> g C / m2
+      soc_30_accumulator += msc.soilLayer(i_Layer).vs_SoilOrganicCarbon() * msc.soilLayer(i_Layer).vs_SoilBulkDensity() * msc.soilLayer(i_Layer).vs_LayerThickness * 1000;
+  }
+  fout += "\t" + fixed(10, soc_30_accumulator);
+
+
+  // SOC-0-200   [g C m-2]
+  var  soc_200_accumulator = 0.0;
+  for (var i_Layer = 0; i_Layer < outLayers; i_Layer++) {
+      // kg C / kg --> g C / m2
+      soc_200_accumulator += msc.soilLayer(i_Layer).vs_SoilOrganicCarbon() * msc.soilLayer(i_Layer).vs_SoilBulkDensity() * msc.soilLayer(i_Layer).vs_LayerThickness * 1000;
+  }
+  fout += "\t" + fixed(10, soc_200_accumulator);
+
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++)
+    fout += "\t" + fixed(10, mso.get_AOM_FastSum(i_Layer));
+
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++)
+    fout += "\t" + fixed(10, mso.get_AOM_SlowSum(i_Layer));
+
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++)
+    fout += "\t" + fixed(10, mso.get_SMB_Fast(i_Layer));
+
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++)
+    fout += "\t" + fixed(10, mso.get_SMB_Slow(i_Layer));
+
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++)
+    fout += "\t" + fixed(10, mso.get_SOM_Fast(i_Layer));
+
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++)
+    fout += "\t" + fixed(10, mso.get_SOM_Slow(i_Layer));
+
+  for(var i_Layer = 0; i_Layer < 1; i_Layer++)
+    fout += "\t" + fixed(10, mso.get_CBalance(i_Layer));
+
+  for(var i_Layer = 0; i_Layer < 3; i_Layer++)
+    fout += "\t" + fixed(10, mso.get_NetNMineralisationRate(i_Layer)); // [kg N ha-1]
+
+
+  fout += "\t" + fixed(10, mso.get_NetNMineralisation()); // [kg N ha-1]
+  fout += "\t" + fixed(10, mso.get_Denitrification()); // [kg N ha-1]
+  fout += "\t" + fixed(10, mso.get_N2O_Produced()); // [kg N ha-1]
+  fout += "\t" + fixed(10, msc.soilLayer(0).get_SoilpH()); // [ ]
+  fout += "\t" + fixed(10, mso.get_NetEcosystemProduction()); // [kg C ha-1]
+  fout += "\t" + fixed(10, mso.get_NetEcosystemExchange()); // [kg C ha-1]
+  fout += "\t" + fixed(10, mso.get_DecomposerRespiration()); // Rh, [kg C ha-1 d-1]
+
+
+  fout += "\t" + fixed(10, weather.dataForTimestep(WEATHER.TMIN, d));
+  fout += "\t" + fixed(10, weather.dataForTimestep(WEATHER.TAVG, d));
+  fout += "\t" + fixed(10, weather.dataForTimestep(WEATHER.TMAX, d));
+  fout += "\t" + fixed(10, weather.dataForTimestep(WEATHER.WIND, d));
+  fout += "\t" + fixed(10, weather.dataForTimestep(WEATHER.GLOBRAD, d));
+  fout += "\t" + fixed(10, weather.dataForTimestep(WEATHER.RELHUMID, d));
+  fout += "\t" + fixed(10, weather.dataForTimestep(WEATHER.SUNHOURS, d));
+  fout += endl;
+
+  // smout
+  gout += "\t" + fixed(10, msm.get_PercentageSoilCoverage());
+
+  for(var i_Layer = 0; i_Layer < 9; i_Layer++) {
+    gout += "\t" + fixed(10, msm.get_SoilMoisture(i_Layer)); // [m3 m-3]
+  }
+
+  gout += "\t" + fixed(10, (msm.get_SoilMoisture(0) + msm.get_SoilMoisture(1) + msm.get_SoilMoisture(2)) / 3.0); //[m3 m-3]
+  gout += "\t" + fixed(10, (msm.get_SoilMoisture(3) + msm.get_SoilMoisture(4) + msm.get_SoilMoisture(5)) / 3.0); //[m3 m-3]
+  gout += "\t" + fixed(10, (msm.get_SoilMoisture(6) + msm.get_SoilMoisture(7) + msm.get_SoilMoisture(8)) / 3.0); //[m3 m-3]
+
+  var M0_60 = 0.0;
+  for(var i_Layer = 0; i_Layer < 6; i_Layer++) {
+    M0_60 += msm.get_SoilMoisture(i_Layer);
+  }
+  gout += "\t" + fixed(10, (M0_60 / 6.0)); // [m3 m-3]
+
+  var M0_90 = 0.0;
+  for(var i_Layer = 0; i_Layer < 9; i_Layer++) {
+    M0_90 += msm.get_SoilMoisture(i_Layer);
+  }
+  gout += "\t" + fixed(10, (M0_90 / 9.0)); // [m3 m-3]
+
+  var PAW0_200 = 0.0;
+  for(var i_Layer = 0; i_Layer < 20; i_Layer++) {
+      PAW0_200 += (msm.get_SoilMoisture(i_Layer) - msa[i_Layer].get_PermanentWiltingPoint()) ;
+  }
+  gout += "\t" + fixed(10, (PAW0_200 * 0.1 * 1000.0)); // [mm]
+
+  var PAW0_130 = 0.0;
+  for(var i_Layer = 0; i_Layer < 13; i_Layer++) {
+      PAW0_130 += (msm.get_SoilMoisture(i_Layer) - msa[i_Layer].get_PermanentWiltingPoint()) ;
+  }
+  gout += "\t" + fixed(10, (PAW0_130 * 0.1 * 1000.0)); // [mm]
+
+    var PAW0_150 = 0.0;
+    for(var i_Layer = 0; i_Layer < 15; i_Layer++) {
+            PAW0_150 += (msm.get_SoilMoisture(i_Layer) - msa[i_Layer].get_PermanentWiltingPoint()) ;
+  }
+    gout += "\t" + fixed(10, (PAW0_150 * 0.1 * 1000.0)); // [mm]
+
+  gout += "\t" + fixed(10, (msc.soilLayer(0).get_SoilNmin() + msc.soilLayer(1).get_SoilNmin() + msc.soilLayer(2).get_SoilNmin()) / 3.0 * 0.3 * 10000); // [kg m-3] -> [kg ha-1]
+  gout += "\t" + fixed(10, (msc.soilLayer(3).get_SoilNmin() + msc.soilLayer(4).get_SoilNmin() + msc.soilLayer(5).get_SoilNmin()) / 3.0 * 0.3 * 10000); // [kg m-3] -> [kg ha-1]
+  gout += "\t" + fixed(10, (msc.soilLayer(6).get_SoilNmin() + msc.soilLayer(7).get_SoilNmin() + msc.soilLayer(8).get_SoilNmin()) / 3.0 * 0.3 * 10000); // [kg m-3] -> [kg ha-1]
+  gout += "\t" + fixed(10, (msc.soilLayer(9).get_SoilNmin() + msc.soilLayer(10).get_SoilNmin() + msc.soilLayer(11).get_SoilNmin()) / 3.0 * 0.3 * 10000); // [kg m-3] -> [kg ha-1]
+
+  var N0_60 = 0.0;
+  for(var i_Layer = 0; i_Layer < 6; i_Layer++) {
+    N0_60 += msc.soilLayer(i_Layer).get_SoilNmin();
+  }
+  gout += "\t" + fixed(10, (N0_60 * 0.1 * 10000));  // [kg m-3] -> [kg ha-1]
+
+  var N0_90 = 0.0;
+  for(var i_Layer = 0; i_Layer < 9; i_Layer++) {
+    N0_90 += msc.soilLayer(i_Layer).get_SoilNmin();
+  }
+  gout += "\t" + fixed(10, (N0_90 * 0.1 * 10000));  // [kg m-3] -> [kg ha-1]
+
+  var N0_200 = 0.0;
+  for(var i_Layer = 0; i_Layer < 20; i_Layer++) {
+    N0_200 += msc.soilLayer(i_Layer).get_SoilNmin();
+  }
+  gout += "\t" + fixed(10, (N0_200 * 0.1 * 10000));  // [kg m-3] -> [kg ha-1]
+
+  var N0_130 = 0.0;
+  for(var i_Layer = 0; i_Layer < 13; i_Layer++) {
+    N0_130 += msc.soilLayer(i_Layer).get_SoilNmin();
+  }
+  gout += "\t" + fixed(10, (N0_130 * 0.1 * 10000));  // [kg m-3] -> [kg ha-1]
+
+  var N0_150 = 0.0;
+  for(var i_Layer = 0; i_Layer < 15; i_Layer++) {
+    N0_150 += msc.soilLayer(i_Layer).get_SoilNmin();
+  }
+  gout += "\t" + fixed(10, (N0_150 * 0.1 * 10000));  // [kg m-3] -> [kg ha-1]
+
+  gout += "\t" + fixed(10, (msc.soilLayer(0).get_SoilNH4() + msc.soilLayer(1).get_SoilNH4() + msc.soilLayer(2).get_SoilNH4()) / 3.0 * 0.3 * 10000); // [kg m-3] -> [kg ha-1]
+  gout += "\t" + fixed(10, (msc.soilLayer(3).get_SoilNH4() + msc.soilLayer(4).get_SoilNH4() + msc.soilLayer(5).get_SoilNH4()) / 3.0 * 0.3 * 10000); // [kg m-3] -> [kg ha-1]
+  gout += "\t" + fixed(10, (msc.soilLayer(6).get_SoilNH4() + msc.soilLayer(7).get_SoilNH4() + msc.soilLayer(8).get_SoilNH4()) / 3.0 * 0.3 * 10000); // [kg m-3] -> [kg ha-1]
+  gout += "\t" + fixed(10, mso.get_SoilOrganicC(0) * 0.1 * 10000);// [kg m-3] -> [kg ha-1]
+  gout += "\t" + fixed(10, ((mso.get_SoilOrganicC(0) + mso.get_SoilOrganicC(1) + mso.get_SoilOrganicC(2)) / 3.0 * 0.3 * 10000)); // [kg m-3] -> [kg ha-1]
+  gout += "\t" + fixed(10, mst.get_SoilTemperature(0));
+  gout += "\t" + fixed(10, mst.get_SoilTemperature(2));
+  gout += "\t" + fixed(10, mst.get_SoilTemperature(5));
+  gout += "\t" + fixed(10, mso.get_DecomposerRespiration()); // Rh, [kg C ha-1 d-1]
+
+  gout += "\t" + fixed(10, mso.get_NH3_Volatilised()); // [kg N ha-1]
+  gout += "\t0"; //! @todo
+  gout += "\t0"; //! @todo
+  gout += "\t0"; //! @todo
+  gout += "\t" + fixed(10, model.dailySumFertiliser());
+  gout += "\t" + fixed(10, model.dailySumIrrigationWater());
+  gout += endl;
+
+  fs.appendFileSync(goutFileName, gout, { encoding: 'utf8' });
+  fs.appendFileSync(foutFileName, fout, { encoding: 'utf8' });
+
+}
 
 
 /* JS debugging */
@@ -1091,12 +2060,12 @@ var tools = {
         }
 
         // Boundaries for linear interpolation
-        var lbRes = Tools.readPrincipalSoilCharacteristicData(texture, srd_lowerBound);
+        var lbRes = tools.readPrincipalSoilCharacteristicData(texture, srd_lowerBound);
         var sat_lowerBound = lbRes.sat;
         var fc_lowerBound = lbRes.fc;
         var pwp_lowerBound = lbRes.pwp;
 
-        var ubRes = Tools.readPrincipalSoilCharacteristicData(texture, srd_upperBound);
+        var ubRes = tools.readPrincipalSoilCharacteristicData(texture, srd_upperBound);
         var sat_upperBound = ubRes.sat;
         var fc_upperBound = ubRes.fc;
         var pwp_upperBound = ubRes.pwp;
@@ -1156,7 +2125,7 @@ var tools = {
           var pwp_mod_lowerBound = 0.0;
           // modifier values are given only for organic matter > 1.0% (class h2)
           if (som_lowerBound !== 0.0) {
-            lbRes = Tools.readSoilCharacteristicModifier(texture, som_lowerBound);
+            lbRes = tools.readSoilCharacteristicModifier(texture, som_lowerBound);
             sat_mod_lowerBound = lbRes.sat;
             fc_mod_lowerBound = lbRes.fc;
             pwp_mod_lowerBound = lbRes.pwp;
@@ -1166,7 +2135,7 @@ var tools = {
           var sat_mod_upperBound = 0.0;
           var pwp_mod_upperBound = 0.0;
           if (som_upperBound !== 0.0) {
-            ubRes = Tools.readSoilCharacteristicModifier(texture, som_upperBound);
+            ubRes = tools.readSoilCharacteristicModifier(texture, som_upperBound);
             sat_mod_upperBound = ubRes.sat;
             fc_mod_upperBound = ubRes.fc;
             pwp_mod_upperBound = ubRes.pwp;
@@ -6156,7 +7125,7 @@ CropGrowthAPI.prototype = {
 
 // TODO: add initial plantDryWeight
 
-var GenericCrop = function (name) {
+var GenericCrop = function (name, options) {
 
   var _id = -1
     , _name = name.toLowerCase()
@@ -6179,9 +7148,10 @@ var GenericCrop = function (name) {
     , _cropParams = null
     ;
 
-  if (_name === 'winter wheat') {
+  if (_name === 'winter wheat' || _name === 'wheat') {
     _id = 1;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -6283,15 +7253,16 @@ var GenericCrop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (_name === 'winter barley') {
+  } else if (_name === 'winter barley' || _name === 'barley') {
     _id = 2;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
         [0.5, 0.5, 0, 0],
         [0.3, 0.2, 0.5, 0],
-        [0.1, 0.2, 0.4, 0.3],
+        [0.1, 0.2, 0.7, 0],
         [0, 0, 0, 1],
         [0, 0, 0, 1],
         [0, 0, 0, 0]
@@ -6387,9 +7358,10 @@ var GenericCrop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (_name === 'winter rye') {
+  } else if (_name === 'winter rye' || _name === 'rye') {
     _id = 3;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -6494,6 +7466,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'spring barley') {
     _id = 4;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -6598,6 +7571,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'grain maize') {
     _id = 5;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -6698,9 +7672,10 @@ var GenericCrop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (_name === 'silage maize') {
+  } else if (_name === 'maize silage' || _name === 'maize' || _name === 'maize-silage') {
     _id = 7;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -6744,7 +7719,7 @@ var GenericCrop = function (name) {
       ],
       organIdsForSecondaryYield: [],
       organIdsForCutting: [],
-      pc_CropName: 'silage maize',
+      pc_CropName: 'maize silage',
       pc_MaxAssimilationRate: 96,
       pc_CarboxylationPathway: 2,
       pc_MinimumTemperatureForAssimilation: 6,
@@ -6790,7 +7765,7 @@ var GenericCrop = function (name) {
       pc_FieldConditionModifier: 1
     };
     _residueParams = {
-      name: 'silage maize',
+      name: 'maize silage',
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
@@ -6805,9 +7780,10 @@ var GenericCrop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (_name === 'winter rape') {
+  } else if (_name === 'winter rape' || _name === 'rape' || _name === 'rapeseed') {
     _id = 9;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -6909,9 +7885,10 @@ var GenericCrop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (_name === 'sugar beet') {
+  } else if (_name === 'sugar beet' || _name === 'beet') {
     _id = 10;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7013,6 +7990,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'mustard') {
     _id = 11;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7118,6 +8096,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'oil raddich') {
     _id = 17;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7220,9 +8199,10 @@ var GenericCrop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (_name === 'winter triticale') {
+  } else if (_name === 'winter triticale' || _name === 'triticale') {
     _id = 19;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7327,6 +8307,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'spring rye') {
     _id = 20;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7428,9 +8409,10 @@ var GenericCrop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (_name === 'oat compound') {
+  } else if (_name === 'oat compound' || _name === 'oats'  || _name === 'oat') {
     _id = 22;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7535,6 +8517,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'spring triticale') {
     _id = 23;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7636,9 +8619,10 @@ var GenericCrop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (_name === 'field pea') {
+  } else if (_name === 'field pea' || _name === 'pea') {
     _id = 24;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7743,6 +8727,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'spring wheat') {
     _id = 25;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7844,9 +8829,10 @@ var GenericCrop = function (name) {
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
       vo_NConcentration: 0
     };
-  } else if (_name === 'soy bean 000') {
+  } else if (_name === 'soy bean 000' || _name === 'soy' || _name === 'soy bean') {
     _id = 28;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7950,6 +8936,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean 00') {
     _id = 29;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8053,6 +9040,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean 0') {
     _id = 30;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8156,6 +9144,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean i') {
     _id = 31;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8259,6 +9248,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean ii') {
     _id = 32;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8362,6 +9352,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean iii') {
     _id = 33;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8465,6 +9456,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean iv') {
     _id = 34;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8568,6 +9560,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean v') {
     _id = 35;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8671,6 +9664,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean vi') {
     _id = 36;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8774,6 +9768,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean vii') {
     _id = 37;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8877,6 +9872,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean viii') {
     _id = 38;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8980,6 +9976,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean ix') {
     _id = 39;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9083,6 +10080,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean x') {
     _id = 40;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9186,6 +10184,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean xi') {
     _id = 41;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9289,6 +10288,7 @@ var GenericCrop = function (name) {
   } else if (_name === 'soy bean xii') {
     _id = 42;
     _cropParams = {
+      autoIrrigationOn: false,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9390,6 +10390,13 @@ var GenericCrop = function (name) {
       vo_NConcentration: 0
     };
   }
+
+  Object.keys(options).forEach(function (key) {
+    if (_cropParams[key] !== undefined && 
+      typeof options[key] === typeof _cropParams[key]) {
+      _cropParams[key] = options[key];
+    }
+  });
 
   return {
 
@@ -9496,8 +10503,11 @@ var GenericCrop = function (name) {
       _primaryYieldN = _secondaryYieldN = _accumulatedETa = 0.0;
       _primaryYieldTM = _secondaryYield = 0.0;
     },
-    get_AccumulatedETa: function ()  {
+    get_AccumulatedETa: function () {
       return _accumulatedETa;
+    },
+    isAutoIrrigationOn: function () {
+      return _cropParams.autoIrrigationOn;
     }
   };
 
@@ -11352,16 +12362,17 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
     }
 
     // Calculating rooting depth layer []
+    // TODO: vc_RootingDepth >= vs_NumberOfLayers vs vc_RootingDepth > vs_NumberOfLayers in MONICA ????
     vc_RootingDepth = toInt(floor(0.5 + (vc_RootingDepth_m / vs_LayerThickness))); // []
 
-    if (vc_RootingDepth > vs_NumberOfLayers) {
-      vc_RootingDepth = vs_NumberOfLayers;
+    if (vc_RootingDepth >= vs_NumberOfLayers) {
+      vc_RootingDepth = vs_NumberOfLayers - 1;
     }
 
     vc_RootingZone = toInt(floor(0.5 + ((1.3 * vc_RootingDepth_m) / vs_LayerThickness))); // []
 
-    if (vc_RootingZone > vs_NumberOfLayers){
-      vc_RootingZone = vs_NumberOfLayers;
+    if (vc_RootingZone >= vs_NumberOfLayers){
+      vc_RootingZone = vs_NumberOfLayers - 1;
     }
 
     vc_TotalRootLength = vc_RootBiomass * pc_SpecificRootLength; //[m m-2]
@@ -12368,8 +13379,95 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
     heatSumIrrigationEnd: { value: get_HeatSumIrrigationEnd },
     heatSumIrrigationStart: { value: get_HeatSumIrrigationStart },
 
-    /* custom */
-    vernalisationFactor: { value: get_VernalisationFactor }
+    /* MONICA API */
+    vernalisationFactor: { value: get_VernalisationFactor },
+    applyCutting: { value: applyCutting },
+    fc_CropDevelopmentalStage: { value: fc_CropDevelopmentalStage },
+    fc_CropDryMatter: { value: fc_CropDryMatter },
+    fc_CropGreenArea: { value: fc_CropGreenArea },
+    fc_CropNUptake: { value: fc_CropNUptake },
+    fc_CropNitrogen: { value: fc_CropNitrogen },
+    fc_CropPhotosynthesis: { value: fc_CropPhotosynthesis },
+    fc_CropSize: { value: fc_CropSize },
+    fc_CropWaterUptake: { value: fc_CropWaterUptake },
+    fc_DaylengthFactor: { value: fc_DaylengthFactor },
+    fc_DroughtImpactOnFertility: { value: fc_DroughtImpactOnFertility },
+    fc_GrossPrimaryProduction: { value: fc_GrossPrimaryProduction },
+    fc_HeatStressImpact: { value: fc_HeatStressImpact },
+    fc_KcFactor: { value: fc_KcFactor },
+    fc_NetPrimaryProduction: { value: fc_NetPrimaryProduction },
+    fc_OxygenDeficiency: { value: fc_OxygenDeficiency },
+    fc_Radiation: { value: fc_Radiation },
+    fc_ReferenceEvapotranspiration: { value: fc_ReferenceEvapotranspiration },
+    fc_SoilCoverage: { value: fc_SoilCoverage },
+    fc_VernalisationFactor: { value: fc_VernalisationFactor },
+    getEffectiveRootingDepth: { value: getEffectiveRootingDepth },
+    get_AbovegroundBiomass: { value: get_AbovegroundBiomass },
+    get_AbovegroundBiomassNConcentration: { value: get_AbovegroundBiomassNConcentration },
+    get_AbovegroundBiomassNContent: { value: get_AbovegroundBiomassNContent },
+    get_AccumulatedETa: { value: get_AccumulatedETa },
+    get_ActNUptake: { value: get_ActNUptake },
+    get_ActualTranspiration: { value: get_ActualTranspiration },
+    get_Assimilates: { value: get_Assimilates },
+    get_AssimilationRate: { value: get_AssimilationRate },
+    get_AutotrophicRespiration: { value: get_AutotrophicRespiration },
+    get_CriticalNConcentration: { value: get_CriticalNConcentration },
+    get_CropHeight: { value: get_CropHeight },
+    get_CropNRedux: { value: get_CropNRedux },
+    get_CropName: { value: get_CropName },
+    get_CurrentTemperatureSum: { value: get_CurrentTemperatureSum },
+    get_DaylengthFactor: { value: get_DaylengthFactor },
+    get_DevelopmentalStage: { value: get_DevelopmentalStage },
+    get_EvaporatedFromIntercept: { value: get_EvaporatedFromIntercept },
+    get_FreshPrimaryCropYield: { value: get_FreshPrimaryCropYield },
+    get_FreshSecondaryCropYield: { value: get_FreshSecondaryCropYield },
+    get_GrossPhotosynthesisHaRate: { value: get_GrossPhotosynthesisHaRate },
+    get_GrossPhotosynthesisRate: { value: get_GrossPhotosynthesisRate },
+    get_GrossPrimaryProduction: { value: get_GrossPrimaryProduction },
+    get_GrowthRespirationAS: { value: get_GrowthRespirationAS },
+    get_HeatStressRedux: { value: get_HeatStressRedux },
+    get_HeatSumIrrigationEnd: { value: get_HeatSumIrrigationEnd },
+    get_HeatSumIrrigationStart: { value: get_HeatSumIrrigationStart },
+    get_KcFactor: { value: get_KcFactor },
+    get_LeafAreaIndex: { value: get_LeafAreaIndex },
+    get_MaintenanceRespirationAS: { value: get_MaintenanceRespirationAS },
+    get_NUptakeFromLayer: { value: get_NUptakeFromLayer },
+    get_NetMaintenanceRespiration: { value: get_NetMaintenanceRespiration },
+    get_NetPhotosynthesis: { value: get_NetPhotosynthesis },
+    get_NetPrecipitation: { value: get_NetPrecipitation },
+    get_NetPrimaryProduction: { value: get_NetPrimaryProduction },
+    get_NumberOfOrgans: { value: get_NumberOfOrgans },
+    get_OrganBiomass: { value: get_OrganBiomass },
+    get_OrganGrowthIncrement: { value: get_OrganGrowthIncrement },
+    get_OrganSpecificNPP: { value: get_OrganSpecificNPP },
+    get_OrganSpecificTotalRespired: { value: get_OrganSpecificTotalRespired },
+    get_OxygenDeficit: { value: get_OxygenDeficit },
+    get_PotNUptake: { value: get_PotNUptake },
+    get_PotentialTranspiration: { value: get_PotentialTranspiration },
+    get_PrimaryCropYield: { value: get_PrimaryCropYield },
+    get_PrimaryYieldNConcentration: { value: get_PrimaryYieldNConcentration },
+    get_PrimaryYieldNContent: { value: get_PrimaryYieldNContent },
+    get_RawProteinConcentration: { value: get_RawProteinConcentration },
+    get_ReferenceEvapotranspiration: { value: get_ReferenceEvapotranspiration },
+    get_RelativeTotalDevelopment: { value: get_RelativeTotalDevelopment },
+    get_RemainingEvapotranspiration: { value: get_RemainingEvapotranspiration },
+    get_ResidueBiomass: { value: get_ResidueBiomass },
+    get_ResiduesNConcentration: { value: get_ResiduesNConcentration },
+    get_ResiduesNContent: { value: get_ResiduesNContent },
+    get_RootNConcentration: { value: get_RootNConcentration },
+    get_RootingDepth: { value: get_RootingDepth },
+    get_SecondaryCropYield: { value: get_SecondaryCropYield },
+    get_SecondaryYieldNContent: { value: get_SecondaryYieldNContent },
+    get_SoilCoverage: { value: get_SoilCoverage },
+    get_StomataResistance: { value: get_StomataResistance },
+    get_SumTotalNUptake: { value: get_SumTotalNUptake },
+    get_TargetNConcentration: { value: get_TargetNConcentration },
+    get_TotalBiomassNContent: { value: get_TotalBiomassNContent },
+    get_Transpiration: { value: get_Transpiration },
+    get_TranspirationDeficit: { value: get_TranspirationDeficit },
+    get_VernalisationFactor: { value: get_VernalisationFactor },
+    isDying: { value: isDying },
+    pc_NumberOfAbovegroundOrgans: { value: pc_NumberOfAbovegroundOrgans }
   });
 
 };
@@ -12377,9 +13475,6 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
 
 
 /*
-  LICENSE
-
-  The MIT License (MIT)
   Copywrite (c) 2015 Jan Vaillant (jan.vaillant@zalf.de)
 
 
@@ -12408,6 +13503,7 @@ var Grass = function (seedDate, harvestDates, species, options) {
   this.mixture = null;
   this._seedDate = seedDate;
   this._harvestDates = harvestDates;
+  this.autoIrrigationOn = options.autoIrrigationOn || false;
 
   var _accumulatedETa = 0.0
     , _appliedAmountIrrigation = 0
@@ -12444,13 +13540,13 @@ var Grass = function (seedDate, harvestDates, species, options) {
       , σ: 20.0                 // [m2 (leaf) kg-1 (DM)]       specific leaf area 
       , d_r_h: 0.15             // [m]                         depth at 50% root mass
       , d_r_mx: 0.4             // [m]                         maximum root depth
-      , δ_ndf_live_l_1: 0.8     // [kg kg-1]                   NDF digestibility live leaf 1
-      , δ_ndf_live_l_2: 0.5     // [kg kg-1]                   NDF digestibility live leaf 2
-      , δ_ndf_live_l_3: 0.3     // [kg kg-1]                   NDF digestibility live leaf 3
+      , δ_ndf_live_l_1: 0.85    // [kg kg-1]                   NDF digestibility live leaf 1
+      , δ_ndf_live_l_2: 0.75    // [kg kg-1]                   NDF digestibility live leaf 2
+      , δ_ndf_live_l_3: 0.65    // [kg kg-1]                   NDF digestibility live leaf 3
       , δ_ndf_dead_l: 0.2       // [kg kg-1]                   NDF digestibility dead leaf
-      , δ_ndf_live_s_1: 0.7     // [kg kg-1]                   NDF digestibility live stem 1
-      , δ_ndf_live_s_2: 0.4     // [kg kg-1]                   NDF digestibility live stem 2
-      , δ_ndf_live_s_3: 0.3     // [kg kg-1]                   NDF digestibility live stem 3
+      , δ_ndf_live_s_1: 0.65    // [kg kg-1]                   NDF digestibility live stem 1
+      , δ_ndf_live_s_2: 0.55    // [kg kg-1]                   NDF digestibility live stem 2
+      , δ_ndf_live_s_3: 0.45    // [kg kg-1]                   NDF digestibility live stem 3
       , δ_ndf_dead_s: 0.2       // [kg kg-1]                   NDF digestibility live leaf
       , δ_nfc: 1                // [kg kg-1]                   NFC digestibility
       , T_mn_high: 5            // [°C]                        critical temperature below which low-temperature stress will occur
@@ -12464,7 +13560,7 @@ var Grass = function (seedDate, harvestDates, species, options) {
       , ξ_N: 200
       , photo: {                // photosynthesis
             T_ref: 20           // [°C]                        reference temperature
-          , T_mn: 3             // [°C]                        minimum temperature 
+          , T_mn: 4             // [°C]                        minimum temperature 
           , T_opt_Pm_amb: 23    // [°C]                        optimum temperature
           , ξ: 0.8              // [-]                         non‐rectangular hyperbola curvatur parameter
           , α_amb_15: 0.05      // [mol (CO2) mol-1 (photons)] photosythetic efficiency α at ambient CO2 (C_amb_ref) and 15 °C
@@ -12634,6 +13730,7 @@ var Grass = function (seedDate, harvestDates, species, options) {
     
       switch (options.name) {
 
+      case 'clover':
       case 'white clover':
 
         this.isLegume = true;
@@ -13436,8 +14533,8 @@ var Grass = function (seedDate, harvestDates, species, options) {
     var noPools = 4
       , leaf_share = 0.7
       , stem_share = 1 - leaf_share
-      , DM_root = 1000 * 1e-4 // kg ha-1 to kg m-2
-      , DM_shoot = (config.plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
+      , DM_root = 0.5 * (config.plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
+      , DM_shoot = 0.5 * (config.plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
       , DM = []
       ;
   
@@ -14096,13 +15193,33 @@ var Grass = function (seedDate, harvestDates, species, options) {
 
   };
   this.type = 'grassland';
+  /* TODO: needs a daily update */
+  this.residueParameters = function () {
+    return {
+      vo_AOM_DryMatterContent: 1,
+      vo_AOM_NH4Content: 0,
+      vo_AOM_NO3Content: 0.001,
+      vo_AOM_CarbamidContent: 0,
+      vo_AOM_SlowDecCoeffStandard: 0.005,
+      vo_AOM_FastDecCoeffStandard: 0.025,
+      vo_PartAOM_to_AOM_Slow: 0.47,
+      vo_PartAOM_to_AOM_Fast: 0.53,
+      vo_CN_Ratio_AOM_Slow: 78,
+      vo_CN_Ratio_AOM_Fast: 0,
+      vo_PartAOM_Slow_to_SMB_Slow: 0.5,
+      vo_PartAOM_Slow_to_SMB_Fast: 0.5,
+      vo_NConcentration: 0
+    };
+  };
+
+  this.isAutoIrrigationOn = function () {
+    return this.autoIrrigationOn;
+  };
+
 };
 
 
 /*
-  LICENSE
-
-  The MIT License (MIT)
   Copywrite (c) 2015 Jan Vaillant (jan.vaillant@zalf.de)
 
 
@@ -14895,7 +16012,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 
           } else if (isLegume && N_assimilated > N_up_pool) {
             N_fix += N_assimilated - N_up_pool;
-            N_up_pool -= N_assimilated;
+            N_up_pool = 0;
           } else {
             N_up_pool -= N_assimilated;
           }
@@ -16069,10 +17186,10 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
         , AH = vars.AH
         ;
 
-      if (DM_shoot <= DM_shoot_min)
-        f_keep = 1;
-      else if (f_keep * DM_shoot <= DM_shoot_min)
-        f_keep = DM_shoot_min / DM_shoot;
+      // if (DM_shoot <= DM_shoot_min)
+      //   f_keep = 1;
+      // else if (f_keep * DM_shoot <= DM_shoot_min)
+      //   f_keep = DM_shoot_min / DM_shoot;
 
       DM += (1 - f_keep) * DM_shoot;
 
@@ -16590,12 +17707,28 @@ var ModelCollection = function (weather) {
       , currentDate = weather.startDate()
       , currentDateString = currentDate.toISODateString()
       , leapYear = currentDate.isLeapYear()
-      , year = year = currentDate.getFullYear()
+      , year = currentDate.getFullYear()
+      , month = currentDate.getMonth()
       , dayOfSimulation = 0
       , model = null
       , noCbs = callbacks.length
       , noModels = this.length
+      , latitude = this[0].getEnvironment().site.vs_Latitude // should the same for all models
+      , spring = (latitude > 0 ? 3 : 10)
+      , autum = (latitude > 0 ? 10 : 3)
       ;
+
+    if (fs && DEBUG) {
+      var foutFileName = 'rmout';
+      var goutFileName = 'smout';
+      var monicaParamFileName = 'parameters';
+
+      this.forEach(function (model, i) {
+        initializeFoutHeader(foutFileName + i);
+        initializeGoutHeader(goutFileName + i);
+        dumpParametersIntoFile(monicaParamFileName + i, model.getEnvironment().centralParameterProvider);
+      });
+    }
 
     var doy = 0
       , tavg = 0
@@ -16612,14 +17745,11 @@ var ModelCollection = function (weather) {
       , daylength = 0
       , R_a = 0
       , isVegPeriod = false
+      , toISODateString = ''
       ;
 
     for (dayOfSimulation; dayOfSimulation < totalNoDays; dayOfSimulation++) {
 
-      logger(MSG_INFO, currentDateString + ' / ' + dayOfSimulation);
-
-      leapYear = currentDate.isLeapYear();
-      year = year = currentDate.getFullYear();
 
       /* get weather data for current day */
       doy = weather.doy(dayOfSimulation);
@@ -16637,33 +17767,90 @@ var ModelCollection = function (weather) {
       f_s = weather.dataForTimestep(WEATHER.F_DIRECTRAD, dayOfSimulation);
       daylength = weather.dataForTimestep(WEATHER.DAYLENGTH, dayOfSimulation) * SEC_PER_HOUR;
       R_a = weather.dataForTimestep(WEATHER.EXRAD, dayOfSimulation);
+      currentDateString = weather.dataForTimestep(WEATHER.ISODATESTRING, dayOfSimulation);
+      currentDate = new Date(Date.parse(currentDateString));
+      leapYear = currentDate.isLeapYear();
+      year = currentDate.getFullYear();
+      month = currentDate.getMonth();
 
-      /* update vegetation period: avg. temperature for five consecutive days below or above 5 °C 
-         TODO: use latitude and min. veg. length?  */
-      if (dayOfSimulation > 4 && !isVegPeriod && 
-        weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation) > 5 && 
-        weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 1) > 5 && 
-        weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 2) > 5 && 
-        weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 3) > 5 && 
-        weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 4) > 5
-      ) isVegPeriod = true;
-      else if (dayOfSimulation > 4 && isVegPeriod && 
-        weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation) < 5 && 
-        weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 1) < 5 && 
-        weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 2) < 5 && 
-        weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 3) < 5 && 
-        weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 4) < 5
-      ) isVegPeriod = false;
+      logger(MSG_INFO, currentDateString + ' / ' + dayOfSimulation);
+
+      /* update vegetation period: avg. temperature for five consecutive days below or above 5 °C */
+      if (abs(latitude) > 23.43721) {
+        if (dayOfSimulation > 4 && !isVegPeriod &&
+          weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation) > 5 && 
+          weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 1) > 5 && 
+          weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 2) > 5 && 
+          weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 3) > 5 && 
+          weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 4) > 5
+        ) isVegPeriod = true;
+        else if (dayOfSimulation > 4 && isVegPeriod && month <= spring && month >= autum &&
+          weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation) < 5 && 
+          weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 1) < 5 && 
+          weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 2) < 5 && 
+          weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 3) < 5 && 
+          weather.dataForTimestep(WEATHER.TAVG, dayOfSimulation - 4) < 5
+        ) isVegPeriod = false;
+      } else {
+        isVegPeriod = true;
+      }
+
+      if (isNaN(tavg) || abs(tavg) === Infinity) {
+        logger(MSG_ERROR, 'tavg invalid: ' + tavg);
+      }
+      if (isNaN(tmax) || abs(tmax) === Infinity) {
+        logger(MSG_ERROR, 'tmax invalid: ' + tmax);
+      }
+      if (isNaN(tmin) || abs(tmin) === Infinity) {
+        logger(MSG_ERROR, 'tmin invalid: ' + tmin);
+      }
+      if (tmin > tmax) {
+        tmin = tmax = tavg;
+        logger(MSG_WARN, 'tmin > tmax: ' + tmin + '/' + tmax);
+      }
+      if (isNaN(globrad) || globrad < 0 || abs(globrad) === Infinity) {
+        logger(MSG_ERROR, 'globrad invalid: ' + globrad);
+      }
+      if (isNaN(sunhours) || sunhours < 0 || abs(sunhours) === Infinity) {
+        logger(MSG_ERROR, 'sunhours invalid: ' + sunhours);
+      }
+      if (isNaN(relhumid) || relhumid < 0 || abs(relhumid) === Infinity) {
+        relhumid = 0.5;
+        logger(MSG_ERROR, 'relhumid invalid: ' + relhumid);
+      }
+      if (isNaN(wind) || wind < 0 || abs(wind) === Infinity) {
+        logger(MSG_ERROR, 'wind invalid: ' + wind);
+      }
+      if (isNaN(windHeight) || windHeight < 0 || abs(windHeight) === Infinity) {
+        logger(MSG_ERROR, 'windHeight invalid: ' + windHeight);
+      }
+      if (isNaN(C_amb) || C_amb < 0 || abs(C_amb) === Infinity) {
+        logger(MSG_ERROR, 'C_amb invalid: ' + C_amb);
+      }
+      if (isNaN(precip) || precip < 0 || precip > 100 || abs(precip) === Infinity) {
+        logger(MSG_ERROR, 'precip invalid: ' + precip);
+      }
+      if (isNaN(f_s) || f_s < 0 || abs(f_s) === Infinity) {
+        logger(MSG_ERROR, 'f_s invalid: ' + f_s);
+      }
+      if (isNaN(daylength) || daylength < 0 || abs(daylength) === Infinity) {
+        logger(MSG_ERROR, 'daylength invalid: ' + daylength);
+      }
+      if (isNaN(R_a) || R_a < 0 || abs(R_a) === Infinity) {
+        logger(MSG_ERROR, 'R_a invalid: ' + R_a);
+      }
 
       for (var m = 0; m < noModels; m++) {
           
         model = this[m];
+        model.setIsVegPeriod(isVegPeriod);
 
         /* production process */
         model.prodProcessStep(currentDate);
 
         /* crop  */
-        if(model.isCropPlanted()) {
+        if (model.isCropPlanted()) {
+          
           model.cropStep(
             doy,
             tavg,
@@ -16681,8 +17868,15 @@ var ModelCollection = function (weather) {
             R_a,
             isVegPeriod
           );
-        }
         
+        }
+
+        if (DEBUG && fs) {
+          fs.appendFileSync(goutFileName + m, currentDateString, { encoding: 'utf8' });
+          fs.appendFileSync(foutFileName + m, currentDateString, { encoding: 'utf8' });
+          writeCropResults(model.cropGrowth(), foutFileName + m, goutFileName + m, model.isCropPlanted());
+        }
+
         /* soil */
         model.generalStep(
           doy,
@@ -16696,6 +17890,10 @@ var ModelCollection = function (weather) {
           globrad,
           relhumid
         );
+
+        if (DEBUG && fs) {
+          writeGeneralResults(foutFileName + m, goutFileName + m, model.getEnvironment(), model, weather, dayOfSimulation);
+        }
         
       } // for each model
 
@@ -16732,7 +17930,6 @@ var Model = function (env) {
   /* this.cropGrowth statt var, um this an SoilX. zu übergeben */
   this._currentCropGrowth = null;
   this.cropGrowth = function () { return that._currentCropGrowth; };
-  this.vw_AtmosphericCO2Concentration;
   this.vs_GroundwaterDepth;
 
   var _env = env
@@ -16757,6 +17954,10 @@ var Model = function (env) {
     , productionProcessIdx = 0 // iterator through the production processes
     , currentProductionProcess = env.cropRotation[productionProcessIdx] // direct handle to current process
     , nextProductionProcessApplicationDate = currentProductionProcess.start()
+    , yields = []
+    , _year = 0
+    , _julday = 0
+    , vw_AtmosphericCO2Concentration = 380 
     ;
 
     debug(currentProductionProcess);
@@ -16954,6 +18155,14 @@ var Model = function (env) {
           + ' Secondary yield N content: ' + that._currentCropGrowth.secondaryYieldNitrogenContent());
 
       _soilOrganic.addOrganicMatter(_currentCrop.residueParameters(), residueBiomass, residueNConcentration);
+
+      yields.push({
+        year: _year,
+        julday: _julday,
+        yield: that._currentCropGrowth.primaryYield(),
+        // yield: that._currentCropGrowth.biomass(3),
+        crop: _currentCrop.name()
+      });
     
     }
 
@@ -17052,7 +18261,7 @@ var Model = function (env) {
       
       if (_currentCrop) {
   
-        _currentCrop.addAppliedIrrigationWater(amount);
+        // _currentCrop.addAppliedIrrigationWater(amount);
         this.addDailySumIrrigationWater(amount);
   
       }
@@ -17070,13 +18279,14 @@ var Model = function (env) {
   */
   var applyTillage = function (depth) {
     _soilColumn.applyTillage(depth);
+    incorporateCurrentCrop();
   };
 
   /* execute next production process step */
   var prodProcessStep = function (currentDate) {
 
     /* is there something to apply today? */
-    if (nextProductionProcessApplicationDate.toISODateString() === currentDate.toISODateString()) {
+    if (!isNaN(nextProductionProcessApplicationDate) && nextProductionProcessApplicationDate.toISODateString() === currentDate.toISODateString()) {
       
       currentProductionProcess.apply(nextProductionProcessApplicationDate, this);
 
@@ -17098,7 +18308,8 @@ var Model = function (env) {
         if (productionProcessIdx < env.cropRotation.length) {
           currentProductionProcess = env.cropRotation[productionProcessIdx];
           nextProductionProcessApplicationDate = currentProductionProcess.start();
-          logger(MSG_INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISODateString());
+          if (!isNaN(nextProductionProcessApplicationDate))
+            logger(MSG_INFO, 'next app-date: ' + nextProductionProcessApplicationDate.toISODateString());
         }
 
       }
@@ -17121,6 +18332,9 @@ var Model = function (env) {
     globrad,
     relhumid
   ) {
+
+    _year = year;
+    _julday = julday;
 
     // that.vw_AtmosphericCO2Concentration = (_env.atmosphericCO2 === -1 ? user_env.p_AthmosphericCO2 : _env.atmosphericCO2);
     // if (toInt(that.vw_AtmosphericCO2Concentration) === 0)
@@ -17212,6 +18426,8 @@ var Model = function (env) {
     //   return;
     // }
 
+    vw_AtmosphericCO2Concentration = C_amb;
+
     p_daysWithCrop++;
 
     that._currentCropGrowth.step(
@@ -17232,17 +18448,11 @@ var Model = function (env) {
       isVegPeriod
     );
 
-    if (_env.useAutomaticIrrigation) {
-
-      var aips = _env.autoIrrigationParams;
-      if (_soilColumn.applyIrrigationViaTrigger(aips.treshold, aips.amount, aips.nitrateConcentration)) {
-
-        _soilOrganic.addIrrigationWater(aips.amount);
-        _currentCrop.addAppliedIrrigationWater(aips.amount);
-        _dailySumIrrigationWater += aips.amount;
-      
-      }
-    
+    if (isVegPeriod && _currentCrop.isAutoIrrigationOn()) { 
+      var irrigationWater = _soilColumn.applyIrrigationViaTrigger(0.35, 0 /* AutomaticIrrigationParameters */);
+      _soilOrganic.addIrrigationWater(irrigationWater);
+      // _currentCrop.addAppliedIrrigationWater(irrigationWater);
+      _dailySumIrrigationWater += irrigationWater;
     }
 
     p_accuNStress += that._currentCropGrowth.nitrogenStress();
@@ -17569,7 +18779,7 @@ var Model = function (env) {
   };
 
   var get_AtmosphericCO2Concentration = function () {
-    return that.vw_AtmosphericCO2Concentration;
+    return vw_AtmosphericCO2Concentration;
   };
 
   var get_GroundwaterDepth = function () { 
@@ -17638,6 +18848,10 @@ var Model = function (env) {
 
   var getIsVegPeriod = function () {
     return Number(isVegPeriod); 
+  };
+
+  var setIsVegPeriod = function (veg) {
+    isVegPeriod = veg; 
   };
 
   return {
@@ -17710,7 +18924,9 @@ var Model = function (env) {
     getAccumulatedWaterStress: getAccumulatedWaterStress,
     getAccumulatedHeatStress: getAccumulatedHeatStress,
     getAccumulatedOxygenStress: getAccumulatedOxygenStress,
-    getIsVegPeriod: getIsVegPeriod
+    getIsVegPeriod: getIsVegPeriod,
+    setIsVegPeriod: setIsVegPeriod,
+    yields: function () { return yields; }
   };
 
 };
@@ -17794,8 +19010,11 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
     var vs_SoilTemperature = 0;
     this.vo_AOM_Pool = [];
 
-    if (DEBUG && !((_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001))
+    if (DEBUG && !((_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001)) {
+      logger(MSG_DEBUG, _vs_SoilOrganicCarbon + ' _vs_SoilOrganicCarbon');
+      logger(MSG_DEBUG, _vs_SoilOrganicMatter + ' _vs_SoilOrganicMatter');
       throw new Error("_vs_SoilOrganicCarbon - (_vs_SoilOrganicMatter * ORGANIC_CONSTANTS.PO_SOM_TO_C)) < 0.00001)");
+    }
 
     vs_SoilMoisture_m3 = this.vs_FieldCapacity * cpp.userInitValues.p_initPercentageFC;
     this.vs_SoilMoistureOld_m3 = this.vs_FieldCapacity * cpp.userInitValues.p_initPercentageFC;
@@ -17936,7 +19155,7 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
     _vs_SoilMoisture_pF = log10(vs_MatricHead);
 
     /* set _vs_SoilMoisture_pF to "small" number in case of vs_Theta "close" to vs_ThetaS (vs_Psi < 1 -> log(vs_Psi) < 0) */
-    _vs_SoilMoisture_pF = (_vs_SoilMoisture_pF < 0.0) ? 5.0E-7 : _vs_SoilMoisture_pF; 
+    _vs_SoilMoisture_pF = (_vs_SoilMoisture_pF < 0.0 || isNaN(_vs_SoilMoisture_pF) || abs(_vs_SoilMoisture_pF) === Infinity ? 0.01 : _vs_SoilMoisture_pF); 
 
   };
 
@@ -18208,6 +19427,8 @@ var SoilColumn = function (gps, sp, cpp) {
   this._vf_TopDressingDelay = 0;
   this._vs_NumberOfOrganicLayers = 0;
 
+  var pm_CriticalMoistureDepth = cpp.userSoilMoistureParameters.pm_CriticalMoistureDepth;
+
 
   var soilColumnArray = [];
   // public properties and methods
@@ -18395,66 +19616,6 @@ var SoilColumn = function (gps, sp, cpp) {
      return vf_FertiliserRecommendation;// + _vf_TopDressing);
   };
 
-  /**
-   * Method for calculating irrigation demand from soil moisture status.
-   * The trigger will be activated and deactivated according to crop parameters
-   * (temperature sum)
-   *
-   * @param vi_IrrigationThreshold
-   * @return could irrigation be applied
-   */
-  soilColumnArray.soilColumnArrayapplyIrrigationViaTrigger = function (
-    vi_IrrigationThreshold,
-    vi_IrrigationAmount,
-    vi_IrrigationNConcentration
-  ) {
-
-    // JS: soilLayer(x) === this[x]
-
-
-    //is actually only called from cropStep and thus there should always
-    //be a crop
-    if (that.cropGrowth === null)
-      logger(MSG_ERROR, "crop is null");
-
-    var s = that.cropGrowth.heatSumIrrigationStart();
-    var e = that.cropGrowth.heatSumIrrigationEnd();
-    var cts = that.cropGrowth.currentTemperatureSum();
-
-    if (cts < s || cts > e) return false;
-
-    var vi_CriticalMoistureDepth = that.centralParameterProvider.userSoilMoistureParameters.pm_CriticalMoistureDepth;
-
-    // Initialisation
-    var vi_ActualPlantAvailableWater = 0.0;
-    var vi_MaxPlantAvailableWater = 0.0;
-    var vi_PlantAvailableWaterFraction = 0.0;
-    var vi_CriticalMoistureLayer = toInt(ceil(vi_CriticalMoistureDepth / that[0].vs_LayerThickness));
-
-    for (var i_Layer = 0; i_Layer < vi_CriticalMoistureLayer; i_Layer++){
-      vi_ActualPlantAvailableWater += (this[i_Layer].get_Vs_SoilMoisture_m3()
-                                   - this[i_Layer].get_PermanentWiltingPoint())
-                                   * this.vs_LayerThickness() * 1000.0; // [mm]
-      vi_MaxPlantAvailableWater += (this[i_Layer].get_FieldCapacity()
-                                   - this[i_Layer].get_PermanentWiltingPoint())
-                                   * this.vs_LayerThickness() * 1000.0; // [mm]
-      vi_PlantAvailableWaterFraction = vi_ActualPlantAvailableWater
-                                         / vi_MaxPlantAvailableWater; // []
-    }
-    if (vi_PlantAvailableWaterFraction <= vi_IrrigationThreshold) {
-      this.applyIrrigation(vi_IrrigationAmount, vi_IrrigationNConcentration);
-
-      logger(MSG_INFO, 
-        "applying automatic irrigation treshold: " + vi_IrrigationThreshold +
-        " amount: " + vi_IrrigationAmount +
-        " N concentration: " + vi_IrrigationNConcentration
-      );
-
-      return true;
-    }
-
-    return false;
-  };
 
   /**
    * @brief Applies irrigation
@@ -18478,6 +19639,81 @@ var SoilColumn = function (gps, sp, cpp) {
     // Adding N from irrigation water to top soil nitrate pool
     this[0].vs_SoilNO3 += vi_NAddedViaIrrigation;
   };
+
+  /**
+ * Method for calculating irrigation demand from soil moisture status.
+ * The trigger will be activated and deactivated according to crop parameters
+ * (temperature sum)
+ *
+ * @param vi_IrrigationThreshold
+ * @return could irrigation be applied
+ */
+soilColumnArray.applyIrrigationViaTrigger = function (
+  vi_IrrigationThreshold,
+  /*vi_IrrigationAmount,*/
+  vi_IrrigationNConcentration
+) {
+  //is actually only called from cropStep and thus there should always
+  //be a crop
+  if (that.cropGrowth === null) {
+    throw new Error('that.cropGrowth === null');
+  }
+
+  // var currentTemperatureSum = cropGrowth->currentTemperatureSum();
+
+  // if (currentTemperatureSum < cropGrowth->heatSumIrrigationStart() || 
+  //   currentTemperatureSum > cropGrowth->heatSumIrrigationEnd()) {
+  //   return false;
+  // }
+
+  var vi_CriticalMoistureDepth = pm_CriticalMoistureDepth;
+  var vi_ActualPlantAvailableWater = 0.0;
+  var vi_MaxPlantAvailableWater = 0.0;
+  var vi_PlantAvailableWaterFraction = 0.0;
+  var vi_IrrigationAmount = 0;
+
+  var vi_CriticalMoistureLayer = toInt(ceil(vi_CriticalMoistureDepth /
+                                          this[0].vs_LayerThickness));
+  for (var i_Layer = 0; i_Layer < vi_CriticalMoistureLayer; i_Layer++) {
+    vi_ActualPlantAvailableWater += 
+      (this[i_Layer].get_Vs_SoilMoisture_m3() - this[i_Layer].vs_PermanentWiltingPoint)
+      * this[0].vs_LayerThickness
+      * 1000.0; // [mm]
+    vi_MaxPlantAvailableWater += (this[i_Layer].vs_FieldCapacity
+                                  - this[i_Layer].vs_PermanentWiltingPoint)
+                                 * this[0].vs_LayerThickness * 1000.0; // [mm]
+
+    // JS!
+    // TODO: upper/lower limit for irri. water?
+    vi_IrrigationAmount += vi_MaxPlantAvailableWater - vi_ActualPlantAvailableWater;
+
+    // monica bug
+    // vi_PlantAvailableWaterFraction = vi_ActualPlantAvailableWater / vi_MaxPlantAvailableWater;
+  }
+  
+  vi_PlantAvailableWaterFraction = vi_ActualPlantAvailableWater / vi_MaxPlantAvailableWater;
+
+  if (vi_PlantAvailableWaterFraction <= vi_IrrigationThreshold) {
+    if (vi_IrrigationAmount < 0) {
+      throw new Error('vi_IrrigationAmount < 0');
+    }
+    this.applyIrrigation(vi_IrrigationAmount, vi_IrrigationNConcentration);
+
+    logger(
+      MSG_INFO,
+      'applying automatic irrigation ' +
+      ' treshold: ' + vi_IrrigationThreshold + 
+      ' amount: ' + vi_IrrigationAmount +
+      ' N concentration: ' + vi_IrrigationNConcentration
+    );
+
+    return vi_IrrigationAmount;
+  }
+
+  return 0;
+}
+
+
 
   /**
    * @brief Checks and deletes AOM pool
@@ -20258,7 +21494,8 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
       fo_MoistOnDenitrification = po_Denit1 + (1.0 - po_Denit1)
           * ((d_SoilMoisture_m3 / d_Saturation) - po_Denit3) / (1.0 - po_Denit3);
     } else {
-      throw new Error("irregular soil water content");
+      fo_MoistOnDenitrification = 0.0;
+      logger(MSG_WARN, "Irregular soil water content");
     }
 
     return fo_MoistOnDenitrification;
@@ -20971,8 +22208,9 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
       vm_Evaporation = new Float64Array(vm_NumberOfLayers), //intern
       vm_Evapotranspiration = new Float64Array(vm_NumberOfLayers), //intern
       vm_FieldCapacity = new Float64Array(vm_NumberOfLayers),
+      vm_GravitationalWater = new Float64Array(vm_NumberOfLayers),
       vm_FluxAtLowerBoundary = 0.0,
-      vm_GravitationalWater = new Float64Array(vm_NumberOfLayers), // Gravitational water in [mm d-1] //intern
+      vm_Gravitationafo_MoistOnDenitrificationlWater = new Float64Array(vm_NumberOfLayers), // Gravitational water in [mm d-1] //intern
       vm_GrossPrecipitation = 0.0, //internal
       vm_GroundwaterAdded = 0,
       //vm_GroundwaterDistance = vm_NumberOfLayers, 0), // map  = joachim)
@@ -21520,16 +22758,9 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
   };
 
   var fm_GroundwaterReplenishment = function () {
-    
-    var vm_StartLayer;
-
-    // do nothing if groundwater is not within profile
-    if (vm_GroundwaterTable > vs_NumberOfLayers) {
-      return;
-    }
 
     // Auffuellschleife von GW-Oberflaeche in Richtung Oberflaeche
-    vm_StartLayer = vm_GroundwaterTable;
+    var vm_StartLayer = vm_GroundwaterTable;
 
     if (vm_StartLayer > vm_NumberOfLayers - 2) {
       vm_StartLayer = vm_NumberOfLayers - 2;
@@ -21563,6 +22794,17 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
       }
 
     } // for
+
+    if (pm_LeachingDepthLayer>vm_GroundwaterTable-1) {
+      if (vm_GroundwaterTable-1 < 0){
+        vm_FluxAtLowerBoundary = 0.0;
+      } else {
+        vm_FluxAtLowerBoundary = vm_WaterFlux[vm_GroundwaterTable-1];
+      }
+    } else {
+      vm_FluxAtLowerBoundary = vm_WaterFlux[pm_LeachingDepthLayer];
+    }
+    //cout << "GWN: " << vm_FluxAtLowerBoundary << endl;
   };
 
   var fm_PercolationWithoutGroundwater = function () {
@@ -23248,6 +24490,8 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       generalParameters.pc_HighTemperatureStressResponseOn = getValue(sim.switches, 'highTemperatureStressResponseOn', generalParameters.pc_HighTemperatureStressResponseOn);
       generalParameters.pc_EmergenceMoistureControlOn = getValue(sim.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
       generalParameters.pc_EmergenceFloodingControlOn = getValue(sim.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
+      
+      generalParameters.ps_MaxMineralisationDepth = 0.4;
 
       logger(MSG_INFO, 'Fetched simulation data.');
       
@@ -23256,6 +24500,8 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       siteParameters.vs_Slope = site.slope;
       siteParameters.vs_HeightNN = site.heightNN;
       siteParameters.vq_NDeposition = getValue(site, 'NDeposition', siteParameters.vq_NDeposition);
+      siteParameters.vs_Soil_CN_Ratio = 10; //TODO: per layer?
+      siteParameters.vs_DrainageCoeff = -1; //TODO: ?
 
       parameterProvider.userEnvironmentParameters.p_AthmosphericCO2 = getValue(site, 'atmosphericCO2', parameterProvider.userEnvironmentParameters.p_AthmosphericCO2);
       parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepth = getValue(site, 'groundwaterDepthMin', parameterProvider.userEnvironmentParameters.p_MinGroundwaterDepth);
@@ -23297,11 +24543,6 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       env.cropRotation = cropRotation;
      
       // TODO: implement and test useAutomaticIrrigation & useNMinFertiliser
-      // if (hermes_config->useAutomaticIrrigation()) {
-      //   env.useAutomaticIrrigation = true;
-      //   env.autoIrrigationParams = hermes_config->getAutomaticIrrigationParameters();
-      // }
-
       // if (hermes_config->useNMinFertiliser()) {
       //   env.useNMinMineralFertilisingMethod = true;
       //   env.nMinUserParams = hermes_config->getNMinUserParameters();
@@ -23358,7 +24599,26 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
         var soilParameters = new SoilParameters();
 
-        soilParameters.set_vs_SoilOrganicMatter(horizon.organicMatter);
+        // soilParameters.set_vs_SoilOrganicCarbon(0.05);
+        // soilParameters.set_vs_SoilBulkDensity(1400);
+        // soilParameters.vs_SoilSandContent = 0.4;
+        // soilParameters.vs_SoilClayContent = 0.2;
+        // soilParameters.vs_SoilStoneContent = 0.02; //TODO: / 100 ?
+        // soilParameters.vs_Lambda = tools.texture2lambda(soilParameters.vs_SoilSandContent, soilParameters.vs_SoilClayContent);
+        // // TODO: Wo wird textureClass verwendet?
+        // soilParameters.vs_SoilTexture = 'Ls2';
+        // soilParameters.vs_SoilpH = 0.69;
+        // /* TODO: ? lambda = drainage_coeff ? */
+        // soilParameters.vs_Lambda = tools.texture2lambda(soilParameters.vs_SoilSandContent, soilParameters.vs_SoilClayContent);
+        // soilParameters.vs_FieldCapacity = 0.33;
+        // /* TODO: name? */
+        // soilParameters.vs_Saturation = 0.45;
+        // soilParameters.vs_PermanentWiltingPoint = 0.2;
+
+
+
+        soilParameters.set_vs_SoilOrganicMatter(getValue(horizon, 'organicMatter', -1));
+        soilParameters.set_vs_SoilOrganicCarbon(getValue(horizon, 'Corg', -1));
         soilParameters.vs_SoilSandContent = horizon.sand;
         soilParameters.vs_SoilClayContent = horizon.clay;
         soilParameters.vs_SoilStoneContent = horizon.sceleton;
@@ -23377,7 +24637,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
           soilParameters.set_vs_SoilBulkDensity(horizon.bulkDensity);
           soilParameters.vs_FieldCapacity = horizon.fieldCapacity;
-          soilParameters.vs_Saturation = horizon.poreVolume - horizon.fieldCapacity;
+          soilParameters.vs_Saturation = horizon.poreVolume;
           soilParameters.vs_PermanentWiltingPoint = horizon.permanentWiltingPoint;
 
         } else { /* if any is missing */
@@ -23387,13 +24647,16 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
           // tools.soilCharacteristicsKA5(soilParameters);
 
           /* else use Saxton */
-          var saxton = tools.saxton(horizon.sand, horizon.clay, horizon.organicMatter, horizon.sceleton).saxton_86;
+          var saxton = tools.saxton(horizon.sand, horizon.clay, soilParameters.vs_SoilOrganicMatter(), horizon.sceleton).saxton_86;
           soilParameters.set_vs_SoilBulkDensity(roundN(2, saxton.BD));
           soilParameters.vs_FieldCapacity = roundN(2, saxton.FC);
           soilParameters.vs_Saturation = roundN(2, saxton.SAT);
           soilParameters.vs_PermanentWiltingPoint = roundN(2, saxton.PWP);
 
         }
+
+        // tools.soilCharacteristicsKA5(soilParameters);
+        // console.log(soilParameters);
         
         /* TODO: hinter readJSON verschieben */ 
         if (!soilParameters.isValid()) {
@@ -23430,7 +24693,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       if (isGrassland) {
         /* if no sowing date provided: we can not start at day 0 and therefor start at day 0 + 1 since model's general step is executed *after* cropStep */
-        var sd = getValue(crop, 'sowingDate', new Date(new Date(startDate).setDate(startDate.getDate() + 1)));
+        var sd = !crop.sowingDate ? new Date(new Date(startDate).setDate(startDate.getDate() + 1)) : new Date(Date.parse(crop.sowingDate));
         var hds = getValue(crop, 'harvestDates', []);
         debug(sd);
         debug(startDate);
@@ -23446,14 +24709,14 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       if (isGrassland) {
 
         var grass = new Grass(sd, hds, crop.species, { 
-          plantDryWeight: crop.plantDryWeight
+          plantDryWeight: crop.plantDryWeight,
+          autoIrrigationOn: crop.autoIrrigationOn || false
         });
         cropRotation[c] = new ProductionProcess('grassland', grass);
 
       } else {
-
         /* choose the first (and only) name in species array (mixtures not implemented in generic crop model) */
-        var genericCrop = new GenericCrop(crop.species[0].name);
+        var genericCrop = new GenericCrop(crop.species[0].name, crop.options);
         genericCrop.setSeedAndHarvestDate(sd, hd);
         cropRotation[c] = new ProductionProcess(crop.species[0].name, genericCrop);
       
@@ -23742,8 +25005,10 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     /* check if all arrays are of the same length */
     var length = data[WEATHER.TMIN].length;
     for (var i in WEATHER) { 
-      if (data[WEATHER[i]].length != length)
+      if (data[WEATHER[i]].length != length) {
+        logger(MSG_ERROR, i + ' length != ' + length);
         ok = false;
+      }
     }
     
     if (ok)
@@ -23861,8 +25126,26 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     else
       console.log(JSON.stringify(results, null, 2));
 
-    if (done) 
+    if (done) {
+      // if (ENVIRONMENT_IS_NODE) {
+      //   fs.writeFileSync('results.csv', '');
+      //   var keys = Object.keys(results[0]);
+      //   for (var i = 0; i < results.length; i++) {
+      //     var res = results[i];
+      //     if (i === 0) {
+      //       keys.forEach(function (e) {
+      //         fs.appendFileSync('results.csv', e + ';');
+      //       });
+      //       fs.appendFileSync('results.csv', '\n');
+      //     }
+      //     keys.forEach(function (e) {
+      //       fs.appendFileSync('results.csv', res[e].value + ';');
+      //     });
+      //     fs.appendFileSync('results.csv', '\n'); 
+      //   }
+      // }
       logger(MSG_INFO, 'done');
+    }
   
   };  
 
