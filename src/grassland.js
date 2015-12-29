@@ -64,13 +64,13 @@ var Grass = function (seedDate, harvestDates, species, options) {
       , σ: 20.0                 // [m2 (leaf) kg-1 (DM)]       specific leaf area 
       , d_r_h: 0.15             // [m]                         depth at 50% root mass
       , d_r_mx: 0.4             // [m]                         maximum root depth
-      , δ_ndf_live_l_1: 0.8     // [kg kg-1]                   NDF digestibility live leaf 1
-      , δ_ndf_live_l_2: 0.5     // [kg kg-1]                   NDF digestibility live leaf 2
-      , δ_ndf_live_l_3: 0.3     // [kg kg-1]                   NDF digestibility live leaf 3
+      , δ_ndf_live_l_1: 0.85    // [kg kg-1]                   NDF digestibility live leaf 1
+      , δ_ndf_live_l_2: 0.75    // [kg kg-1]                   NDF digestibility live leaf 2
+      , δ_ndf_live_l_3: 0.65    // [kg kg-1]                   NDF digestibility live leaf 3
       , δ_ndf_dead_l: 0.2       // [kg kg-1]                   NDF digestibility dead leaf
-      , δ_ndf_live_s_1: 0.7     // [kg kg-1]                   NDF digestibility live stem 1
-      , δ_ndf_live_s_2: 0.4     // [kg kg-1]                   NDF digestibility live stem 2
-      , δ_ndf_live_s_3: 0.3     // [kg kg-1]                   NDF digestibility live stem 3
+      , δ_ndf_live_s_1: 0.65    // [kg kg-1]                   NDF digestibility live stem 1
+      , δ_ndf_live_s_2: 0.55    // [kg kg-1]                   NDF digestibility live stem 2
+      , δ_ndf_live_s_3: 0.45    // [kg kg-1]                   NDF digestibility live stem 3
       , δ_ndf_dead_s: 0.2       // [kg kg-1]                   NDF digestibility live leaf
       , δ_nfc: 1                // [kg kg-1]                   NFC digestibility
       , T_mn_high: 5            // [°C]                        critical temperature below which low-temperature stress will occur
@@ -1717,17 +1717,18 @@ var Grass = function (seedDate, harvestDates, species, options) {
 
   };
   this.type = 'grassland';
+  /* TODO: needs a daily update */
   this.residueParameters = function () {
     return {
       vo_AOM_DryMatterContent: 1,
       vo_AOM_NH4Content: 0,
       vo_AOM_NO3Content: 0.001,
       vo_AOM_CarbamidContent: 0,
-      vo_AOM_SlowDecCoeffStandard: 0.012,
-      vo_AOM_FastDecCoeffStandard: 0.05,
-      vo_PartAOM_to_AOM_Slow: 0.61,
-      vo_PartAOM_to_AOM_Fast: 0.39,
-      vo_CN_Ratio_AOM_Slow: 225,
+      vo_AOM_SlowDecCoeffStandard: 0.005,
+      vo_AOM_FastDecCoeffStandard: 0.025,
+      vo_PartAOM_to_AOM_Slow: 0.47,
+      vo_PartAOM_to_AOM_Fast: 0.53,
+      vo_CN_Ratio_AOM_Slow: 78,
       vo_CN_Ratio_AOM_Fast: 0,
       vo_PartAOM_Slow_to_SMB_Slow: 0.5,
       vo_PartAOM_Slow_to_SMB_Fast: 0.5,
