@@ -14,13 +14,14 @@ Nendel, C., M. Berg, K.C. Kersebaum, W. Mirschel, X. Specka, M. Wegehenkel, K.O.
 Johnson I. R., Lodge G. M., White R. E. (2003). The Sustainable Grazing Systems Pasture Model: description, philosophy and application to the SGS National Experiment. Australian Journal of Experimental Agriculture 43, 711–728. 
 
 ## Aims
-- Replace MONICA's generic grass-legume model with a more sophisticated grassland model that is able to simulate mixtures of species.
-- Provide additional nutritional parameters (e.g. digestibility) for forage crops (e.g. maize, whole-crop silage) that may be consumend by animal (ruminants) models.
-- Add routines to interact with animal models (grazing).
-- Add other grassland species (or functional groups) if parameters are available.
-- Add simple rountines for automatic seed, harvest, fertilization, irrigation and tillage date predictions.
-- Simplify MONICA's input parameters, configuration and API.
-- Provide infrastructure and unified API to easily extend crop.js with custom crop growth models
+- [x] Replace MONICA's generic grass-legume model with a more sophisticated grassland model that is able to simulate mixtures of species.
+- [ ] Provide additional nutritional parameters (e.g. digestibility) for forage crops (e.g. maize, whole-crop silage) that may be consumend by animal (ruminants) models.
+- [x] Add multi-model support to allow interaction of models (rotations, paddocks).
+- [x] Add routines to interact with animal models (grazing).
+- [x] Add other grassland species (or functional groups) if parameters are available.
+- [ ] Add simple rountines for automatic seed, harvest, fertilization, irrigation and tillage date predictions.
+- [x] Simplify MONICA's input parameters, configuration and API.
+- [x] Provide infrastructure and unified API to easily extend crop.js with custom crop growth models
 
 ## Acknowledgements
 
