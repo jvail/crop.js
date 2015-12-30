@@ -4,7 +4,7 @@ crop.js
 crop.js is a dynamic, generic crop and grassland growth model in JavaScript. It is a JS port of the soil, water and crop processes of [MONICA (C++)](https://github.com/zalf-lsa/monica) and an implementation of [SGS Pasture Model](http://imj.com.au/sgs/) from the publicly available documentation.
 
 ## Examples & Usage
-See [examples](https://github.com/jvail/crop.js/tree/master/exp).
+See example [code](https://github.com/jvail/crop.js/tree/master/exp) and [application](https://zalf-lse.github.io/solid-dss/).
 
 ## Model Genealogy
 [MONICA](http://monica.agrosystem-models.com/) is based on [HERMES](http://www.zalf.de/en/forschung/institute/lsa/forschung/oekomod/hermes/Pages/default.aspx) and [DAISY](https://code.google.com/p/daisy-model/). HERMES is based on [SUCROS](http://models.pps.wur.nl/node/3). The grassland model is based on the [SGS Pasture Model](http://imj.com.au/sgs/).
