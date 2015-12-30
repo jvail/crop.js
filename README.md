@@ -1,7 +1,7 @@
 crop.js
 =======
 
-crop.js is a dynamic, generic crop (-rotation) and grassland growth model in JavaScript. It is a JS port of the soil, water and crop processes of [MONICA (C++)](https://github.com/zalf-lsa/monica) and an implementation of [SGS Pasture Model](http://imj.com.au/sgs/) from the publicly available documentation.
+crop.js is a dynamic, deterministic generic crop (-rotation) and grassland growth model in JavaScript. It is a JS port of the soil, water and crop processes of [MONICA (C++)](https://github.com/zalf-lsa/monica) and an implementation of [SGS Pasture Model](http://imj.com.au/sgs/) from the publicly available documentation.
 
 ## Examples & Usage
 See example [code](https://github.com/jvail/crop.js/tree/master/exp) and [application](https://zalf-lse.github.io/solid-dss/).
