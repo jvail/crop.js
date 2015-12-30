@@ -480,7 +480,12 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
     vc_DeclinationCosinus = cos(vc_Declination * PI / 180.0) * cos(vs_Latitude * PI / 180.0);
 
     // Calculation of the atmospheric day lenght - old DL
-    vc_AstronomicDayLenght = 12.0 * (PI + 2.0 * asin(vc_DeclinationSinus / vc_DeclinationCosinus)) / PI;
+    if (vc_DeclinationSinus / vc_DeclinationCosinus < -1)
+      vc_AstronomicDayLenght = 12.0 * (PI + 2.0 * asin(-1)) / PI;
+    else if (vc_DeclinationSinus / vc_DeclinationCosinus > 1)
+      vc_AstronomicDayLenght = 12.0 * (PI + 2.0 * asin(1)) / PI;
+    else
+      vc_AstronomicDayLenght = 12.0 * (PI + 2.0 * asin(vc_DeclinationSinus / vc_DeclinationCosinus)) / PI;
 
 
     // Calculation of the effective day length - old DLE
@@ -495,8 +500,12 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
     }
 
     // old DLP
-    vc_PhotoperiodicDaylength = 12.0 * (PI + 2.0 * asin((-sin(-6.0 * PI / 180.0) + vc_DeclinationSinus)
-        / vc_DeclinationCosinus)) / PI;
+    if ((-sin(-6.0 * PI / 180.0) + vc_DeclinationSinus) / vc_DeclinationCosinus < -1)
+      vc_PhotoperiodicDaylength = 12.0 * (PI + 2.0 * asin(-1)) / PI;
+    else if ((-sin(-6.0 * PI / 180.0) + vc_DeclinationSinus) / vc_DeclinationCosinus > 1)
+      vc_PhotoperiodicDaylength = 12.0 * (PI + 2.0 * asin(1)) / PI;
+    else
+      vc_PhotoperiodicDaylength = 12.0 * (PI + 2.0 * asin((-sin(-6.0 * PI / 180.0) + vc_DeclinationSinus) / vc_DeclinationCosinus)) / PI;
 
     // Calculation of the mean photosynthetically active radiation [J m-2] - old RDN
     vc_PhotActRadiationMean = 3600.0 * (vc_DeclinationSinus * vc_AstronomicDayLenght + 24.0 / PI * vc_DeclinationCosinus
