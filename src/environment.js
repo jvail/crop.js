@@ -1,3 +1,8 @@
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
+
 var Environment = function (sps, cpp) {
 
   this.mode = "MyMode"; // JS! mode not implemented

@@ -1,3 +1,8 @@
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
+
 var SnowComponent = function (cpp) {
 
   var vm_SnowDensity = 0.0,

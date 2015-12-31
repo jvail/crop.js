@@ -1,3 +1,7 @@
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var SoilMoisture = function (sc, stps, mm, cpp) {
 

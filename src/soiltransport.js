@@ -1,3 +1,7 @@
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var SoilTransport = function (sc, sps, cpp) {
 
