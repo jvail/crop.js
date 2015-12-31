@@ -82,8 +82,8 @@ var GeneralParameters = function () {
   this.pc_WaterDeficitResponseOn = true;
   this.pc_LowTemperatureStressResponseOn = false;
   this.pc_HighTemperatureStressResponseOn = false;
-  this.pc_EmergenceFloodingControlOn = false;
-  this.pc_EmergenceMoistureControlOn = false;
+  this.pc_EmergenceFloodingControlOn = false; // unused
+  this.pc_EmergenceMoistureControlOn = false; // unused
 
   for (var i = 0; i < this.ps_LayerThickness.length; i++)
     this.ps_LayerThickness[i] = this._ps_LayerThickness;

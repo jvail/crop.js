@@ -1,14 +1,3 @@
-/*
-  JS Changes:
-    - applyCutting(): reset LAI
-    - get_PrimaryCropYield(): bestimme yield auch nach cutting
-    - get_FreshPrimaryCropYield(): bestimme yield auch nach cutting
-
-
-  TODO: 
-   
-    - dont return per ha values 
-*/
 
 var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
 

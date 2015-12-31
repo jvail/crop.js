@@ -24,16 +24,6 @@
       "desc": "Switches the crop soil moisture response off for potential growth simulations",
       "unit": "bool",
       "default": true
-    },
-    "emergenceMoistureControlOn": {
-      "desc": "Switches the seed response to soil moisture off for simulations with unknown initial conditions",
-      "unit": "bool",
-      "default": false
-    },
-    "emergenceFloodingControlOn": {
-      "desc": "Switches the seed response to flooded surface off for simulations with unknown surface slope",
-      "unit": "bool",
-      "default": false
     }
   },
   "init": {

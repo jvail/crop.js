@@ -22,12 +22,12 @@
     - sort out DM vs OM
 */
 
-var Grass = function (seedDate, harvestDates, species, options) {
+var Grass = function (seedDate, harvestDates, species, plantDryWeight, autoIrrigationOn) {
   
   this.mixture = null;
   this._seedDate = seedDate;
-  this._harvestDates = harvestDates;
-  this.autoIrrigationOn = options.autoIrrigationOn || false;
+  this._harvestDates = harvestDates; // unused
+  this.autoIrrigationOn = autoIrrigationOn || false;
 
   var _accumulatedETa = 0.0
     , _appliedAmountIrrigation = 0
@@ -1058,8 +1058,8 @@ var Grass = function (seedDate, harvestDates, species, options) {
     var noPools = 4
       , leaf_share = 0.7
       , stem_share = 1 - leaf_share
-      , DM_root = 0.5 * (config.plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
-      , DM_shoot = 0.5 * (config.plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
+      , DM_root = 0.5 * (plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
+      , DM_shoot = 0.5 * (plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
       , DM = []
       ;
   
@@ -1678,7 +1678,7 @@ var Grass = function (seedDate, harvestDates, species, options) {
       mix.push(
         new Species({
           name: species[s].name,
-          constants: species[s].constants
+          constants: species[s].options
         })
       );      
       dm.push(species[s].dryMatterFraction);
@@ -1695,8 +1695,7 @@ var Grass = function (seedDate, harvestDates, species, options) {
   //   options.homogeneity = 0;
 
   this.mixture = new Mixture(mix, { 
-    DM: dm, 
-    plantDryWeight: options.plantDryWeight
+    DM: dm
   });
   
   this.seedDate = function () {

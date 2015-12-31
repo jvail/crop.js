@@ -39,14 +39,7 @@
           "NConc": 0
         }
       ],
-      "organicFertilisers": [
-        {
-          "name": "cattle slurry",
-          "date": "1996-09-01",
-          "method": "Fixed",
-          "amount": 10000
-        }
-      ],
+      "organicFertilisers": [],
       "mineralFertilisers": [
         {
           "name": "Ammonium Nitrate",

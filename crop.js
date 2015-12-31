@@ -4,8 +4,8 @@ var crop = crop || {};
 var example_config = {
  "simulation": {
   "time": {
-   "startDate": "1991-01-01",
-   "endDate": "1992-12-31"
+   "startDate": "1996-01-01",
+   "endDate": "1997-12-31"
   },
   "switches": {
    "useSecondaryYieldOn": false,
@@ -17,27 +17,27 @@ var example_config = {
   }
  },
  "site": {
-  "latitude": 52.2,
+  "latitude": 52.625,
   "slope": 0,
   "heightNN": 1,
   "horizons": [
    {
     "thickness": 0.2,
-    "organicMatter": 0.05,
+    "organicMatter": 0.015,
     "sand": 0.6,
     "clay": 0.05,
     "sceleton": 0.02
    },
    {
     "thickness": 0.5,
-    "organicMatter": 0.05,
+    "organicMatter": 0.015,
     "sand": 0.6,
     "clay": 0.05,
     "sceleton": 0.02
    },
    {
     "thickness": 2,
-    "organicMatter": 0.05,
+    "organicMatter": 0.01,
     "sand": 0.6,
     "clay": 0.05,
     "sceleton": 0.02
@@ -50,89 +50,17 @@ var example_config = {
     "model": "generic",
     "species": [
      {
-      "name": "winter wheat"
-     }
-    ],
-    "sowingDate": "1991-10-01",
-    "plantDryWeight": 225,
-    "percNTRansplant": 0.07,
-    "finalHarvestDate": "1992-08-01",
-    "residuesRemoval": 0.85,
-    "tillageOperations": [
-     {
-      "date": "1991-09-01",
-      "method": "Plough",
-      "depth": 30
-     }
-    ],
-    "irrigations": [
-     {
-      "date": "1992-06-01",
-      "method": "Sprinkler",
-      "eventType": "Fixed",
-      "threshold": 0.2,
-      "area": 1,
-      "amount": 5,
-      "NConc": 0
-     }
-    ],
-    "organicFertilisers": [
-     {
-      "name": "cattle slurry",
-      "date": "1992-05-01",
-      "method": "Fixed",
-      "amount": 30
-     }
-    ],
-    "mineralFertilisers": [
-     {
-      "name": "Ammonium Nitrate",
-      "date": "1992-04-01",
-      "method": "Fixed",
-      "amount": 40
-     }
-    ]
-   },
-   {
-    "model": "generic",
-    "species": [
-     {
       "name": "winter rye"
      }
     ],
-    "sowingDate": "1992-09-01",
+    "sowingDate": "1996-10-01",
     "plantDryWeight": 225,
     "percNTRansplant": 0.07,
-    "finalHarvestDate": "1993-08-01",
-    "residuesRemoval": 0.85,
+    "finalHarvestDate": "1998-07-01",
     "tillageOperations": [],
-    "irrigations": [
-     {
-      "date": "1993-06-01",
-      "method": "Sprinkler",
-      "eventType": "Fixed",
-      "threshold": 0.2,
-      "area": 1,
-      "amount": 5,
-      "NConc": 0
-     }
-    ],
-    "organicFertilisers": [
-     {
-      "name": "cattle slurry",
-      "date": "1993-05-01",
-      "method": "Fixed",
-      "amount": 30
-     }
-    ],
-    "mineralFertilisers": [
-     {
-      "name": "Ammonium Nitrate",
-      "date": "1993-04-01",
-      "method": "Fixed",
-      "amount": 40
-     }
-    ]
+    "irrigations": [],
+    "organicFertilisers": [],
+    "mineralFertilisers": []
    }
   ]
  }
@@ -2422,8 +2350,8 @@ var GeneralParameters = function () {
   this.pc_WaterDeficitResponseOn = true;
   this.pc_LowTemperatureStressResponseOn = false;
   this.pc_HighTemperatureStressResponseOn = false;
-  this.pc_EmergenceFloodingControlOn = false;
-  this.pc_EmergenceMoistureControlOn = false;
+  this.pc_EmergenceFloodingControlOn = false; // unused
+  this.pc_EmergenceMoistureControlOn = false; // unused
 
   for (var i = 0; i < this.ps_LayerThickness.length; i++)
     this.ps_LayerThickness[i] = this._ps_LayerThickness;
@@ -7125,7 +7053,7 @@ CropGrowthAPI.prototype = {
 
 // TODO: add initial plantDryWeight
 
-var GenericCrop = function (name, options) {
+var GenericCrop = function (name, plantDryWeight, autoIrrigationOn, options) {
 
   var _id = -1
     , _name = name.toLowerCase()
@@ -7151,7 +7079,7 @@ var GenericCrop = function (name, options) {
   if (_name === 'winter wheat' || _name === 'wheat') {
     _id = 1;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7256,7 +7184,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'winter barley' || _name === 'barley') {
     _id = 2;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7361,7 +7289,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'winter rye' || _name === 'rye') {
     _id = 3;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7466,7 +7394,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'spring barley') {
     _id = 4;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7571,7 +7499,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'grain maize') {
     _id = 5;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7675,7 +7603,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'maize silage' || _name === 'maize' || _name === 'maize-silage') {
     _id = 7;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7783,7 +7711,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'winter rape' || _name === 'rape' || _name === 'rapeseed') {
     _id = 9;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7888,7 +7816,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'sugar beet' || _name === 'beet') {
     _id = 10;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -7990,7 +7918,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'mustard') {
     _id = 11;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8096,7 +8024,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'oil raddich') {
     _id = 17;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8202,7 +8130,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'winter triticale' || _name === 'triticale') {
     _id = 19;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8307,7 +8235,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'spring rye') {
     _id = 20;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8412,7 +8340,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'oat compound' || _name === 'oats'  || _name === 'oat') {
     _id = 22;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8517,7 +8445,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'spring triticale') {
     _id = 23;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8622,7 +8550,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'field pea' || _name === 'pea') {
     _id = 24;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8727,7 +8655,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'spring wheat') {
     _id = 25;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8832,7 +8760,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean 000' || _name === 'soy' || _name === 'soy bean') {
     _id = 28;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -8936,7 +8864,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean 00') {
     _id = 29;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9040,7 +8968,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean 0') {
     _id = 30;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9144,7 +9072,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean i') {
     _id = 31;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9248,7 +9176,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean ii') {
     _id = 32;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9352,7 +9280,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean iii') {
     _id = 33;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9456,7 +9384,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean iv') {
     _id = 34;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9560,7 +9488,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean v') {
     _id = 35;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9664,7 +9592,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean vi') {
     _id = 36;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9768,7 +9696,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean vii') {
     _id = 37;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9872,7 +9800,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean viii') {
     _id = 38;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -9976,7 +9904,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean ix') {
     _id = 39;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -10080,7 +10008,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean x') {
     _id = 40;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -10184,7 +10112,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean xi') {
     _id = 41;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -10288,7 +10216,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean xii') {
     _id = 42;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -10397,6 +10325,9 @@ var GenericCrop = function (name, options) {
       _cropParams[key] = options[key];
     }
   });
+
+  _cropParams.pc_InitialOrganBiomass[ORGAN_ROOT] = plantDryWeight * 0.5;
+  _cropParams.pc_InitialOrganBiomass[ORGAN_LEAF] = plantDryWeight * 0.5;
 
   return {
 
@@ -10514,17 +10445,6 @@ var GenericCrop = function (name, options) {
 };
 
 
-/*
-  JS Changes:
-    - applyCutting(): reset LAI
-    - get_PrimaryCropYield(): bestimme yield auch nach cutting
-    - get_FreshPrimaryCropYield(): bestimme yield auch nach cutting
-
-
-  TODO: 
-   
-    - dont return per ha values 
-*/
 
 var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
 
@@ -10996,7 +10916,12 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
     vc_DeclinationCosinus = cos(vc_Declination * PI / 180.0) * cos(vs_Latitude * PI / 180.0);
 
     // Calculation of the atmospheric day lenght - old DL
-    vc_AstronomicDayLenght = 12.0 * (PI + 2.0 * asin(vc_DeclinationSinus / vc_DeclinationCosinus)) / PI;
+    if (vc_DeclinationSinus / vc_DeclinationCosinus < -1)
+      vc_AstronomicDayLenght = 12.0 * (PI + 2.0 * asin(-1)) / PI;
+    else if (vc_DeclinationSinus / vc_DeclinationCosinus > 1)
+      vc_AstronomicDayLenght = 12.0 * (PI + 2.0 * asin(1)) / PI;
+    else
+      vc_AstronomicDayLenght = 12.0 * (PI + 2.0 * asin(vc_DeclinationSinus / vc_DeclinationCosinus)) / PI;
 
 
     // Calculation of the effective day length - old DLE
@@ -11011,8 +10936,12 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
     }
 
     // old DLP
-    vc_PhotoperiodicDaylength = 12.0 * (PI + 2.0 * asin((-sin(-6.0 * PI / 180.0) + vc_DeclinationSinus)
-        / vc_DeclinationCosinus)) / PI;
+    if ((-sin(-6.0 * PI / 180.0) + vc_DeclinationSinus) / vc_DeclinationCosinus < -1)
+      vc_PhotoperiodicDaylength = 12.0 * (PI + 2.0 * asin(-1)) / PI;
+    else if ((-sin(-6.0 * PI / 180.0) + vc_DeclinationSinus) / vc_DeclinationCosinus > 1)
+      vc_PhotoperiodicDaylength = 12.0 * (PI + 2.0 * asin(1)) / PI;
+    else
+      vc_PhotoperiodicDaylength = 12.0 * (PI + 2.0 * asin((-sin(-6.0 * PI / 180.0) + vc_DeclinationSinus) / vc_DeclinationCosinus)) / PI;
 
     // Calculation of the mean photosynthetically active radiation [J m-2] - old RDN
     vc_PhotActRadiationMean = 3600.0 * (vc_DeclinationSinus * vc_AstronomicDayLenght + 24.0 / PI * vc_DeclinationCosinus
@@ -13498,12 +13427,12 @@ var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
     - sort out DM vs OM
 */
 
-var Grass = function (seedDate, harvestDates, species, options) {
+var Grass = function (seedDate, harvestDates, species, plantDryWeight, autoIrrigationOn) {
   
   this.mixture = null;
   this._seedDate = seedDate;
-  this._harvestDates = harvestDates;
-  this.autoIrrigationOn = options.autoIrrigationOn || false;
+  this._harvestDates = harvestDates; // unused
+  this.autoIrrigationOn = autoIrrigationOn || false;
 
   var _accumulatedETa = 0.0
     , _appliedAmountIrrigation = 0
@@ -13583,6 +13512,7 @@ var Grass = function (seedDate, harvestDates, species, options) {
             ρ_shoot_ref: 0.75   // [-]                         reference shoot partitioning fraction
           , ρ_l_max: 0.7        // [-]                         fraction partitioned to leaf
           , GDD_flower: 500     // [C° d]                      growing degree days till flowering
+          , γ_stock: 0.0005     // [ha animals-1]              dead to litter flux adjustment for trampling               
         }
       , N_leaf: {
             opt: 0.035 / 0.45
@@ -14533,8 +14463,8 @@ var Grass = function (seedDate, harvestDates, species, options) {
     var noPools = 4
       , leaf_share = 0.7
       , stem_share = 1 - leaf_share
-      , DM_root = 0.5 * (config.plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
-      , DM_shoot = 0.5 * (config.plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
+      , DM_root = 0.5 * (plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
+      , DM_shoot = 0.5 * (plantDryWeight || 1000) * 1e-4 // kg ha-1 to kg m-2
       , DM = []
       ;
   
@@ -15153,7 +15083,7 @@ var Grass = function (seedDate, harvestDates, species, options) {
       mix.push(
         new Species({
           name: species[s].name,
-          constants: species[s].constants
+          constants: species[s].options
         })
       );      
       dm.push(species[s].dryMatterFraction);
@@ -15170,8 +15100,7 @@ var Grass = function (seedDate, harvestDates, species, options) {
   //   options.homogeneity = 0;
 
   this.mixture = new Mixture(mix, { 
-    DM: dm, 
-    plantDryWeight: options.plantDryWeight
+    DM: dm
   });
   
   this.seedDate = function () {
@@ -15266,6 +15195,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     , generalParams = gps
     , centralParameterProvider = cpp
     , numberOfSpecies = mixture.length
+    , ρ_stock = 0 /* [animals ha-1] stocking rate */
     // , homogeneity = mixture.homogeneity
     , vs_NumberOfLayers  = sc.vs_NumberOfLayers()
     , vs_NumberOfOrganicLayers  = sc.vs_NumberOfOrganicLayers()
@@ -16259,8 +16189,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           /* stem flux parameter TODO: how to better relate γ_s, γ_r to γ_l */
         , γ_s = 0.8 * γ_l // 0.8 is scale factor turn over rate relative to leaves
         , γ_r = 0.02 * f_γ(T) // root senescense rate TODO: f_γ(T)?
-          /* dead to litter flux parameter (value from AgPasture) */
-        , γ_dead = 0.11
+          /* dead to litter flux adjusted for trampling (ref value from AgPasture) */
+        , γ_dead = 0.11 + cons.part.γ_stock * ρ_stock
           /* no remob if N concentration already exceeds maximum */
         , fN_remob_l = (species.N_live_leaf() / species.C_live_leaf() < cons.N_leaf.max) ? 0.5 : 0
         , fN_remob_s = (species.N_live_stem() / species.C_live_stem() < cons.N_leaf.max * 0.5) ? 0.5 : 0
@@ -17524,6 +17454,11 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     return (speciesIdx === undefined) ? mixture.τ_T_high() : mixture[speciesIdx].vars.τ_T_high;
   };
 
+  /* rate [animals ha-1] currently size/weight does not matter */
+  var setStockingRate = function (rate) {
+    ρ_stock = rate;
+  };
+
   return Object.create(CropGrowthAPI.prototype, {
 
     step: { value: step },
@@ -17587,6 +17522,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     shootOrganicMatterContent: { value: shootOrganicMatterContent },
     shootCrudeProteinContent: { value: shootCrudeProteinContent },
     shootCrudeFibreContent: { value: shootCrudeFibreContent },
+
+    setStockingRate: { value: setStockingRate },
 
     harvestShootBiomassByHeight: { value: harvestShootBiomassByHeight },
     harvestShootBiomass: { value: harvestShootBiomass }
@@ -24488,8 +24425,9 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       generalParameters.pc_WaterDeficitResponseOn = getValue(sim.switches, 'waterDeficitResponseOn', generalParameters.pc_WaterDeficitResponseOn);
       generalParameters.pc_LowTemperatureStressResponseOn = getValue(sim.switches, 'lowTemperatureStressResponseOn', generalParameters.pc_LowTemperatureStressResponseOn);
       generalParameters.pc_HighTemperatureStressResponseOn = getValue(sim.switches, 'highTemperatureStressResponseOn', generalParameters.pc_HighTemperatureStressResponseOn);
-      generalParameters.pc_EmergenceMoistureControlOn = getValue(sim.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
-      generalParameters.pc_EmergenceFloodingControlOn = getValue(sim.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
+      // unused
+      // generalParameters.pc_EmergenceMoistureControlOn = getValue(sim.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
+      // generalParameters.pc_EmergenceFloodingControlOn = getValue(sim.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
       
       generalParameters.ps_MaxMineralisationDepth = 0.4;
 
@@ -24616,9 +24554,13 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
         // soilParameters.vs_PermanentWiltingPoint = 0.2;
 
 
-
-        soilParameters.set_vs_SoilOrganicMatter(getValue(horizon, 'organicMatter', -1));
-        soilParameters.set_vs_SoilOrganicCarbon(getValue(horizon, 'Corg', -1));
+        if (horizon.organicMatter) {
+          soilParameters.set_vs_SoilOrganicMatter(getValue(horizon, 'organicMatter', -1));
+        } else if (horizon.Corg) {
+          soilParameters.set_vs_SoilOrganicCarbon(getValue(horizon, 'Corg', -1));         
+        } else {
+          soilParameters.set_vs_SoilOrganicCarbon(0.008);
+        }
         soilParameters.vs_SoilSandContent = horizon.sand;
         soilParameters.vs_SoilClayContent = horizon.clay;
         soilParameters.vs_SoilStoneContent = horizon.sceleton;
@@ -24678,29 +24620,34 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
   function createProcesses(cropRotation, production, startDate) {
     
-    var ok = true;
-    var crops = production.crops;
-    var cs = crops.length;
+    var ok = true,
+        crops = production.crops,
+        cs = crops.length,
+        crop = null,
+        isGrassland = false,
+        isPermanentGrassland = false,
+        sowingDate = null,
+        harvestDate = null,
+        grass = null,
+        genericCrop = null;
+
     
     logger(MSG_INFO, 'Fetching ' + cs + ' crops.');
 
     for (var c = 0; c < cs; c++) {
 
-      var crop = crops[c];
-      var isGrassland = (crop.model === 'grassland');
+      crop = crops[c];
+      isGrassland = (crop.model === 'grassland');
       /* assume perm. grassland if there is only one crop in the rotation array and sowing date has not been specified */
-      var isPermanentGrassland = (isGrassland && cs === 1 && (crop.sowingDate === null || crop.sowingDate === undefined));
+      isPermanentGrassland = (isGrassland && cs === 1 && (crop.sowingDate === null || crop.sowingDate === undefined));
 
       if (isGrassland) {
         /* if no sowing date provided: we can not start at day 0 and therefor start at day 0 + 1 since model's general step is executed *after* cropStep */
-        var sd = !crop.sowingDate ? new Date(new Date(startDate).setDate(startDate.getDate() + 1)) : new Date(Date.parse(crop.sowingDate));
-        var hds = getValue(crop, 'harvestDates', []);
-        debug(sd);
-        debug(startDate);
+        sowingDate = !crop.sowingDate ? new Date(new Date(startDate).setDate(startDate.getDate() + 1)) : new Date(Date.parse(crop.sowingDate));
       } else {
-        var sd = new Date(Date.parse(crop.sowingDate));
-        var hd = new Date(Date.parse(crop.finalHarvestDate));
-        if (!sd.isValid() || !hd.isValid()) {
+        sowingDate = new Date(Date.parse(crop.sowingDate));
+        harvestDate = new Date(Date.parse(crop.finalHarvestDate));
+        if (!sowingDate.isValid() || !harvestDate.isValid()) {
           ok = false;
           logger(MSG_ERROR, 'Invalid sowing or harvest date in ' + crop.species[0].name);
         }
@@ -24708,16 +24655,25 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       if (isGrassland) {
 
-        var grass = new Grass(sd, hds, crop.species, { 
-          plantDryWeight: crop.plantDryWeight,
-          autoIrrigationOn: crop.autoIrrigationOn || false
-        });
+        /* harvestDate unused. Use callback for grassland harvests */
+        grass = new Grass(
+          sowingDate, 
+          [], 
+          crop.species,
+          crop.plantDryWeight, 
+          !!crop.autoIrrigationOn || false
+        );
         cropRotation[c] = new ProductionProcess('grassland', grass);
 
       } else {
         /* choose the first (and only) name in species array (mixtures not implemented in generic crop model) */
-        var genericCrop = new GenericCrop(crop.species[0].name, crop.options);
-        genericCrop.setSeedAndHarvestDate(sd, hd);
+        genericCrop = new GenericCrop(
+          crop.species[0].name,
+          crop.plantDryWeight, 
+          !!crop.autoIrrigationOn || false,
+          crop.species[0].options || {}
+        );
+        genericCrop.setSeedAndHarvestDate(sowingDate, harvestDate);
         cropRotation[c] = new ProductionProcess(crop.species[0].name, genericCrop);
       
       }

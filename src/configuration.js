@@ -106,8 +106,9 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
       generalParameters.pc_WaterDeficitResponseOn = getValue(sim.switches, 'waterDeficitResponseOn', generalParameters.pc_WaterDeficitResponseOn);
       generalParameters.pc_LowTemperatureStressResponseOn = getValue(sim.switches, 'lowTemperatureStressResponseOn', generalParameters.pc_LowTemperatureStressResponseOn);
       generalParameters.pc_HighTemperatureStressResponseOn = getValue(sim.switches, 'highTemperatureStressResponseOn', generalParameters.pc_HighTemperatureStressResponseOn);
-      generalParameters.pc_EmergenceMoistureControlOn = getValue(sim.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
-      generalParameters.pc_EmergenceFloodingControlOn = getValue(sim.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
+      // unused
+      // generalParameters.pc_EmergenceMoistureControlOn = getValue(sim.switches, 'emergenceMoistureControlOn', generalParameters.pc_EmergenceMoistureControlOn);
+      // generalParameters.pc_EmergenceFloodingControlOn = getValue(sim.switches, 'emergenceFloodingControlOn', generalParameters.pc_EmergenceFloodingControlOn);
       
       generalParameters.ps_MaxMineralisationDepth = 0.4;
 
@@ -234,9 +235,13 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
         // soilParameters.vs_PermanentWiltingPoint = 0.2;
 
 
-
-        soilParameters.set_vs_SoilOrganicMatter(getValue(horizon, 'organicMatter', -1));
-        soilParameters.set_vs_SoilOrganicCarbon(getValue(horizon, 'Corg', -1));
+        if (horizon.organicMatter) {
+          soilParameters.set_vs_SoilOrganicMatter(getValue(horizon, 'organicMatter', -1));
+        } else if (horizon.Corg) {
+          soilParameters.set_vs_SoilOrganicCarbon(getValue(horizon, 'Corg', -1));         
+        } else {
+          soilParameters.set_vs_SoilOrganicCarbon(0.008);
+        }
         soilParameters.vs_SoilSandContent = horizon.sand;
         soilParameters.vs_SoilClayContent = horizon.clay;
         soilParameters.vs_SoilStoneContent = horizon.sceleton;
@@ -296,29 +301,34 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
   function createProcesses(cropRotation, production, startDate) {
     
-    var ok = true;
-    var crops = production.crops;
-    var cs = crops.length;
+    var ok = true,
+        crops = production.crops,
+        cs = crops.length,
+        crop = null,
+        isGrassland = false,
+        isPermanentGrassland = false,
+        sowingDate = null,
+        harvestDate = null,
+        grass = null,
+        genericCrop = null;
+
     
     logger(MSG_INFO, 'Fetching ' + cs + ' crops.');
 
     for (var c = 0; c < cs; c++) {
 
-      var crop = crops[c];
-      var isGrassland = (crop.model === 'grassland');
+      crop = crops[c];
+      isGrassland = (crop.model === 'grassland');
       /* assume perm. grassland if there is only one crop in the rotation array and sowing date has not been specified */
-      var isPermanentGrassland = (isGrassland && cs === 1 && (crop.sowingDate === null || crop.sowingDate === undefined));
+      isPermanentGrassland = (isGrassland && cs === 1 && (crop.sowingDate === null || crop.sowingDate === undefined));
 
       if (isGrassland) {
         /* if no sowing date provided: we can not start at day 0 and therefor start at day 0 + 1 since model's general step is executed *after* cropStep */
-        var sd = !crop.sowingDate ? new Date(new Date(startDate).setDate(startDate.getDate() + 1)) : new Date(Date.parse(crop.sowingDate));
-        var hds = getValue(crop, 'harvestDates', []);
-        debug(sd);
-        debug(startDate);
+        sowingDate = !crop.sowingDate ? new Date(new Date(startDate).setDate(startDate.getDate() + 1)) : new Date(Date.parse(crop.sowingDate));
       } else {
-        var sd = new Date(Date.parse(crop.sowingDate));
-        var hd = new Date(Date.parse(crop.finalHarvestDate));
-        if (!sd.isValid() || !hd.isValid()) {
+        sowingDate = new Date(Date.parse(crop.sowingDate));
+        harvestDate = new Date(Date.parse(crop.finalHarvestDate));
+        if (!sowingDate.isValid() || !harvestDate.isValid()) {
           ok = false;
           logger(MSG_ERROR, 'Invalid sowing or harvest date in ' + crop.species[0].name);
         }
@@ -326,16 +336,25 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
       if (isGrassland) {
 
-        var grass = new Grass(sd, hds, crop.species, { 
-          plantDryWeight: crop.plantDryWeight,
-          autoIrrigationOn: crop.autoIrrigationOn || false
-        });
+        /* harvestDate unused. Use callback for grassland harvests */
+        grass = new Grass(
+          sowingDate, 
+          [], 
+          crop.species,
+          crop.plantDryWeight, 
+          !!crop.autoIrrigationOn || false
+        );
         cropRotation[c] = new ProductionProcess('grassland', grass);
 
       } else {
         /* choose the first (and only) name in species array (mixtures not implemented in generic crop model) */
-        var genericCrop = new GenericCrop(crop.species[0].name, crop.options);
-        genericCrop.setSeedAndHarvestDate(sd, hd);
+        genericCrop = new GenericCrop(
+          crop.species[0].name,
+          crop.plantDryWeight, 
+          !!crop.autoIrrigationOn || false,
+          crop.species[0].options || {}
+        );
+        genericCrop.setSeedAndHarvestDate(sowingDate, harvestDate);
         cropRotation[c] = new ProductionProcess(crop.species[0].name, genericCrop);
       
       }

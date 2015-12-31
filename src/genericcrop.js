@@ -1,6 +1,6 @@
 // TODO: add initial plantDryWeight
 
-var GenericCrop = function (name, options) {
+var GenericCrop = function (name, plantDryWeight, autoIrrigationOn, options) {
 
   var _id = -1
     , _name = name.toLowerCase()
@@ -26,7 +26,7 @@ var GenericCrop = function (name, options) {
   if (_name === 'winter wheat' || _name === 'wheat') {
     _id = 1;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -131,7 +131,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'winter barley' || _name === 'barley') {
     _id = 2;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -236,7 +236,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'winter rye' || _name === 'rye') {
     _id = 3;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -341,7 +341,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'spring barley') {
     _id = 4;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -446,7 +446,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'grain maize') {
     _id = 5;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -550,7 +550,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'maize silage' || _name === 'maize' || _name === 'maize-silage') {
     _id = 7;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -658,7 +658,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'winter rape' || _name === 'rape' || _name === 'rapeseed') {
     _id = 9;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -763,7 +763,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'sugar beet' || _name === 'beet') {
     _id = 10;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -865,7 +865,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'mustard') {
     _id = 11;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -971,7 +971,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'oil raddich') {
     _id = 17;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -1077,7 +1077,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'winter triticale' || _name === 'triticale') {
     _id = 19;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -1182,7 +1182,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'spring rye') {
     _id = 20;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -1287,7 +1287,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'oat compound' || _name === 'oats'  || _name === 'oat') {
     _id = 22;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -1392,7 +1392,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'spring triticale') {
     _id = 23;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -1497,7 +1497,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'field pea' || _name === 'pea') {
     _id = 24;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -1602,7 +1602,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'spring wheat') {
     _id = 25;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 6,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -1707,7 +1707,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean 000' || _name === 'soy' || _name === 'soy bean') {
     _id = 28;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -1811,7 +1811,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean 00') {
     _id = 29;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -1915,7 +1915,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean 0') {
     _id = 30;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -2019,7 +2019,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean i') {
     _id = 31;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -2123,7 +2123,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean ii') {
     _id = 32;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -2227,7 +2227,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean iii') {
     _id = 33;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -2331,7 +2331,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean iv') {
     _id = 34;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -2435,7 +2435,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean v') {
     _id = 35;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -2539,7 +2539,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean vi') {
     _id = 36;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -2643,7 +2643,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean vii') {
     _id = 37;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -2747,7 +2747,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean viii') {
     _id = 38;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -2851,7 +2851,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean ix') {
     _id = 39;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -2955,7 +2955,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean x') {
     _id = 40;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -3059,7 +3059,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean xi') {
     _id = 41;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -3163,7 +3163,7 @@ var GenericCrop = function (name, options) {
   } else if (_name === 'soy bean xii') {
     _id = 42;
     _cropParams = {
-      autoIrrigationOn: false,
+      autoIrrigationOn: autoIrrigationOn,
       pc_NumberOfDevelopmentalStages: 7,
       pc_NumberOfOrgans: 4,
       pc_AssimilatePartitioningCoeff: [
@@ -3272,6 +3272,9 @@ var GenericCrop = function (name, options) {
       _cropParams[key] = options[key];
     }
   });
+
+  _cropParams.pc_InitialOrganBiomass[ORGAN_ROOT] = plantDryWeight * 0.5;
+  _cropParams.pc_InitialOrganBiomass[ORGAN_LEAF] = plantDryWeight * 0.5;
 
   return {
 
