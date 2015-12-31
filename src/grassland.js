@@ -107,6 +107,7 @@ var Grass = function (seedDate, harvestDates, species, options) {
             ρ_shoot_ref: 0.75   // [-]                         reference shoot partitioning fraction
           , ρ_l_max: 0.7        // [-]                         fraction partitioned to leaf
           , GDD_flower: 500     // [C° d]                      growing degree days till flowering
+          , γ_stock: 0.0005     // [ha animals-1]              dead to litter flux adjustment for trampling               
         }
       , N_leaf: {
             opt: 0.035 / 0.45

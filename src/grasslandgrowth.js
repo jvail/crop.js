@@ -45,6 +45,7 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     , generalParams = gps
     , centralParameterProvider = cpp
     , numberOfSpecies = mixture.length
+    , ρ_stock = 0 /* [animals ha-1] stocking rate */
     // , homogeneity = mixture.homogeneity
     , vs_NumberOfLayers  = sc.vs_NumberOfLayers()
     , vs_NumberOfOrganicLayers  = sc.vs_NumberOfOrganicLayers()
@@ -1038,8 +1039,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
           /* stem flux parameter TODO: how to better relate γ_s, γ_r to γ_l */
         , γ_s = 0.8 * γ_l // 0.8 is scale factor turn over rate relative to leaves
         , γ_r = 0.02 * f_γ(T) // root senescense rate TODO: f_γ(T)?
-          /* dead to litter flux parameter (value from AgPasture) */
-        , γ_dead = 0.11
+          /* dead to litter flux adjusted for trampling (ref value from AgPasture) */
+        , γ_dead = 0.11 + cons.part.γ_stock * ρ_stock
           /* no remob if N concentration already exceeds maximum */
         , fN_remob_l = (species.N_live_leaf() / species.C_live_leaf() < cons.N_leaf.max) ? 0.5 : 0
         , fN_remob_s = (species.N_live_stem() / species.C_live_stem() < cons.N_leaf.max * 0.5) ? 0.5 : 0
@@ -2303,6 +2304,11 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     return (speciesIdx === undefined) ? mixture.τ_T_high() : mixture[speciesIdx].vars.τ_T_high;
   };
 
+  /* rate [animals ha-1] currently size/weight does not matter */
+  var setStockingRate = function (rate) {
+    ρ_stock = rate;
+  };
+
   return Object.create(CropGrowthAPI.prototype, {
 
     step: { value: step },
@@ -2366,6 +2372,8 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
     shootOrganicMatterContent: { value: shootOrganicMatterContent },
     shootCrudeProteinContent: { value: shootCrudeProteinContent },
     shootCrudeFibreContent: { value: shootCrudeFibreContent },
+
+    setStockingRate: { value: setStockingRate },
 
     harvestShootBiomassByHeight: { value: harvestShootBiomassByHeight },
     harvestShootBiomass: { value: harvestShootBiomass }
