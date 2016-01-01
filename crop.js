@@ -2263,10 +2263,321 @@ var tools = {
       //-> (t * 100.0 * 100.0) / 1000000.0 -> t / 100
       return asMJpm2pd ? t/100.0 : t;
     }
+  , 
+  /*
+    Solar radiation and daylength depending only on latitude and temperature (min, max) input
+
+    REFERENCES
+    
+    Allen, Richard G. et al. 1998.
+    Crop evapotranspiration - Guidelines for computing crop water requirements
+    FAO Irrigation and drainage paper 56
+
+    Johnson. I.R. 2013.
+    DairyMod and the SGS Pasture Model: a mathematical description of the biophysical
+      
+    Rotz, C. A., Corson, M.S., Chianese, D.S., Montes, F., Hafner, S.D., Bonifacio, H.F. and Coiner, C.U. 2014. 
+    The integrated farm system model: reference manual version 4.1. 
+    Available: http://afrsweb.usda.gov/SP2UserFiles/Place/19020500/Reference%20Manual.pdf Accessed January 3, 2015.
+
+    Hargreaves GH, Samani ZA. (1985) Reference crop evapotranspiration from temperature.
+    Appl Engine Agric. 1(2):96–99
+    
+    Supit, I. 2003.
+    Updated system description of the WOFOST crop growth simulation model as implemented
+    in the Crop Growth Monitoring System applied by the European Commission 
+    (http://www.treemail.nl/download/treebook7/start.htm)
+
+    LICENSE
+
+    Copyright 2014 Jan Vaillant <jan.vaillant@zalf.de>
+
+    Distributed under the MIT License. See accompanying file LICENSE or copy at http://opensource.org/licenses/MIT
+  */
+
+    weather: (function () {
+
+      var PI = Math.PI
+        , sin = Math.sin
+        , cos = Math.cos
+        , tan = Math.tan
+        , acos = Math.acos
+        , sqrt = Math.sqrt
+        , pow = Math.pow
+        , exp = Math.exp
+        , ceil = Math.ceil
+        , min = Math.min
+        , MS_PER_DAY = 1000 * 60 * 60 * 24
+        ;
+
+      /*
+        Allen (1998) eq. 22
+
+        rad [rad] 
+        deg [decimal degrees]
+      */
+
+      var rad = function (deg) {
+
+        return (PI / 180) * deg;
+        
+      };
+
+      /*
+        Allen (1998) eq. 23
+
+        dr  []  Inverse relative distance Earth-Sun
+        J   [#] Day of year (1 - 366)
+      */
+
+      var dr = function (J) {
+
+        return 1 + (0.033 * cos(((2 * PI) / 356) * J));
+
+      };
+
+      /*
+        Allen (1998) eq. 24
+
+        d [rad] Solar declination
+        J [#]   Day of year (1 - 366)
+      */
+
+      var d = function (J) {
+        
+        return 0.409 * sin((((2 * PI) / 365) * J) - 1.39);
+
+      };
+
+      /*
+        Allen (1998) eq. 25
+
+        ws  [rad]             Sunset hour angle
+        j   [decimal degree]  Latitude
+        d   [rad]             Solar declination
+      */
+
+      var ws = function (j, d) {
+
+        return acos(-tan(rad(j)) * tan(d));
+
+      };
+
+
+      /*
+        Allen (1998) eq. 21
+
+        R_a   [MJ m-2 day-1]    Extraterrestrial radiation
+        Gsc   [MJ m-2 min-1]    Solar constant = 0.0820 
+        dr    []                Inverse relative distance Earth-Sun (eq. 23)
+        ws    [rad]             Sunset hour angle (eqs. 25 or 26)
+        j     [decimal degree]  Latitude
+        d     [rad]             Solar declination (eq. 24)
+      */
+
+      var R_a = function (dr, ws, j, d, unit) {
+
+        if (unit !== 'mj' && unit !== 'mm')
+          unit = 'mj';
+          
+        var Gsc = 0.0820;
+        var R_a = ((24 * 60) / PI) * Gsc * dr * ((ws * sin(rad(j)) * sin(d)) + (cos(rad(j)) * cos(d) * sin(ws)));
+        
+        return (unit === 'mj') ? R_a : R_a * 0.408;
+
+      };
+
+      /*
+        Hargreaves & Samani (1985)
+
+        R_s   [MJ m-2 day-1]  Solar or shortwave radiation
+        R_a   [MJ m-2 day-1]  Extraterrestrial radiation
+        T_mn  [°C]            Minimum temperature
+        T_mx  [°C]            Maximum temperature
+      */
+
+      var R_s = function (R_a, T_mn, T_mx) {
+
+        var TD = (T_mx - T_mn) <= 0 ? 1 : (T_mx - T_mn)
+          /* Samani, Z., 2000. Estimating Solar Radiation and Evapotranspiration Using Minimum Climatological Data.
+            J. of Irrig. and Drain. Engrg., ASCE, 126(4), 265-267. */ 
+          , K_T = 0.00185 * pow(TD, 2) - 0.0433 * TD + 0.4023 // 0.162 - 0.190 
+          ;
+
+        return R_a * K_T * sqrt(TD);
+
+      };
+
+      /*
+        Allen (1998) eq. 34
+
+        N   [hour]  Maximum possible duration of sunshine or daylight hours
+        ws  [rad]   Sunset hour angle in radians
+      */
+
+      var N = function (ws) {
+        
+        return (24 / PI) * ws;
+
+      };
+
+      /*
+        PAR [MJ m-2 day-1]  Photosynthetically active radiation
+        R_s [MJ m-2 day-1]  Solar or shortwave radiation
+      */
+
+      var PAR = function (R_s) {
+        
+        /* 0.45, .., 0.5 ? */ 
+        return 0.5 * R_s;
+
+      };
+
+      /*
+        Johnson (2013) eq. 2.8
+
+        PPF [μmol (photons) m-2 day-1]  Photosynthetic photon flux
+        PAR [J m-2 day-1]               Photosynthetic active ration
+
+        TODO: estimated 0.218 based on location?
+      */
+
+      var PPF = function (PAR) { 
+
+        return PAR / 0.218;     
+
+      };
+
+      /*
+        Supid (2003) eqs. 4.28a - 4.28d
+
+        Defaults to 0.7 in Johnson (2013).
+
+        f_s   [-]             Fraction of direct solar radiation
+        R_s   [MJ m-2 day-1]  Solar or shortwave radiation
+        R_a   [MJ m-2 day-1]  Extraterrestrial radiation            
+      */
+
+      var f_s = function (R_s, R_a) {
+
+        var f_d = 0 /* Fraction of diffuse solar radiation */
+          , T_atm = R_s / R_a /* Fraction of R_s in R_a */
+          ;
+
+        if (T_atm <= 0.07)
+          f_d = 1;
+        else if (0.07 < T_atm && T_atm <= 0.35)
+          f_d = 1 - 2.3 * pow(T_atm - 0.07, 2);
+        else if (0.35 < T_atm && T_atm <= 0.75)
+          f_d = 1.33 - 1.46 * T_atm;
+        else if (0.75 < T_atm)
+          f_d = 0.23;
+
+        return 1 - f_d;
+
+      };
+
+      /*
+        doy   [#]     day of year
+        date  [Date]  date object
+      */
+
+      var doy = function (date) {
+
+        return ceil((date - (new Date(date.getFullYear(), 0, 1))) / MS_PER_DAY);
+
+      };
+
+      /*
+        Rotz (2014)
+
+        Simple estimate of relative humidity if not available in weather data
+
+        rh    [-]   relative humidity
+        T_mn  [°C]  minimum temperature
+        T_mx  [°C]  maximum temperature
+      */
+
+      var rh = function (T_mn, T_mx) {
+
+        return min(1, 1 - exp(-0.2 * (T_mx - T_mn)));
+
+      };
+
+      /*
+        Returns arrays with length T_mn.length.
+
+        j           [decimal degree]  latitude
+        T_mn        [°C]              array minimum temperature
+        T_mx        [°C]              array maximum temperature
+        startDate   [date]            string, ISO Format (1995-01-01)
+      */
+
+      var solar = function (j, T_mn, T_mx, startDate) {
+
+        /* return value */
+        var ret = {
+            N: []     /* Maximum possible duration of sunshine or daylight hours [hour] */
+          , R_a: []   /* Extraterrestrial radiation [MJ m-2 day-1] */
+          , R_s: []   /* Solar or shortwave radiation [MJ m-2 day-1] */
+          , PAR: []   /* Photosynthetically active radiation [MJ m-2 day-1] */
+          , PPF: []   /* Photosynthetic photon flux [μmol (photons) m-2 day-1] */
+          , f_s: []   /* Fraction of direct solar radiation [-] */
+          , date: []  /* date string in ISO format */
+          , doy: []   /* day of year */
+        };
+
+        var _doy, date, dr_, d_, ws_, R_a_, N_, R_s_, PAR_, PPF_, f_s_;
+
+        date = new Date(startDate);
+        _doy = doy(date);
+
+        for (var i = 0, is = T_mn.length; i < is; i++) {
+
+          dr_   = dr(_doy);
+          d_    = d(_doy);
+          ws_   = ws(j, d_);
+          R_a_  = R_a(dr_, ws_, j, d_)
+          N_    = N(ws_);
+          R_s_  = R_s(R_a_, T_mn[i], T_mx[i]);
+          PAR_  = PAR(R_s_);
+          PPF_  = PPF(PAR_ * 1e6 /* MJ to J */);
+          f_s_  = f_s(R_s_, R_a_);
+
+          ret.N[i]    = N_;
+          ret.R_a[i]  = R_a_;
+          ret.R_s[i]  = R_s_;
+          ret.PAR[i]  = PAR_;
+          ret.PPF[i]  = PPF_;
+          ret.f_s[i]  = f_s_;
+          ret.date[i] = date.toISOString().substr(0, 10); /* remove time string */
+          ret.doy[i]  = _doy;
+
+          date.setDate(date.getDate() + 1);
+          _doy = doy(date);
+
+        }
+        
+        return ret;
+        
+      };
+
+      return {
+        rh: rh,
+        solar: solar
+      };
+
+    }())
+
+
+
 };
 
 
-
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var YieldComponent = function (oid, yp, ydm) {
 
@@ -5672,7 +5983,10 @@ var soilAggregationValues = {
 };
 
 
-
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var MineralFertilizer = function (name, carbamid, no3, nh4) {
 
@@ -6453,10 +6767,8 @@ IrrigationApplication.prototype.constructor = IrrigationApplication;
 
 
 /*
-
-  Changes:
-    - var getWorkstep = function (date)
-
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
 */
 
 var ProductionProcess = function (name, crop) {
@@ -7051,7 +7363,10 @@ CropGrowthAPI.prototype = {
 };
 
 
-// TODO: add initial plantDryWeight
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var GenericCrop = function (name, plantDryWeight, autoIrrigationOn, options) {
 
@@ -10445,6 +10760,10 @@ var GenericCrop = function (name, plantDryWeight, autoIrrigationOn, options) {
 };
 
 
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var GenericCropGrowth = function (sc, gps, cps, stps, cpp) {
 
@@ -17533,6 +17852,11 @@ var GrasslandGrowth = function (sc, gps, mixture, stps, cpp) { // takes addition
 };
 
 
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
+
 var Environment = function (sps, cpp) {
 
   this.mode = "MyMode"; // JS! mode not implemented
@@ -17619,6 +17943,7 @@ var Environment = function (sps, cpp) {
   };
 
 };
+
 
 /*
   Run a collection of models. 
@@ -17854,10 +18179,8 @@ var ModelCollection = function (weather) {
 
 
 /*
-  TODO:
-
-    - CO2 eq. source?
-
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
 */
 
 var Model = function (env) {
@@ -18869,6 +19192,10 @@ var Model = function (env) {
 };
 
 
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var SoilLayer = function (vs_LayerThickness, sps, cpp) {
 
@@ -19350,6 +19677,10 @@ var SoilLayer = function (vs_LayerThickness, sps, cpp) {
 };
 
 
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var SoilColumn = function (gps, sp, cpp) {
 
@@ -20011,6 +20342,10 @@ soilColumnArray.applyIrrigationViaTrigger = function (
 };
 
 
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var SoilOrganic = function (sc, gps, stps, cpp) {
 
@@ -21600,6 +21935,11 @@ var SoilOrganic = function (sc, gps, stps, cpp) {
 };
 
 
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
+
 var FrostComponent = function (sc, cpp) {
     
   var soilColumn = sc,
@@ -21862,6 +22202,11 @@ var FrostComponent = function (sc, cpp) {
 
 };
 
+
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var SnowComponent = function (cpp) {
 
@@ -22127,6 +22472,10 @@ var SnowComponent = function (cpp) {
 };
 
 
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var SoilMoisture = function (sc, stps, mm, cpp) {
 
@@ -23408,6 +23757,10 @@ var SoilMoisture = function (sc, stps, mm, cpp) {
 };
 
 
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var SoilTransport = function (sc, sps, cpp) {
 
@@ -23861,6 +24214,10 @@ var SoilTransport = function (sc, sps, cpp) {
 
 
 
+/*
+  Originally derived, ported from MONICA
+  Find details on copywrite & license in the relevant source files at https://github.com/zalf-lsa/monica.
+*/
 
 var SoilTemperature = function (sc, mm, cpp) {
 
@@ -24384,9 +24741,14 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     var startDate = new Date(sim.time.startDate);
     var endDate = new Date(sim.time.endDate);
 
+    if (!Array.isArray(siteAndProd))
+      siteAndProd = [siteAndProd];
+
+    noModels = siteAndProd.length;
+
     /* weather */
     var weather = new Weather(startDate, endDate);
-    if (!createWeather(weather, weatherData, Date.parse(sim.time.startDate), Date.parse(sim.time.endDate))) {
+    if (!createWeather(weather, siteAndProd[0].site.latitude, weatherData)) {
       logger(MSG_ERROR, 'Error fetching weather data.');
       return;
     }
@@ -24394,11 +24756,6 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     logger(MSG_INFO, 'Fetched weather data.');
 
     models = new ModelCollection(weather);
-
-    if (!Array.isArray(siteAndProd))
-      siteAndProd = [siteAndProd];
-
-    noModels = siteAndProd.length;
 
     for (var sp = 0, sps = siteAndProd.length; sp < sps; sp++) {
 
@@ -24935,31 +25292,79 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
   // };
 
 
-  function createWeather(weather, input) {
+  function createWeather(weather, latitude, input) {
 
-    var ok = true;
-    var data = [];
+    var ok = true,
+        length = input.tmin.length,
+        startDateString = weather.startDate().toISOString().substr(0, 10),
+        data = [],
+        calcData = null;
 
-    data[WEATHER.TMIN] = new Float64Array(input.tmin);                  /* [°C] */
-    data[WEATHER.TMAX] = new Float64Array(input.tmax);                  /* [°C] */
-    data[WEATHER.TAVG] = new Float64Array(input.tavg);                  /* [°C] */
-    data[WEATHER.GLOBRAD] = new Float64Array(input.globrad);            /* [MJ m-2] */
-    data[WEATHER.WIND] = new Float64Array(input.wind);                  /* [m s-1] */
-    data[WEATHER.PRECIP] = new Float64Array(input.precip);              /* [mm] */
+    data[WEATHER.TMIN] = new Float64Array(input.tmin); /* [°C] */
+    data[WEATHER.TMAX] = new Float64Array(input.tmax); /* [°C] */
+    data[WEATHER.PRECIP] = new Float64Array(input.precip); /* [mm] */
 
-    /* required for grassland model */
-    data[WEATHER.DAYLENGTH] = new Float64Array(input.daylength);        /* [h] */
-    data[WEATHER.F_DIRECTRAD] = new Float64Array(input.f_directrad);    /* [h h-1] fraction direct solar radiation */
-    data[WEATHER.EXRAD] = new Float64Array(input.exrad);                /* [MJ m-2] */
+    /* optional */
+    data[WEATHER.TAVG] = new Float64Array(input.tavg && input.tavg.length > 0 ? input.tavg : length); /* [°C] */
+    data[WEATHER.GLOBRAD] = new Float64Array(input.globrad && input.globrad.length > 0 ? input.globrad : length); /* [MJ m-2] */
+    data[WEATHER.WIND] = new Float64Array(input.wind && input.wind.length > 0 ? input.wind : length); /* [m s-1] */
 
-    data[WEATHER.SUNHOURS] = new Float64Array(input.sunhours);          /* [h] */
-    data[WEATHER.RELHUMID] = new Float64Array(input.relhumid);          /* [%] */
+    data[WEATHER.DAYLENGTH] = new Float64Array(input.daylength && input.daylength.length > 0 ? input.daylength : length); /* [h] */
+    data[WEATHER.F_DIRECTRAD] = new Float64Array(input.f_directrad && input.f_directrad.length > 0 ? input.f_directrad : length); /* [h h-1] fraction direct solar radiation */
+    data[WEATHER.EXRAD] = new Float64Array(input.exrad && input.exrad.length > 0 ? input.exrad : length); /* [MJ m-2] */
+
+    data[WEATHER.SUNHOURS] = new Float64Array(input.sunhours && input.sunhours.length > 0 ? input.sunhours : length); /* [h] */
+    data[WEATHER.RELHUMID] = new Float64Array(input.relhumid && input.relhumid.length > 0 ? input.relhumid : length); /* [%] */
 
     data[WEATHER.DOY] = input.doy;
     data[WEATHER.ISODATESTRING] = input.date;
 
+    if (
+        !input.globrad || input.globrad.length === 0 ||
+        !input.daylength || input.daylength.length === 0 ||
+        !input.f_directrad || input.f_directrad.length === 0 ||
+        !input.exrad || input.exrad.length === 0 ||
+        !input.sunhours || input.sunhours.length === 0
+    ) {
+      /* estimate missing values */
+      calcData = tools.weather.solar(latitude, data[WEATHER.TMIN], data[WEATHER.TMAX], startDateString);
+      
+      if (!input.globrad || input.globrad.length === 0) {
+        data[WEATHER.GLOBRAD] = new Float64Array(calcData.R_s);
+      }
+      if (!input.daylength || input.daylength.length === 0) {
+        data[WEATHER.DAYLENGTH] = new Float64Array(calcData.N);
+      }
+      if (!input.f_directrad || input.f_directrad.length === 0) {
+        data[WEATHER.F_DIRECTRAD] = new Float64Array(calcData.f_s);
+      }
+      if (!input.exrad || input.exrad.length === 0) {
+        data[WEATHER.EXRAD] = new Float64Array(calcData.R_a);
+      }
+      if (!input.sunhours || input.sunhours.length === 0) {
+        data[WEATHER.SUNHOURS] = new Float64Array(calcData.N);
+      }
+      if (!data[WEATHER.DOY] || data[WEATHER.DOY].length === 0) {
+        data[WEATHER.DOY] = calcData.doy;
+      }
+      if (!data[WEATHER.ISODATESTRING] || data[WEATHER.ISODATESTRING].length === 0) {
+        data[WEATHER.ISODATESTRING] = calcData.date;
+      }
+    }
+
+    for (var i = 0; i < length; i++) {
+      if (!input.tavg || input.tavg.length === 0) {
+        data[WEATHER.TAVG][i] = (data[WEATHER.TMIN][i] + data[WEATHER.TMAX][i]) / 2;
+      }
+      if (!input.relhumid || input.relhumid.length === 0) {
+        data[WEATHER.RELHUMID][i] = tools.weather.rh(data[WEATHER.TMIN][i], data[WEATHER.TMAX][i]);
+      }
+      if (!input.wind || input.wind.length === 0) {
+        data[WEATHER.WIND][i] = 2;
+      }
+    }
+    
     /* check if all arrays are of the same length */
-    var length = data[WEATHER.TMIN].length;
     for (var i in WEATHER) { 
       if (data[WEATHER[i]].length != length) {
         logger(MSG_ERROR, i + ' length != ' + length);

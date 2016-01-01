@@ -52,16 +52,16 @@ function getWeather(lat, lon) {
   }
 
   var solar = weather.solar(lat, weatherData.tmin, weatherData.tmax, '1995-01-01');
-  for (var d = 0, ds = solar.PPF.length; d < ds; d++) {
-    weatherData.globrad[d] = solar.R_s[d];
-    weatherData.f_directrad[d] = solar.f_s[d];
-    weatherData.daylength[d] = solar.N[d];
-    weatherData.sunhours[d] = solar.N[d];
-    weatherData.relhumid[d] = weather.rh(weatherData.tmin[d], weatherData.tmax[d]);
-    weatherData.date[d] = solar.date[d];
-    weatherData.doy[d] = solar.doy[d];
-    weatherData.exrad[d] = solar.R_a[d];
-  }
+  // for (var d = 0, ds = solar.PPF.length; d < ds; d++) {
+  //   weatherData.globrad[d] = solar.R_s[d];
+  //   weatherData.f_directrad[d] = solar.f_s[d];
+  //   weatherData.daylength[d] = solar.N[d];
+  //   weatherData.sunhours[d] = solar.N[d];
+  //   weatherData.relhumid[d] = weather.rh(weatherData.tmin[d], weatherData.tmax[d]);
+  //   weatherData.date[d] = solar.date[d];
+  //   weatherData.doy[d] = solar.doy[d];
+  //   weatherData.exrad[d] = solar.R_a[d];
+  // }
 
   return weatherData;
 }

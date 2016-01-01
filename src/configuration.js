@@ -65,9 +65,14 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     var startDate = new Date(sim.time.startDate);
     var endDate = new Date(sim.time.endDate);
 
+    if (!Array.isArray(siteAndProd))
+      siteAndProd = [siteAndProd];
+
+    noModels = siteAndProd.length;
+
     /* weather */
     var weather = new Weather(startDate, endDate);
-    if (!createWeather(weather, weatherData, Date.parse(sim.time.startDate), Date.parse(sim.time.endDate))) {
+    if (!createWeather(weather, siteAndProd[0].site.latitude, weatherData)) {
       logger(MSG_ERROR, 'Error fetching weather data.');
       return;
     }
@@ -75,11 +80,6 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
     logger(MSG_INFO, 'Fetched weather data.');
 
     models = new ModelCollection(weather);
-
-    if (!Array.isArray(siteAndProd))
-      siteAndProd = [siteAndProd];
-
-    noModels = siteAndProd.length;
 
     for (var sp = 0, sps = siteAndProd.length; sp < sps; sp++) {
 
@@ -616,31 +616,79 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
   // };
 
 
-  function createWeather(weather, input) {
+  function createWeather(weather, latitude, input) {
 
-    var ok = true;
-    var data = [];
+    var ok = true,
+        length = input.tmin.length,
+        startDateString = weather.startDate().toISOString().substr(0, 10),
+        data = [],
+        calcData = null;
 
-    data[WEATHER.TMIN] = new Float64Array(input.tmin);                  /* [°C] */
-    data[WEATHER.TMAX] = new Float64Array(input.tmax);                  /* [°C] */
-    data[WEATHER.TAVG] = new Float64Array(input.tavg);                  /* [°C] */
-    data[WEATHER.GLOBRAD] = new Float64Array(input.globrad);            /* [MJ m-2] */
-    data[WEATHER.WIND] = new Float64Array(input.wind);                  /* [m s-1] */
-    data[WEATHER.PRECIP] = new Float64Array(input.precip);              /* [mm] */
+    data[WEATHER.TMIN] = new Float64Array(input.tmin); /* [°C] */
+    data[WEATHER.TMAX] = new Float64Array(input.tmax); /* [°C] */
+    data[WEATHER.PRECIP] = new Float64Array(input.precip); /* [mm] */
 
-    /* required for grassland model */
-    data[WEATHER.DAYLENGTH] = new Float64Array(input.daylength);        /* [h] */
-    data[WEATHER.F_DIRECTRAD] = new Float64Array(input.f_directrad);    /* [h h-1] fraction direct solar radiation */
-    data[WEATHER.EXRAD] = new Float64Array(input.exrad);                /* [MJ m-2] */
+    /* optional */
+    data[WEATHER.TAVG] = new Float64Array(input.tavg && input.tavg.length > 0 ? input.tavg : length); /* [°C] */
+    data[WEATHER.GLOBRAD] = new Float64Array(input.globrad && input.globrad.length > 0 ? input.globrad : length); /* [MJ m-2] */
+    data[WEATHER.WIND] = new Float64Array(input.wind && input.wind.length > 0 ? input.wind : length); /* [m s-1] */
 
-    data[WEATHER.SUNHOURS] = new Float64Array(input.sunhours);          /* [h] */
-    data[WEATHER.RELHUMID] = new Float64Array(input.relhumid);          /* [%] */
+    data[WEATHER.DAYLENGTH] = new Float64Array(input.daylength && input.daylength.length > 0 ? input.daylength : length); /* [h] */
+    data[WEATHER.F_DIRECTRAD] = new Float64Array(input.f_directrad && input.f_directrad.length > 0 ? input.f_directrad : length); /* [h h-1] fraction direct solar radiation */
+    data[WEATHER.EXRAD] = new Float64Array(input.exrad && input.exrad.length > 0 ? input.exrad : length); /* [MJ m-2] */
+
+    data[WEATHER.SUNHOURS] = new Float64Array(input.sunhours && input.sunhours.length > 0 ? input.sunhours : length); /* [h] */
+    data[WEATHER.RELHUMID] = new Float64Array(input.relhumid && input.relhumid.length > 0 ? input.relhumid : length); /* [%] */
 
     data[WEATHER.DOY] = input.doy;
     data[WEATHER.ISODATESTRING] = input.date;
 
+    if (
+        !input.globrad || input.globrad.length === 0 ||
+        !input.daylength || input.daylength.length === 0 ||
+        !input.f_directrad || input.f_directrad.length === 0 ||
+        !input.exrad || input.exrad.length === 0 ||
+        !input.sunhours || input.sunhours.length === 0
+    ) {
+      /* estimate missing values */
+      calcData = tools.weather.solar(latitude, data[WEATHER.TMIN], data[WEATHER.TMAX], startDateString);
+      
+      if (!input.globrad || input.globrad.length === 0) {
+        data[WEATHER.GLOBRAD] = new Float64Array(calcData.R_s);
+      }
+      if (!input.daylength || input.daylength.length === 0) {
+        data[WEATHER.DAYLENGTH] = new Float64Array(calcData.N);
+      }
+      if (!input.f_directrad || input.f_directrad.length === 0) {
+        data[WEATHER.F_DIRECTRAD] = new Float64Array(calcData.f_s);
+      }
+      if (!input.exrad || input.exrad.length === 0) {
+        data[WEATHER.EXRAD] = new Float64Array(calcData.R_a);
+      }
+      if (!input.sunhours || input.sunhours.length === 0) {
+        data[WEATHER.SUNHOURS] = new Float64Array(calcData.N);
+      }
+      if (!data[WEATHER.DOY] || data[WEATHER.DOY].length === 0) {
+        data[WEATHER.DOY] = calcData.doy;
+      }
+      if (!data[WEATHER.ISODATESTRING] || data[WEATHER.ISODATESTRING].length === 0) {
+        data[WEATHER.ISODATESTRING] = calcData.date;
+      }
+    }
+
+    for (var i = 0; i < length; i++) {
+      if (!input.tavg || input.tavg.length === 0) {
+        data[WEATHER.TAVG][i] = (data[WEATHER.TMIN][i] + data[WEATHER.TMAX][i]) / 2;
+      }
+      if (!input.relhumid || input.relhumid.length === 0) {
+        data[WEATHER.RELHUMID][i] = tools.weather.rh(data[WEATHER.TMIN][i], data[WEATHER.TMAX][i]);
+      }
+      if (!input.wind || input.wind.length === 0) {
+        data[WEATHER.WIND][i] = 2;
+      }
+    }
+    
     /* check if all arrays are of the same length */
-    var length = data[WEATHER.TMIN].length;
     for (var i in WEATHER) { 
       if (data[WEATHER[i]].length != length) {
         logger(MSG_ERROR, i + ' length != ' + length);
