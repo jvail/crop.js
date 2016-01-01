@@ -13,8 +13,6 @@ var fs = require('fs')
   , noModels = 2
   ;
 
-eval(fs.readFileSync('../lib/weather.solar.js').toString());
-
 function getWeather(lat, lon) {
 
   var rr = JSON.parse(fs.readFileSync('rr_' + lat + '_' + lon + '.json').toString());
@@ -50,18 +48,6 @@ function getWeather(lat, lon) {
     weatherData.tavg.push(tg.values[d] * tg.scale);
     weatherData.wind.push(2); /* default wind speed */
   }
-
-  var solar = weather.solar(lat, weatherData.tmin, weatherData.tmax, '1995-01-01');
-  // for (var d = 0, ds = solar.PPF.length; d < ds; d++) {
-  //   weatherData.globrad[d] = solar.R_s[d];
-  //   weatherData.f_directrad[d] = solar.f_s[d];
-  //   weatherData.daylength[d] = solar.N[d];
-  //   weatherData.sunhours[d] = solar.N[d];
-  //   weatherData.relhumid[d] = weather.rh(weatherData.tmin[d], weatherData.tmax[d]);
-  //   weatherData.date[d] = solar.date[d];
-  //   weatherData.doy[d] = solar.doy[d];
-  //   weatherData.exrad[d] = solar.R_a[d];
-  // }
 
   return weatherData;
 }
@@ -128,7 +114,6 @@ var successiveHarvestCb = (function () {
 
 }());
 
-
 var sim = JSON.parse(fs.readFileSync('rye.simulation.json').toString())
   , site = JSON.parse(fs.readFileSync('rye.site.json').toString())
   , production1 = JSON.parse(fs.readFileSync('rye.production.json').toString())
@@ -156,7 +141,3 @@ var cfg = new crop.Configuration(weatherData, debug, verbose, successiveHarvestC
 cfg.run(sim, siteAndProd);
 
 console.log((Date.now() - startTime) / 1000);
-
-
-
-
