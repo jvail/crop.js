@@ -4,7 +4,99 @@ crop.js
 crop.js is a dynamic, deterministic generic crop (-rotation) and grassland growth model in JavaScript. It is a JS port of the soil, water and crop processes of [MONICA (C++) code](https://github.com/zalf-lsa/monica) and an implementation of [SGS Pasture Model](http://imj.com.au/sgs/) from the publicly available documentation.
 
 ## Examples & Usage
-See example [code](https://github.com/jvail/crop.js/tree/master/exp) and [application](https://zalf-lse.github.io/solid-dss/).
+
+```javascript
+var debug = true,
+    verbose = true,
+    weather = {
+      tmin: [/*...your data...*/],
+      tmax: [/*...your data...*/],
+      precip: [/*...your data...*/]
+    };
+
+/* create a configuration */
+var configuration = new crop.Configuration(weather, debug, verbose, 
+    // optional callback
+    function (dayOfSimulation, dateString, models, done) {
+      var model, 
+          soilTemperature,
+          soilMoisture,
+          soilOrganic,
+          soilColumn,
+          soilTransport;
+
+      for (var m = 0; m < models.length; m++) {
+
+        model = models[m];
+
+        // access sub-models
+        if (model.isCropPlanted())
+          cropGrowth = model.cropGrowth();
+
+        soilTemperature = model.soilTemperature();
+        soilMoisture = model.soilMoisture();
+        soilOrganic = model.soilOrganic();
+        soilColumn = model.soilColumn()
+        soilTransport = model.soilTransport();
+
+        /* do stuff */
+      }
+
+    });
+
+/* set up simulation, soil and crop parameters */
+var simulation = {
+      time: {
+        startDate: '1996-01-01',
+        endDate: '1997-12-31'
+      },
+      switches: {
+        nitrogenResponseOn: true,
+        waterDeficitResponseOn: true
+      },
+      init: {
+        percentageFC: 1
+      }
+    },
+    site: {
+      latitude: 52.625,
+      slope: 0,
+      heightNN: 1,
+      horizons: [{
+        thickness: 2,
+        organicMatter: 0.015,
+        sand: 0.60,
+        clay: 0.05,
+        sceleton: 0.02
+      }]
+    },
+    production: {
+      crops: [
+        {
+          model: 'generic',
+          species: [
+            {
+              // see available crops at genericcrop.js and grassland.js
+              // with varying parameter quality!
+              name: 'winter rye'
+            }
+          ],
+          sowingDate: '1996-10-01',
+          plantDryWeight: 225,
+          finalHarvestDate: '1997-07-01',
+          tillageOperations: [],
+          irrigations: [],
+          organicFertilisers: [],
+          mineralFertilisers: []
+        }
+      ]
+    };
+
+/* run the simulation */
+configuration.run(simulation, { site: site, production: production });
+´´´
+
+See also [code](https://github.com/jvail/crop.js/tree/master/exp) and [application](https://zalf-lse.github.io/solid-dss/) examples.
 
 ## Model Genealogy
 [MONICA](http://monica.agrosystem-models.com/) is based on [HERMES](http://www.zalf.de/en/forschung/institute/lsa/forschung/oekomod/hermes/Pages/default.aspx) and [DAISY](https://code.google.com/p/daisy-model/). HERMES is based on [SUCROS](http://models.pps.wur.nl/node/3). The grassland model is based on the [SGS Pasture Model](http://imj.com.au/sgs/).
