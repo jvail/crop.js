@@ -86,7 +86,7 @@ var simulation = {
 
 /* run the simulation */
 configuration.run(simulation, { site: site, production: production });
-´´´
+```
 
 See also [code](https://github.com/jvail/crop.js/tree/master/exp) and [application](https://zalf-lse.github.io/solid-dss/) examples.
 
