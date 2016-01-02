@@ -63,25 +63,23 @@ var simulation = {
       }]
     },
     production: {
-      crops: [
-        {
-          model: 'generic',
-          species: [
-            {
-              // see available crops at genericcrop.js and grassland.js
-              // with varying parameter quality!
-              name: 'winter rye'
-            }
-          ],
-          sowingDate: '1996-10-01',
-          plantDryWeight: 225,
-          finalHarvestDate: '1997-07-01',
-          tillageOperations: [],
-          irrigations: [],
-          organicFertilisers: [],
-          mineralFertilisers: []
-        }
-      ]
+      crops: [{ /* a rotation or single crop: dates should not collide */
+        model: 'generic',
+        species: [
+          {
+            // see available crops at genericcrop.js and grassland.js
+            // with varying paramerer quality!
+            name: 'winter rye'
+          }
+        ],
+        sowingDate: '1996-10-01',
+        plantDryWeight: 225,
+        finalHarvestDate: '1997-07-01',
+        tillageOperations: [],
+        irrigations: [],
+        organicFertilisers: [],
+        mineralFertilisers: []
+      }]
     };
 
 /* run the simulation */
