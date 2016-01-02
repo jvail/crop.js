@@ -86,7 +86,7 @@ var simulation = {
 configuration.run(simulation, { site: site, production: production });
 ```
 
-See also [code](https://github.com/jvail/crop.js/tree/master/exp) and [application](https://zalf-lse.github.io/solid-dss/) examples.
+See also [code](https://github.com/jvail/crop.js/tree/master/exp) and [application](https://zalf-lse.github.io/solid-dss/) examples. A configuration's parameter description is available from [here](https://github.com/jvail/crop.js/tree/master/cfg/meta.json).
 
 ## Model Genealogy
 [MONICA](http://monica.agrosystem-models.com/) is based on [HERMES](http://www.zalf.de/en/forschung/institute/lsa/forschung/oekomod/hermes/Pages/default.aspx) and [DAISY](https://code.google.com/p/daisy-model/). HERMES is based on [SUCROS](http://models.pps.wur.nl/node/3). The grassland model is based on the [SGS Pasture Model](http://imj.com.au/sgs/).
