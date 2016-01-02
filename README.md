@@ -68,7 +68,7 @@ var simulation = {
         species: [
           {
             // see available crops at genericcrop.js and grassland.js
-            // with varying paramerer quality!
+            // with varying parameter quality!
             name: 'winter rye'
           }
         ],
