@@ -18,27 +18,19 @@ var debug = true,
 var configuration = new crop.Configuration(weather, debug, verbose, 
     // optional callback
     function (dayOfSimulation, dateString, models, done) {
-      var model, 
-          soilTemperature,
-          soilMoisture,
-          soilOrganic,
-          soilColumn,
-          soilTransport;
-
+      var model, cropGrowth, soilTemperature, soilMoisture,
+          soilOrganic, soilColumn, soilTransport;
+          
       for (var m = 0; m < models.length; m++) {
-
         model = models[m];
-
         // access sub-models
         if (model.isCropPlanted())
           cropGrowth = model.cropGrowth();
-
         soilTemperature = model.soilTemperature();
         soilMoisture = model.soilMoisture();
         soilOrganic = model.soilOrganic();
         soilColumn = model.soilColumn()
         soilTransport = model.soilTransport();
-
         /* do stuff */
       }
 
