@@ -8,7 +8,7 @@ crop.js is a dynamic, deterministic generic crop (-rotation) and grassland growt
 ```javascript
 var debug = true,
     verbose = true,
-    weather = {
+    weather = { // find complete description of optional or mandatory input data in src/configuration.js 
       tmin: [/*...your data...*/],
       tmax: [/*...your data...*/],
       precip: [/*...your data...*/]
