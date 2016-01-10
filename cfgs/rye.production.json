@@ -1,0 +1,59 @@
+{
+  "crops": [
+    {
+      "model": "generic",
+      "species": [
+        {
+          "name": "winter rye"
+        }
+      ],
+      "sowingDate": "1996-10-01",
+      "plantDryWeight": 225,
+      "percNTRansplant": 0.07,
+      "finalHarvestDate": "2000-10-01",
+      "residuesRemoval": 0.85,
+      "tillageOperations": [
+        {
+          "date": "1996-09-02",
+          "method": "Plough",
+          "depth": 30
+        }
+      ],
+      "irrigations": [
+        {
+          "date": "1997-06-01",
+          "method": "Sprinkler",
+          "eventType": "Fixed",
+          "threshold": 0.2,
+          "area": 1,
+          "amount": 50,
+          "NConc": 0
+        },
+        {
+          "date": "1997-06-15",
+          "method": "Sprinkler",
+          "eventType": "Fixed",
+          "threshold": 0.2,
+          "area": 1,
+          "amount": 50,
+          "NConc": 0
+        }
+      ],
+      "organicFertilisers": [],
+      "mineralFertilisers": [
+        {
+          "name": "Ammonium Nitrate",
+          "date": "1997-04-01",
+          "method": "Fixed",
+          "amount": 50
+        },
+        {
+          "name": "Ammonium Nitrate",
+          "date": "1997-05-15",
+          "method": "Fixed",
+          "amount": 50
+        }
+      ]
+    }
+  ]
+}
