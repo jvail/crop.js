@@ -25532,9 +25532,10 @@ if (ENVIRONMENT_IS_NODE) {
 
   onmessage = function (evt) {
     if (evt.data.hasOwnProperty('run')) {
-      var config = evt.data.run;
+      var config = evt.data.run,
+          cbs = (callbacks === undefined ? [] : callbacks);
       /* callbacks vis importScript */
-      var cfg = new Configuration(config.weather, config.debug, config.verbose, callbacks || []);
+      var cfg = new Configuration(config.weather, config.debug, config.verbose, cbs);
       postMessage(cfg.run(config.sim, config.siteAndProd));
     } else {
       postMessage(null);
