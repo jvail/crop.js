@@ -22,6 +22,7 @@ function getWeather(lat, lon) {
  
   /* read weather files */
   var weatherData = {
+    startDate: '1995-01-01',
     tmin: [],
     tmax: [],
     tavg: [],

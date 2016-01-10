@@ -1,6 +1,7 @@
 /*
   weatherData = {                   object
-      tmin          [°C]            (mandatory) array, daily minimum temperature
+      startDate     [date string]   date of index 0
+    , tmin          [°C]            (mandatory) array, daily minimum temperature
     , tmax          [°C]            (mandatory) array, daily maximum temperature
     , tavg          [°C]            (optional)  array, daily average temperature
     , globrad       [MJ m-2]        (optional)  array, global radiation
@@ -620,7 +621,7 @@ var Configuration = function (weatherData, doDebug, isVerbose, callbacks) {
 
     var ok = true,
         length = input.tmin.length,
-        startDateString = weather.startDate().toISOString().substr(0, 10),
+        startDateString = input.startDate || weather.startDate().toISOString().substr(0, 10),
         data = [],
         calcData = null;
 
