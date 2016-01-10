@@ -8,96 +8,172 @@
 <link rel='stylesheet' href='lib/jquery-ui-1.11.4/jquery-ui.min.css'>
 <link rel='stylesheet' href='lib/c3.min.css'>
 <link rel='stylesheet' href='lib/codemirror-5.10/codemirror.css'>
+<link rel='stylesheet' href='lib/codemirror-5.10/lint.css'>
 <script src="lib/jquery-2.2.0.min.js"></script>
 <script src="lib/jquery-ui-1.11.4/jquery-ui.min.js"></script>
 <script src="lib/bootstrap-3.3.6/js/bootstrap.min.js"></script>
 <script src="lib/d3.min.js"></script>
 <script src="lib/c3.min.js"></script>
 <script src="lib/c3.min.js"></script>
+<script src="lib/jsonlint.js"></script>
 <script src="lib/codemirror-5.10/codemirror.min.js"></script>
 <script type="text/javascript">
 
 $(function () {
-  var editor = CodeMirror.fromTextArea($('textarea').get(0), { 
-        mode: 'text/javascript',
-        keyMap: 'sublime'
+  var editor = CodeMirror.fromTextArea($('#editor').get(0), { 
+        keyMap: 'sublime',
+        lineNumbers: true,
+        mode: "application/json",
+        gutters: ["CodeMirror-lint-markers"],
+        lint: true
       }),
-      worker = new Worker('lib/crop.min.js'),
-      weather = (function () {
-        var data = {
-            tmin: [],
-            tmax: [],
-            tavg: [],
-            globrad: [],
-            wind: [],
-            sunhours: [],
-            relhumid: [],
-            precip: [],
-            ppf: [],
-            daylength: [],
-            f_directrad: [],
-            date: [],
-            doy: [],
-            exrad: []
-          },        
-          err = false;
-        [ 'rr_52.625_13.375.json',
-          'tn_52.625_13.375.json',
-          'tx_52.625_13.375.json',
-          'tg_52.625_13.375.json' ].forEach(function (file) {
-          $.ajax({
-            type: 'GET',
-            url: 'weather/' + file,
-            dataType: 'json',
-            success: function(obj) {
-              var vals = [],
-                  type = file.substring(0, 2);
-              for (var i = 0; i < obj.values.length; i++)
-                vals.push(obj.values[i] * obj.scale);
-              if (type === 'rr')
-                data.precip = vals;
-              else if (type === 'tn')
-                data.tmin = vals;
-              else if (type === 'tx')
-                data.tmax = vals;
-              else if (type === 'tg')
-                data.tavg = vals;
-              if (data.precip.length && data.tmin.length &&
-                  data.tavg.length && data.tmax.length) {
-                console.log(data);
-                return data;
-              }
-            },
-            error: function () {
-              console.log(arguments);
-              err = true;
+      worker = new Worker('lib/crop.js'),
+      weather = null;
+
+    (function () {
+      var data = {
+          tmin: [],
+          tmax: [],
+          tavg: [],
+          globrad: [],
+          wind: [],
+          sunhours: [],
+          relhumid: [],
+          precip: [],
+          ppf: [],
+          daylength: [],
+          f_directrad: [],
+          date: [],
+          doy: [],
+          exrad: []
+        },        
+        err = false;
+      [ 'rr_52.625_13.375.json',
+        'tn_52.625_13.375.json',
+        'tx_52.625_13.375.json',
+        'tg_52.625_13.375.json' ].forEach(function (file) {
+        $.ajax({
+          type: 'GET',
+          url: 'weather/' + file,
+          dataType: 'json',
+          success: function(obj) {
+            var vals = [],
+                type = file.substring(0, 2);
+            for (var i = 0; i < obj.values.length; i++)
+              vals.push(obj.values[i] * obj.scale);
+            if (type === 'rr')
+              data.precip = vals;
+            else if (type === 'tn')
+              data.tmin = vals;
+            else if (type === 'tx')
+              data.tmax = vals;
+            else if (type === 'tg')
+              data.tavg = vals;
+            if (data.precip.length && data.tmin.length &&
+                data.tavg.length && data.tmax.length) {
+              weather = data;
+              $('button').trigger('click');
             }
+          },
+          error: function () {
+            console.log(arguments);
+            err = true;
+          }
+        });
+      });      
+    }());
+
+
+  var chart = c3.generate({
+    bindto: '#chart',
+    data: {
+      // x: 'x',
+      columns: []
+    },
+    // axis: {
+    // },
+    subchart: {
+      show: true
+    },
+    point: {
+      show: false
+    }
+  });
+
+  $('button').on('click', function() {
+    var obj = JSON.parse(editor.getValue());
+    var chartData = [];
+    $('select').on('change', function () {
+      var columns = [];
+      $('select option:selected').each(function () {
+        columns.push(chartData[$(this).index() + 1]);
+      });
+      // console.log(columns);
+      chart.destroy();
+      chart = c3.generate({
+          bindto: '#chart',
+          data: {
+            // x: 'x',
+            columns: columns
+          },
+          // axis: {
+          // },
+          // subchart: {
+          //   show: true
+          // },
+          point: {
+            show: false
+          }
+        });
+    });
+    worker.onmessage = function (evt) {
+      var data = evt.data;
+      // console.log(data);
+      if (data) {
+        if (data.msg === 'done') {
+          var columns = [];
+          $('select option:selected').each(function () {
+            columns.push(chartData[$(this).index() + 1]);
           });
-        });      
-      }());
-
-
-  worker.onmessage = function (evt) {
-    var data = evt.data;
-    console.log(data);
-    if (data.done) {
-
-    }
-  };
-
-  var obj = JSON.parse(editor.getValue());
-
-  worker.postMessage({
-    run: {
-      debug: true,
-      verbose: true,
-      weather: weather,
-      sim: obj.simulation,
-      siteAndProd: {
-        site: obj.site,
-        production: obj.production
+          // console.log(columns);
+          chart.load({
+            columns: columns
+          });
+        } else if (data.results) {
+          var results = data.results[0];
+          if (results) {
+            if (chartData.length === 0) {
+              Object.keys(results).forEach(function (key, i) {
+                if (key === 'date') {
+                  chartData.push(['x']);
+                } else {
+                  chartData.push([key + ' ' + results[key].unit]);
+                  if ($('select > option').length < chartData.length) {
+                    $('select').append('<option '+(key === 'BiomassFruit' ? 'selected' : '')+'>'+key + ' ' + results[key].unit+'</option>');
+                  }                  
+                }
+              });          
+            }
+            Object.keys(results).forEach(function (key, i) {
+              var val = results[key].value;
+              chartData[i].push(val === undefined ? 0 : val);                
+            });            
+          }
+        } 
       }
-    }
+    };
+    worker.postMessage({
+      run: {
+        debug: true,
+        verbose: true,
+        weather: weather,
+        sim: obj.simulation,
+        siteAndProd: {
+          site: obj.site,
+          production: obj.production
+        }
+      }
+    });    
   });
 
 
@@ -110,58 +186,58 @@ $(function () {
 
 body {
   background-color: rgba(249, 249, 249, 1);
-  font-size: 14px;
+  font-size: 13px;
   font-family:"Helvetica Neue", Arial, Helvetica, sans-serif;
   box-sizing: border-box;
+  padding: 15px;
 }
 
 .CodeMirror, select, #chart {
   border: 1px solid;
   border-color: lightgrey;
-  border-radius: 3px;  
+  border-radius: 3px;
+  height: 600px;
 }
 
 button {
   width: 80px;
   height: 30px;
-  margin-top: 16px;
-  margin-bottom: 10px;
-  margin-right: 16px;
   border: 1px solid;
   border-color: grey;
   border-radius: 3px;
-  float: right;
 }
 
 #chart {
+  height: 600px;
+}
 
+select[multiple] {
+  height: 600px;
+  width:  100%;
+}
+
+.row, .col {
+  margin-bottom: 10px;
 }
 
 </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class='row row-centered'>
-      <div class='col-lg-2'>
-        <select multiple>
-          <option value="volvo">Volvo</option>
-          <option value="saab">Saab</option>
-          <option value="opel">Opel</option>
-          <option value="audi">Audi</option>
-        </select>        
-      </div>
-      <div id='chart' class='col-lg-8'>
-      </div>
+  <div class="container-fluid">
+    <div class='row'>
+      <div class='col col-lg-1'>
+        <button>run</button>
+      </div>  
     </div>
     <div class='row'>
-      <div class='col-lg-6'>
-        <textarea>
+      <div class='col col-lg-3'>     
+        <textarea id='editor'>
 {
   "simulation": {
     "time": {
-      "startDate": "1996-01-01",
-      "endDate": "1997-12-31"
+      "startDate": "1995-01-01",
+      "endDate": "1997-01-01"
     },
     "switches": {
       "nitrogenResponseOn": true,
@@ -208,49 +284,18 @@ button {
             "name": "winter rye"
           }
         ],
-        "sowingDate": "1996-10-01",
+        "sowingDate": "1995-10-01",
         "plantDryWeight": 225,
         "percNTRansplant": 0.07,
-        "finalHarvestDate": "2000-10-01",
+        "finalHarvestDate": "1996-08-01",
         "residuesRemoval": 0.85,
-        "tillageOperations": [
-          {
-            "date": "1996-09-02",
-            "method": "Plough",
-            "depth": 30
-          }
-        ],
-        "irrigations": [
-          {
-            "date": "1997-06-01",
-            "method": "Sprinkler",
-            "eventType": "Fixed",
-            "threshold": 0.2,
-            "area": 1,
-            "amount": 50,
-            "NConc": 0
-          },
-          {
-            "date": "1997-06-15",
-            "method": "Sprinkler",
-            "eventType": "Fixed",
-            "threshold": 0.2,
-            "area": 1,
-            "amount": 50,
-            "NConc": 0
-          }
-        ],
+        "tillageOperations": [],
+        "irrigations": [],
         "organicFertilisers": [],
         "mineralFertilisers": [
           {
             "name": "Ammonium Nitrate",
-            "date": "1997-04-01",
-            "method": "Fixed",
-            "amount": 50
-          },
-          {
-            "name": "Ammonium Nitrate",
-            "date": "1997-05-15",
+            "date": "1996-05-01",
             "method": "Fixed",
             "amount": 50
           }
@@ -259,14 +304,19 @@ button {
     ]
   }
 }
-      </textarea>
+        </textarea>
       </div>
-      <div class='col-lg-6'>
-        <textarea></textarea>
-      <div>
+      <div class='col col-lg-2'>
+        <select multiple>
+        </select>        
+      </div>
+      <div class='col col-lg-7'>
+        <div id='chart'></div>
+      </div>
     </div>
     <div class='row'>
-      <button>run</button>
+      <div class='col col-lg-12'>
+      </div>
     </div>
   </div>
 
