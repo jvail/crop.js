@@ -14,7 +14,7 @@ if (ENVIRONMENT_IS_NODE) {
     if (evt.data.hasOwnProperty('run')) {
       var config = evt.data.run;
       /* callbacks vis importScript */
-      var cfg = new Configuration(null, config.weather, config.debug, callbacks);
+      var cfg = new Configuration(config.weather, config.debug, config.verbose, callbacks || []);
       postMessage(cfg.run(config.sim, config.siteAndProd));
     } else {
       postMessage(null);
