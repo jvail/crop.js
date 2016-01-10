@@ -27,11 +27,12 @@ $(function () {
         gutters: ["CodeMirror-lint-markers"],
         lint: true
       }),
-      worker = new Worker('lib/crop.js'),
+      worker = new Worker('lib/crop.min.js'),
       weather = null;
 
     (function () {
       var data = {
+          startDate: '1995-01-01',
           tmin: [],
           tmax: [],
           tavg: [],
