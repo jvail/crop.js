@@ -93,9 +93,9 @@ $(function () {
     },
     // axis: {
     // },
-    subchart: {
-      show: true
-    },
+    // subchart: {
+    //   show: true
+    // },
     point: {
       show: false
     }
@@ -150,7 +150,7 @@ $(function () {
                 } else {
                   chartData.push([key + ' ' + results[key].unit]);
                   if ($('select > option').length < chartData.length) {
-                    $('select').append('<option '+(key === 'BiomassFruit' ? 'selected' : '')+'>'+key + ' ' + results[key].unit+'</option>');
+                    $('select').append('<option '+(key === 'BiomassShoot' || key ==='BiomassRoot' ? 'selected' : '')+'>'+key + ' ' + results[key].unit+'</option>');
                   }                  
                 }
               });          
@@ -237,8 +237,8 @@ select[multiple] {
 {
   "simulation": {
     "time": {
-      "startDate": "1995-01-01",
-      "endDate": "1997-01-01"
+      "startDate": "1996-03-01",
+      "endDate": "1996-08-15"
     },
     "switches": {
       "nitrogenResponseOn": true,
@@ -282,10 +282,10 @@ select[multiple] {
         "model": "generic",
         "species": [
           {
-            "name": "winter rye"
+            "name": "oats"
           }
         ],
-        "sowingDate": "1995-10-01",
+        "sowingDate": "1996-03-15",
         "plantDryWeight": 225,
         "percNTRansplant": 0.07,
         "finalHarvestDate": "1996-08-01",
