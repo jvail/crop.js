@@ -11,11 +11,10 @@ if (ENVIRONMENT_IS_NODE) {
   var fs = null;
 
   onmessage = function (evt) {
-    if (evt.data.hasOwnProperty('run')) {
-      var config = evt.data.run,
-          cbs = (callbacks === undefined ? [] : callbacks);
+    if (evt.data.run && typeof evt.data.run === 'object') {
+      var config = evt.data.run;
       /* callbacks vis importScript */
-      var cfg = new Configuration(config.weather, config.debug, config.verbose, cbs);
+      var cfg = new Configuration(config.weather, config.debug, config.verbose, this.callbacks || []);
       postMessage(cfg.run(config.sim, config.siteAndProd));
     } else {
       postMessage(null);
