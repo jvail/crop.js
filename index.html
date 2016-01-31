@@ -30,6 +30,8 @@ $(function () {
       worker = new Worker('lib/crop.min.js'),
       weather = null;
 
+    $('.resize').resizable();
+
     (function () {
       var data = {
           startDate: '1995-01-01',
@@ -232,7 +234,7 @@ select[multiple] {
       </div>  
     </div>
     <div class='row'>
-      <div class='col col-lg-3'>     
+      <div class='col col-lg-3 resize'>     
         <textarea id='editor'>
 {
   "simulation": {
@@ -307,7 +309,7 @@ select[multiple] {
 }
         </textarea>
       </div>
-      <div class='col col-lg-2'>
+      <div class='col col-lg-2 resize'>
         <select multiple>
         </select>        
       </div>
